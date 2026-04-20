@@ -1,0 +1,82 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model Empresa {
+  id        Int      @id @default(autoincrement())
+  nome      String
+  email     String   @unique
+  senha     String
+  createdAt DateTime @default(now())
+
+  usuarios Usuario[]
+}
+
+model Usuario {
+  id        Int      @id @default(autoincrement())
+  nome      String
+  email     String   @unique
+  senha     String
+  role      String   @default("funcionario")
+  empresaId Int
+  createdAt DateTime @default(now())
+
+  empresa    Empresa  @relation(fields: [empresaId], references: [id])
+}
+
+model Cliente {
+  id          Int      @id @default(autoincrement())
+  nome        String
+  telefone    String?
+  email       String?
+  status      String   @default("em_dia")
+  observacoes String?
+  empresaId   Int
+  createdAt   DateTime @default(now())
+
+  contasReceber ContaReceber[]
+}
+
+model Transacao {
+  id        Int      @id @default(autoincrement())
+  tipo      String
+  valor     Float
+  categoria String?
+  descricao String?
+  formaPagamento String?
+  status    String   @default("ativa")
+  empresaId Int
+  createdAt DateTime @default(now())
+}
+
+model ContaReceber {
+  id          Int      @id @default(autoincrement())
+  clienteId   Int
+  empresaId   Int
+  descricao   String?
+  valorTotal  Float
+  valorPago   Float    @default(0)
+  status      String   @default("pendente")
+  vencimento  DateTime?
+  createdAt   DateTime @default(now())
+
+  cliente     Cliente  @relation(fields: [clienteId], references: [id])
+  pagamentos  PagamentoContaReceber[]
+}
+
+model PagamentoContaReceber {
+  id             Int      @id @default(autoincrement())
+  contaReceberId Int
+  empresaId      Int
+  valor          Float
+  formaPagamento String?
+  descricao      String?
+  createdAt      DateTime @default(now())
+
+  contaReceber   ContaReceber @relation(fields: [contaReceberId], references: [id])
+}
