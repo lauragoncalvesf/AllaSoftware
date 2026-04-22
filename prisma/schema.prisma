@@ -80,3 +80,14 @@ model PagamentoContaReceber {
 
   contaReceber   ContaReceber @relation(fields: [contaReceberId], references: [id])
 }
+
+model Servico {
+  id        Int      @id @default(autoincrement())
+  nome      String
+  descricao String?
+  preco     Float
+  duracao   Int?
+  status    String    @default("ativo")
+  empresaId Int
+  createdAt DateTime  @default(now())
+}

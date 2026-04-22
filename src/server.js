@@ -8,8 +8,9 @@ import dashboardRoutes from "./routes/dashboardRoutes.js"
 import contaReceberRoutes from "./routes/contaReceberRoutes.js"
 import alertaRoutes from "./routes/alertaRoutes.js"
 import usuarioRoutes from "./routes/usuarioRoutes.js"
+import servicoRoutes from "./routes/servicoRoutes.js"
 
-const app = express() //  TEM QUE VIR PRIMEIRO
+const app = express() 
 
 app.use(cors())
 app.use(express.json())
@@ -21,6 +22,7 @@ dashboardRoutes(app)
 contaReceberRoutes(app)
 alertaRoutes(app)
 usuarioRoutes(app)
+servicoRoutes (app)
 
 //  rota de teste
 app.get("/teste", auth, (req, res) => {
