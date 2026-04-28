@@ -1,0 +1,678 @@
+import { useEffect, useMemo, useState } from "react"
+import AppLayout from "../layouts/AppLayout"
+import api from "../services/api"
+import ClienteSearchSelect from "../components/ClienteSearchSelect"
+
+export default function ContasReceber() {
+  const usuario = JSON.parse(localStorage.getItem("usuario"))
+  const isAdmin = usuario?.role === "admin"
+
+  const [contas, setContas] = useState([])
+  const [clientes, setClientes] = useState([])  
+  const [loading, setLoading] = useState(true)
+
+  const [status, setStatus] = useState("")
+  const [clienteIdFiltro, setClienteIdFiltro] = useState("")
+
+  const [mostrarNovaContaModal, setMostrarNovaContaModal] = useState(false)
+  const [mostrarPagamentoModal, setMostrarPagamentoModal] = useState(false)
+
+  const [novaConta, setNovaConta] = useState({
+    clienteId: "",
+    descricao: "",
+    valorTotal: "",
+    vencimento: ""
+  })
+
+  const [contaSelecionada, setContaSelecionada] = useState(null)
+  const [pagamento, setPagamento] = useState({
+    valor: "",
+    formaPagamento: "",
+    descricao: ""
+  })
+
+  useEffect(() => {
+    carregarDados()
+  }, [status, clienteIdFiltro])
+
+  const carregarDados = async () => {
+    try {
+      setLoading(true)
+
+      const params = new URLSearchParams()
+      if (status) params.append("status", status)
+      if (clienteIdFiltro) params.append("clienteId", clienteIdFiltro)
+
+      const [contasRes, clientesRes] = await Promise.all([
+        api.get(`/contas-receber?${params.toString()}`),
+        api.get("/clientes")
+      ])
+
+      setContas(contasRes.data || [])
+      setClientes(clientesRes.data || [])
+    } catch (error) {
+      console.error("Erro ao carregar contas a receber:", error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const formatarMoeda = (valor) => {
+    return Number(valor || 0).toLocaleString("pt-BR", {
+      style: "currency",
+      currency: "BRL"
+    })
+  }
+
+  const formatarData = (data) => {
+    if (!data) return "Sem vencimento"
+    return new Date(data).toLocaleDateString("pt-BR")
+  }
+
+  const getSaldoRestante = (conta) => {
+    return Number(conta.valorTotal || 0) - Number(conta.valorPago || 0)
+  }
+
+  const resumo = useMemo(() => {
+    const pendentes = contas.filter((c) => c.status === "pendente").length
+    const parciais = contas.filter((c) => c.status === "parcial").length
+    const vencidas = contas.filter((c) => c.status === "vencido").length
+
+    const totalEmAberto = contas
+      .filter((c) => ["pendente", "parcial", "vencido"].includes(c.status))
+      .reduce((acc, conta) => acc + getSaldoRestante(conta), 0)
+
+    return {
+      total: contas.length,
+      pendentes,
+      parciais,
+      vencidas,
+      totalEmAberto
+    }
+  }, [contas])
+
+  const abrirPagamento = (conta) => {
+    setContaSelecionada(conta)
+    setPagamento({
+      valor: getSaldoRestante(conta),
+      formaPagamento: "",
+      descricao: ""
+    })
+    setMostrarPagamentoModal(true)
+  }
+
+  const salvarNovaConta = async (e) => {
+    e.preventDefault()
+
+    try {
+      await api.post("/contas-receber", {
+        clienteId: Number(novaConta.clienteId),
+        descricao: novaConta.descricao || null,
+        valorTotal: Number(novaConta.valorTotal),
+        vencimento: novaConta.vencimento || null
+      })
+
+      setNovaConta({
+        clienteId: "",
+        descricao: "",
+        valorTotal: "",
+        vencimento: ""
+      })
+      setBuscaClienteNovaConta("")
+      setMostrarSugestoesNovaConta(false)
+
+      setMostrarNovaContaModal(false)
+      carregarDados()
+    } catch (error) {
+      console.error("Erro ao criar conta:", error)
+      alert(error.response?.data?.error || "Erro ao criar conta")
+    }
+  }
+
+  const registrarPagamento = async (e) => {
+    e.preventDefault()
+
+    if (!contaSelecionada) return
+
+    try {
+      await api.post(`/contas-receber/${contaSelecionada.id}/pagamento`, {
+        valor: Number(pagamento.valor),
+        formaPagamento: pagamento.formaPagamento || null,
+        descricao: pagamento.descricao || null
+      })
+
+      setPagamento({
+        valor: "",
+        formaPagamento: "",
+        descricao: ""
+      })
+
+      setContaSelecionada(null)
+      setMostrarPagamentoModal(false)
+      carregarDados()
+    } catch (error) {
+      console.error("Erro ao registrar pagamento:", error)
+      alert(error.response?.data?.error || "Erro ao registrar pagamento")
+    }
+  }
+
+  return (
+    <AppLayout>
+      <div className="space-y-6">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          <div>
+            <h1 className="text-2xl md:text-3xl font-bold text-[#2D2E47]">
+              Contas a Receber
+            </h1>
+            <p className="text-sm text-gray-500 mt-1">
+              Controle valores pendentes, pagamentos e vencimentos.
+            </p>
+          </div>
+
+          {isAdmin && (
+            <button
+              onClick={() => setMostrarNovaContaModal(true)}
+              className="bg-[#2F8AA3] text-white px-4 py-2.5 rounded-xl text-sm font-medium hover:opacity-90 transition shadow-sm"
+            >
+              + Nova Conta
+            </button>
+          )}
+        </div>
+
+        <div className="flex flex-col xl:flex-row xl:items-center xl:justify-between gap-4">
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setStatus("")}
+              className={`px-3 py-1.5 rounded-full text-sm font-medium transition ${
+                status === ""
+                  ? "bg-[#2F8AA3] text-white"
+                  : "bg-white border border-gray-200 text-gray-600 hover:bg-gray-50"
+              }`}
+            >
+              Todas
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setStatus("pendente")}
+              className={`px-3 py-1.5 rounded-full text-sm font-medium transition ${
+                status === "pendente"
+                  ? "bg-[#2F8AA3] text-white"
+                  : "bg-white border border-gray-200 text-gray-600 hover:bg-gray-50"
+              }`}
+            >
+              Pendentes
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setStatus("parcial")}
+              className={`px-3 py-1.5 rounded-full text-sm font-medium transition ${
+                status === "parcial"
+                  ? "bg-[#2F8AA3] text-white"
+                  : "bg-white border border-gray-200 text-gray-600 hover:bg-gray-50"
+              }`}
+            >
+              Parciais
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setStatus("vencido")}
+              className={`px-3 py-1.5 rounded-full text-sm font-medium transition ${
+                status === "vencido"
+                  ? "bg-[#2F8AA3] text-white"
+                  : "bg-white border border-gray-200 text-gray-600 hover:bg-gray-50"
+              }`}
+            >
+              Vencidas
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setStatus("pago")}
+              className={`px-3 py-1.5 rounded-full text-sm font-medium transition ${
+                status === "pago"
+                  ? "bg-[#2F8AA3] text-white"
+                  : "bg-white border border-gray-200 text-gray-600 hover:bg-gray-50"
+              }`}
+            >
+              Pagas
+            </button>
+          </div>
+          <div className="w-full xl:max-w-sm">
+          <ClienteSearchSelect
+            clientes={clientes}
+            clienteId={clienteIdFiltro}
+            setClienteId={setClienteIdFiltro}
+            placeholder="Buscar cliente para filtrar"
+            permitirSemCliente={true}
+          />
+        </div>
+         
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <ResumoCard
+            titulo="Total de Contas"
+            valor={resumo.total}
+            corIcone="bg-blue-100 text-blue-600"
+          />
+          <ResumoCard
+            titulo="Pendentes + Parciais"
+            valor={resumo.pendentes + resumo.parciais}
+            corIcone="bg-amber-100 text-amber-600"
+          />
+          <ResumoCard
+            titulo="Vencidas"
+            valor={resumo.vencidas}
+            corIcone="bg-red-100 text-red-600"
+          />
+          <ResumoCard
+            titulo="Total em Aberto"
+            valor={formatarMoeda(resumo.totalEmAberto)}
+            corIcone="bg-violet-100 text-violet-600"
+          />
+        </div>
+
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+          {loading ? (
+            <div className="p-6 text-gray-500">Carregando contas...</div>
+          ) : contas.length === 0 ? (
+            <div className="p-6 text-gray-500">Nenhuma conta encontrada.</div>
+          ) : (
+            <>
+              <div className="hidden xl:block">
+                <div className="grid grid-cols-12 gap-4 px-6 py-4 text-sm font-semibold text-gray-500 border-b border-gray-100">
+                  <div className="col-span-3">Cliente</div>
+                  <div className="col-span-2">Descrição</div>
+                  <div className="col-span-2">Valores</div>
+                  <div className="col-span-2">Vencimento</div>
+                  <div className="col-span-1">Status</div>
+                  <div className="col-span-2 text-right">Ações</div>
+                </div>
+
+                {contas.map((conta) => (
+                  <div
+                    key={conta.id}
+                    className="grid grid-cols-12 gap-4 px-6 py-5 border-b border-gray-100 last:border-b-0"
+                  >
+                    <div className="col-span-3">
+                      <p className="font-semibold text-[#2D2E47]">
+                        {conta.cliente?.nome || "Sem cliente"}
+                      </p>
+                      <p className="text-sm text-gray-500">
+                        Conta #{conta.id}
+                      </p>
+                    </div>
+
+                    <div className="col-span-2">
+                      <p className="text-sm text-gray-600">
+                        {conta.descricao || "Sem descrição"}
+                      </p>
+                    </div>
+
+                    <div className="col-span-2">
+                      <p className="text-sm text-gray-700">
+                        Total: {formatarMoeda(conta.valorTotal)}
+                      </p>
+                      <p className="text-sm text-gray-500">
+                        Pago: {formatarMoeda(conta.valorPago)}
+                      </p>
+                      <p className="text-sm font-medium text-[#2D2E47]">
+                        Saldo: {formatarMoeda(getSaldoRestante(conta))}
+                      </p>
+                    </div>
+
+                    <div className="col-span-2 flex items-center">
+                      <p className="text-sm text-gray-600">
+                        {formatarData(conta.vencimento)}
+                      </p>
+                    </div>
+
+                    <div className="col-span-1 flex items-center">
+                      <StatusBadge status={conta.status} />
+                    </div>
+
+                    <div className="col-span-2 flex items-center justify-end gap-2">
+                      {conta.status !== "pago" && (
+                        <button
+                          onClick={() => abrirPagamento(conta)}
+                          className="text-sm px-3 py-2 rounded-lg border border-emerald-200 text-emerald-600 hover:bg-emerald-50"
+                        >
+                          Receber
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <div className="xl:hidden p-4 space-y-4">
+                {contas.map((conta) => (
+                  <div
+                    key={conta.id}
+                    className="border border-gray-100 rounded-2xl p-4 shadow-sm"
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <h3 className="font-semibold text-[#2D2E47]">
+                          {conta.cliente?.nome || "Sem cliente"}
+                        </h3>
+                        <p className="text-sm text-gray-500 mt-1">
+                          {conta.descricao || "Sem descrição"}
+                        </p>
+                        <p className="text-xs text-gray-400 mt-1">
+                          Conta #{conta.id}
+                        </p>
+                      </div>
+
+                      <StatusBadge status={conta.status} />
+                    </div>
+
+                    <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
+                      <div>
+                        <p className="text-gray-400">Valor total</p>
+                        <p className="font-medium text-[#2D2E47]">
+                          {formatarMoeda(conta.valorTotal)}
+                        </p>
+                      </div>
+
+                      <div>
+                        <p className="text-gray-400">Valor pago</p>
+                        <p className="font-medium text-[#2D2E47]">
+                          {formatarMoeda(conta.valorPago)}
+                        </p>
+                      </div>
+
+                      <div>
+                        <p className="text-gray-400">Saldo restante</p>
+                        <p className="font-medium text-[#2D2E47]">
+                          {formatarMoeda(getSaldoRestante(conta))}
+                        </p>
+                      </div>
+
+                      <div>
+                        <p className="text-gray-400">Vencimento</p>
+                        <p className="font-medium text-[#2D2E47]">
+                          {formatarData(conta.vencimento)}
+                        </p>
+                      </div>
+                    </div>
+
+                    {conta.status !== "pago" && (
+                      <div className="mt-4">
+                        <button
+                          onClick={() => abrirPagamento(conta)}
+                          className="text-sm px-3 py-2 rounded-lg border border-emerald-200 text-emerald-600 hover:bg-emerald-50"
+                        >
+                          Receber pagamento
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </>
+          )}
+        </div>
+      </div>
+
+      {mostrarNovaContaModal && isAdmin && (
+        <Modal onClose={() => setMostrarNovaContaModal(false)} titulo="Nova Conta a Receber">
+          <form onSubmit={salvarNovaConta} className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-[#2D2E47] mb-2">
+              Cliente *
+            </label>
+
+            <ClienteSearchSelect
+              clientes={clientes}
+              clienteId={novaConta.clienteId}
+              setClienteId={(id) =>
+                setNovaConta({ ...novaConta, clienteId: id })
+              }
+              placeholder="Digite o nome do cliente"
+              permitirSemCliente={false}
+            />
+          </div>
+            <CampoInput
+              label="Descrição"
+              value={novaConta.descricao}
+              onChange={(e) =>
+                setNovaConta({ ...novaConta, descricao: e.target.value })
+              }
+              placeholder="Ex: venda parcelada"
+            />
+
+            <CampoInput
+              label="Valor total *"
+              type="number"
+              value={novaConta.valorTotal}
+              onChange={(e) =>
+                setNovaConta({ ...novaConta, valorTotal: e.target.value })
+              }
+              placeholder="0,00"
+              required
+            />
+
+            <CampoInput
+              label="Vencimento"
+              type="date"
+              value={novaConta.vencimento}
+              onChange={(e) =>
+                setNovaConta({ ...novaConta, vencimento: e.target.value })
+              }
+            />
+
+            <div className="flex justify-end gap-3 pt-2">
+              <button
+                type="button"
+                onClick={() => setMostrarNovaContaModal(false)}
+                className="px-5 py-2.5 rounded-xl border border-gray-200 text-gray-600 hover:bg-gray-50"
+              >
+                Cancelar
+              </button>
+
+              <button
+                type="submit"
+                className="px-5 py-2.5 rounded-xl bg-[#2F8AA3] text-white hover:opacity-90"
+              >
+                Salvar Conta
+              </button>
+            </div>
+          </form>
+        </Modal>
+      )}
+
+      {mostrarPagamentoModal && contaSelecionada && (
+        <Modal onClose={() => setMostrarPagamentoModal(false)} titulo="Registrar Pagamento">
+          <form onSubmit={registrarPagamento} className="space-y-4">
+            <div className="bg-gray-50 rounded-xl p-4">
+              <p className="text-sm text-gray-500">Cliente</p>
+              <p className="font-medium text-[#2D2E47]">
+                {contaSelecionada.cliente?.nome}
+              </p>
+
+              <p className="text-sm text-gray-500 mt-3">Saldo restante</p>
+              <p className="font-semibold text-[#2D2E47]">
+                {formatarMoeda(getSaldoRestante(contaSelecionada))}
+              </p>
+            </div>
+
+            <CampoInput
+              label="Valor *"
+              type="number"
+              value={pagamento.valor}
+              onChange={(e) =>
+                setPagamento({ ...pagamento, valor: e.target.value })
+              }
+              placeholder="0,00"
+              required
+            />
+
+            <CampoSelect
+              label="Forma de pagamento"
+              value={pagamento.formaPagamento}
+              onChange={(e) =>
+                setPagamento({ ...pagamento, formaPagamento: e.target.value })
+              }
+              options={[
+                { value: "", label: "Selecione" },
+                { value: "dinheiro", label: "Dinheiro" },
+                { value: "pix", label: "Pix" },
+                { value: "cartao_credito", label: "Cartão de crédito" },
+                { value: "cartao_debito", label: "Cartão de débito" }
+              ]}
+            />
+
+            <CampoInput
+              label="Descrição"
+              value={pagamento.descricao}
+              onChange={(e) =>
+                setPagamento({ ...pagamento, descricao: e.target.value })
+              }
+              placeholder="Ex: pagamento da 1ª parcela"
+            />
+
+            <div className="flex justify-end gap-3 pt-2">
+              <button
+                type="button"
+                onClick={() => setMostrarPagamentoModal(false)}
+                className="px-5 py-2.5 rounded-xl border border-gray-200 text-gray-600 hover:bg-gray-50"
+              >
+                Cancelar
+              </button>
+
+              <button
+                type="submit"
+                className="px-5 py-2.5 rounded-xl bg-[#2F8AA3] text-white hover:opacity-90"
+              >
+                Confirmar Pagamento
+              </button>
+            </div>
+          </form>
+        </Modal>
+      )}
+    </AppLayout>
+  )
+}
+
+function StatusBadge({ status }) {
+  const estilos = {
+    pendente: "bg-amber-100 text-amber-700",
+    parcial: "bg-blue-100 text-blue-700",
+    vencido: "bg-red-100 text-red-700",
+    pago: "bg-emerald-100 text-emerald-700"
+  }
+
+  const labels = {
+    pendente: "Pendente",
+    parcial: "Parcial",
+    vencido: "Vencido",
+    pago: "Pago"
+  }
+
+  return (
+    <span
+      className={`text-xs font-semibold px-3 py-1 rounded-full ${
+        estilos[status] || "bg-gray-100 text-gray-600"
+      }`}
+    >
+      {labels[status] || status}
+    </span>
+  )
+}
+
+function ResumoCard({ titulo, valor, subtitulo, corIcone }) {
+  return (
+    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 flex items-start gap-4">
+      <div
+        className={`w-12 h-12 rounded-full flex items-center justify-center text-lg font-bold ${corIcone}`}
+      >
+        •
+      </div>
+
+      <div>
+        <p className="text-sm text-gray-500">{titulo}</p>
+        <p className="text-3xl font-bold text-[#2D2E47] mt-1">{valor}</p>
+        <p className="text-sm text-gray-400 mt-1">{subtitulo}</p>
+      </div>
+    </div>
+  )
+}
+
+function Modal({ titulo, children, onClose, largura = "max-w-2xl" }) {
+  return (
+    <div className="fixed inset-0 z-50 bg-black/35 flex items-center justify-center p-4">
+      <div className={`w-full ${largura} bg-white rounded-2xl shadow-xl max-h-[90vh] overflow-y-auto`}>
+        <div className="flex items-center justify-between px-6 py-5 border-b border-gray-100">
+          <h2 className="text-2xl font-bold text-[#2D2E47]">{titulo}</h2>
+
+          <button
+            onClick={onClose}
+            className="text-gray-400 hover:text-gray-600 text-2xl"
+          >
+            ×
+          </button>
+        </div>
+
+        <div className="p-6">{children}</div>
+      </div>
+    </div>
+  )
+}
+
+function CampoInput({
+  label,
+  value,
+  onChange,
+  placeholder,
+  type = "text",
+  required = false
+}) {
+  return (
+    <div>
+      <label className="block text-sm font-medium text-[#2D2E47] mb-2">
+        {label}
+      </label>
+      <input
+        type={type}
+        value={value}
+        onChange={onChange}
+        placeholder={placeholder}
+        required={required}
+        className="w-full border border-gray-200 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-[#3E7996]"
+      />
+    </div>
+  )
+}
+
+function CampoSelect({
+  label,
+  value,
+  onChange,
+  options = [],
+  required = false
+}) {
+  return (
+    <div>
+      <label className="block text-sm font-medium text-[#2D2E47] mb-2">
+        {label}
+      </label>
+      <select
+        value={value}
+        onChange={onChange}
+        required={required}
+        className="w-full border border-gray-200 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-[#3E7996]"
+      >
+        {options.map((option) => (
+          <option key={`${option.value}-${option.label}`} value={option.value}>
+            {option.label}
+          </option>
+        ))}
+      </select>
+    </div>
+  )
+}
