@@ -1,6 +1,9 @@
+import "dotenv/config"
 import express from "express"
 import cors from "cors"
+import helmet from "helmet"
 import authRoutes from "./routes/authRoutes.js"
+import passwordRoutes from "./routes/passwordRoutes.js"
 import { auth } from "./middlewares/auth.js"
 import clienteRoutes from "./routes/clienteRoutes.js"
 import transacaoRoutes from "./routes/transacaoRoutes.js"
@@ -11,24 +14,45 @@ import usuarioRoutes from "./routes/usuarioRoutes.js"
 import servicoRoutes from "./routes/servicoRoutes.js"
 import produtoRoutes from "./routes/produtoRoutes.js"
 import vendaRoutes from "./routes/vendaRoutes.js"
+import { securityHeaders } from "./middlewares/security.js"
+import { limiterGeral, limiterLogin } from "./middlewares/rateLimiter.js"
+import { errorHandler } from "./middlewares/errorHandler.js"
 
-const app = express() 
+const app = express()
 
-app.use(cors())
-app.use(express.json())
+// 🔒 Segurança
+app.use(securityHeaders)
+app.use(helmet())
 
+// 🌐 CORS
+app.use(cors({
+  origin: process.env.FRONTEND_URL || "http://localhost:5173",
+  credentials: true,
+  methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
+  allowedHeaders: ["Content-Type", "Authorization"]
+}))
+
+// 📊 Middleware
+app.use(express.json({ limit: "10mb" }))
+app.use(express.urlencoded({ limit: "10mb", extended: true }))
+
+// 🚫 Rate Limiting
+app.use(limiterGeral)
+
+// 📝 Rotas
 authRoutes(app)
+passwordRoutes(app)
 clienteRoutes(app)
 transacaoRoutes(app)
 dashboardRoutes(app)
 contaReceberRoutes(app)
 alertaRoutes(app)
 usuarioRoutes(app)
-servicoRoutes (app)
+servicoRoutes(app)
 produtoRoutes(app)
 vendaRoutes(app)
 
-//  rota de teste
+// 🧪 Rota de teste
 app.get("/teste", auth, (req, res) => {
   res.json({
     message: "Acesso liberado",
@@ -36,7 +60,21 @@ app.get("/teste", auth, (req, res) => {
   })
 })
 
+// 🚫 Rota 404
+app.use((req, res) => {
+  res.status(404).json({
+    error: "Rota não encontrada",
+    path: req.path,
+    method: req.method
+  })
+})
 
-app.listen(3000, () => {
-  console.log("Servidor rodando 🚀")
+// ❌ Tratamento de Erros Global
+app.use(errorHandler)
+
+const PORT = process.env.PORT || 3000
+
+app.listen(PORT, () => {
+  console.log(`🚀 Servidor rodando em http://localhost:${PORT}`)
+  console.log(`📡 Ambiente: ${process.env.NODE_ENV || "development"}`)
 })

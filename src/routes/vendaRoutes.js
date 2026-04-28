@@ -3,6 +3,6 @@ import { auth } from "../middlewares/auth.js"
 import { permitirRoles } from "../middlewares/permitirRoles.js"
 
 export default (app) => {
-  app.post("/vendas", auth, criarVenda)
+  app.post("/vendas", auth, permitirRoles("admin", "gerente", "funcionario"), criarVenda)
   app.get("/vendas", auth, listarVendas)
 }

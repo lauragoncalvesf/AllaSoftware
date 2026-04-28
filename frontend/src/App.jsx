@@ -1,5 +1,7 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom"
 import Login from "./pages/Login"
+import EsqueceuSenha from "./pages/EsqueceuSenha"
+import ResetarSenha from "./pages/ResetarSenha"
 import CadastroEmpresa from "./pages/CadastroEmpresa"
 import Dashboard from "./pages/Dashboard"
 import Clientes from "./pages/Clientes"
@@ -22,6 +24,8 @@ function App() {
       <Routes>
         <Route path="/" element={<Login />} />
         <Route path="/cadastro-empresa" element={<CadastroEmpresa />} />
+        <Route path="/esqueceu-senha" element={<EsqueceuSenha />} />
+        <Route path="/resetar-senha" element={<ResetarSenha />} />
 
         <Route
           path="/dashboard"

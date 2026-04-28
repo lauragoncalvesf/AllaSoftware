@@ -1,7 +1,8 @@
-import { useNavigate } from "react-router-dom"
+import { useNavigate, useLocation } from "react-router-dom"
 
 export default function Sidebar() {
   const navigate = useNavigate()
+  const location = useLocation()
   const usuario = JSON.parse(localStorage.getItem("usuario"))
 
   const logout = () => {
@@ -10,10 +11,21 @@ export default function Sidebar() {
     navigate("/")
   }
 
+  // Função para verificar se é rota ativa
+  const isActive = (path) => location.pathname === path
+
+  // Função para retornar classe de estilo baseado se está ativo
+  const getNavButtonClass = (path) => {
+    const baseClass = "w-full text-left px-4 py-2 rounded-lg transition-colors"
+    return isActive(path)
+      ? `${baseClass} bg-[#3E7996] text-white font-semibold`
+      : `${baseClass} hover:bg-white/10`
+  }
+
   return (
-    <aside className="w-64 min-h-screen bg-[#2D2E47] text-white flex flex-col">
+    <aside className="fixed left-0 top-0 w-64 h-screen bg-[#2D2E47] text-white flex flex-col overflow-y-auto">
       <div className="p-6 border-b border-white/10">
-        <h1 className="text-xl font-bold">Sistema SaaS</h1>
+        <h1 className="text-xl font-bold">Sistema ALLA</h1>
         <p className="text-sm text-white/70 mt-2">{usuario?.nome}</p>
         <p className="text-xs text-white/50">Perfil: {usuario?.role}</p>
       </div>
@@ -21,42 +33,42 @@ export default function Sidebar() {
       <nav className="flex-1 p-4 space-y-2">
         <button
           onClick={() => navigate("/dashboard")}
-          className="w-full text-left px-4 py-2 rounded-lg hover:bg-white/10"
+          className={getNavButtonClass("/dashboard")}
         >
           Dashboard
         </button>
 
         <button
           onClick={() => navigate("/clientes")}
-          className="w-full text-left px-4 py-2 rounded-lg hover:bg-white/10"
+          className={getNavButtonClass("/clientes")}
         >
           Clientes
         </button>
 
         <button
-        onClick={() => navigate("/servicos")}
-        className="w-full text-left px-4 py-2 rouded-lg hover:bg-white/10"
+          onClick={() => navigate("/servicos")}
+          className={getNavButtonClass("/servicos")}
         >
           Serviços
         </button>
 
         <button
-        onClick={() => navigate("/produtos")}
-        className="w-full text-left px-4 py-2 rouded-lg hover:bg-white/10"
+          onClick={() => navigate("/produtos")}
+          className={getNavButtonClass("/produtos")}
         >
           Produtos
         </button>
 
         <button
           onClick={() => navigate("/vendas")}
-          className="w-full text-left px-4 py-2 rounded-lg hover:bg-white/10"
+          className={getNavButtonClass("/vendas")}
         >
           Vendas
         </button>
 
         <button
           onClick={() => navigate("/contas-receber")}
-          className="w-full text-left px-4 py-2 rounded-lg hover:bg-white/10"
+          className={getNavButtonClass("/contas-receber")}
         >
           Contas a Receber
         </button>
@@ -65,28 +77,28 @@ export default function Sidebar() {
           <>
             <button
               onClick={() => navigate("/transacoes")}
-              className="w-full text-left px-4 py-2 rounded-lg hover:bg-white/10"
+              className={getNavButtonClass("/transacoes")}
             >
               Financeiro
             </button>
 
             <button
               onClick={() => navigate("/financeiro/dashboard")}
-              className="w-full text-left px-4 py-2 rounded-lg hover:bg-white/10"
+              className={getNavButtonClass("/financeiro/dashboard")}
             >
               Dashboard FInanceiro
             </button>
 
             <button
               onClick={() => navigate("/usuarios")}
-              className="w-full text-left px-4 py-2 rounded-lg hover:bg-white/10"
+              className={getNavButtonClass("/usuarios")}
             >
               Usuários
             </button>
 
             <button
               onClick={() => navigate("/relatorios/financeiro")}
-              className="w-full text-left px-4 py-2 rounded-lg hover:bg-white/10"
+              className={getNavButtonClass("/relatorios/financeiro")}
             >
               Relatórios
             </button>

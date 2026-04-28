@@ -1,7 +1,9 @@
-import { register, login, loginUsuario } from "../controllers/authController.js"
+import { register, login, loginUsuario, refreshAccessToken } from "../controllers/authController.js"
+import { limiterLogin } from "../middlewares/rateLimiter.js"
 
 export default (app) => {
-  app.post("/register", register)
-  app.post("/login", login)
-  app.post("/login-usuario", loginUsuario)
+  app.post("/register", limiterLogin, register)
+  app.post("/login", limiterLogin, login)
+  app.post("/login-usuario", limiterLogin, loginUsuario)
+  app.post("/refresh-token", refreshAccessToken)
 }

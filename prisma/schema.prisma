@@ -131,3 +131,20 @@ model ItemVenda {
 
   venda         Venda    @relation(fields: [vendaId], references: [id], onDelete: Cascade)
 }
+
+model AuditLog {
+  id        Int      @id @default(autoincrement())
+  empresaId Int
+  usuarioId Int?
+  acao      String
+  entidade  String
+  descricao String?
+  dados     String?
+  ipAddress String?
+  userAgent String?
+  timestamp DateTime @default(now())
+
+  @@index([empresaId])
+  @@index([usuarioId])
+  @@index([timestamp])
+}

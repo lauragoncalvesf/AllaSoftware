@@ -15,9 +15,12 @@ export default function Login() {
         senha
       })
 
-      const { token, usuario } = response.data
+      const { accessToken, usuario } = response.data
 
-      localStorage.setItem("token", token)
+      console.log("Login response:", response.data)
+      console.log("AccessToken salvo:", accessToken)
+
+      localStorage.setItem("token", accessToken)
       localStorage.setItem("usuario", JSON.stringify(usuario))
 
       window.location.href = "/dashboard"
@@ -57,6 +60,12 @@ export default function Login() {
             value={senha}
             onChange={(e) => setSenha(e.target.value)}
           />
+          <Link
+            to="/esqueceu-senha"
+            className="text-xs text-[#3E7996] hover:underline mt-1 inline-block"
+          >
+            Esqueceu a senha?
+          </Link>
         </div>
 
         <button
