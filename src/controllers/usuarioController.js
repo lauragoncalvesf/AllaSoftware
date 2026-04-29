@@ -85,3 +85,45 @@ export const listarUsuarios = async (req, res) => {
     })
   }
 }
+
+export const deletarUsuario = async (req, res) => {
+  try {
+    const { id } = req.params
+
+    const usuarioLogadoId = req.usuarioId
+
+    if (Number(id) === Number(usuarioLogadoId)) {
+      return res.status(400).json({
+        error: "Você não pode excluir o próprio usuário logado"
+      })
+    }
+
+    const usuario = await prisma.usuario.findFirst({
+      where: {
+        id: Number(id),
+        empresaId: req.empresaId
+      }
+    })
+
+    if (!usuario) {
+      return res.status(404).json({
+        error: "Usuário não encontrado para esta empresa"
+      })
+    }
+
+    await prisma.usuario.delete({
+      where: {
+        id: Number(id)
+      }
+    })
+
+    res.json({
+      message: "Usuário removido com sucesso"
+    })
+  } catch (error) {
+    console.error("Erro ao deletar usuário:", error)
+    res.status(500).json({
+      error: "Erro ao deletar usuário"
+    })
+  }
+}
