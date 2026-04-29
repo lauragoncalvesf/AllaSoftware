@@ -1,5 +1,103 @@
 import prisma from "../config/prisma.js"
 
+const calcularStatusConta = (valorTotal, valorPago, vencimento) => {
+  if (valorPago >= valorTotal) return "pago"
+
+  const agora = new Date()
+
+  if (vencimento && new Date(vencimento) < agora) {
+    return "vencido"
+  }
+
+  if (valorPago > 0) return "parcial"
+
+  return "pendente"
+}
+
+const getPeriodoMes = (data = new Date()) => {
+  const inicio = new Date(data.getFullYear(), data.getMonth(), 1, 0, 0, 0, 0)
+  const fim = new Date(
+    data.getFullYear(),
+    data.getMonth() + 1,
+    0,
+    23,
+    59,
+    59,
+    999
+  )
+
+  return { inicio, fim }
+}
+
+const obterOuCriarContaMensal = async ({
+  tx,
+  clienteId,
+  empresaId,
+  totalFinal,
+  valorPago,
+  vencimento
+}) => {
+  const hoje = new Date()
+  const { inicio, fim } = getPeriodoMes(hoje)
+
+  let conta = await tx.contaReceber.findFirst({
+    where: {
+      clienteId: Number(clienteId),
+      empresaId,
+      status: {
+        in: ["pendente", "parcial", "vencido"]
+      },
+      createdAt: {
+        gte: inicio,
+        lte: fim
+      }
+    }
+  })
+
+  const dataVencimento =
+    vencimento ||
+    new Date(hoje.getFullYear(), hoje.getMonth() + 1, 0, 23, 59, 59, 999)
+
+  if (!conta) {
+    return await tx.contaReceber.create({
+      data: {
+        clienteId: Number(clienteId),
+        empresaId,
+        descricao: `Conta mensal - ${String(hoje.getMonth() + 1).padStart(
+          2,
+          "0"
+        )}/${hoje.getFullYear()}`,
+        valorTotal: Number(totalFinal),
+        valorPago: Number(valorPago),
+        status: calcularStatusConta(
+          Number(totalFinal),
+          Number(valorPago),
+          dataVencimento
+        ),
+        vencimento: dataVencimento
+      }
+    })
+  }
+
+  const novoValorTotal = Number(conta.valorTotal) + Number(totalFinal)
+  const novoValorPago = Number(conta.valorPago) + Number(valorPago)
+
+  return await tx.contaReceber.update({
+    where: {
+      id: conta.id
+    },
+    data: {
+      valorTotal: novoValorTotal,
+      valorPago: novoValorPago,
+      status: calcularStatusConta(
+        novoValorTotal,
+        novoValorPago,
+        conta.vencimento
+      )
+    }
+  })
+}
+
 // Criar venda
 export const criarVenda = async (req, res) => {
   try {
@@ -10,8 +108,7 @@ export const criarVenda = async (req, res) => {
       itens,
       formaPagamento,
       valorPago,
-      vencimento,
-      descricaoConta
+      vencimento
     } = req.body || {}
 
     if (!itens || !Array.isArray(itens) || itens.length === 0) {
@@ -119,21 +216,18 @@ export const criarVenda = async (req, res) => {
       })
     }
 
-    // Regra: sem cliente, só pode venda totalmente paga
     if (!clienteId && valorPagoFinal < totalFinal) {
       return res.status(400).json({
         error: "Venda sem cliente só pode ser finalizada com pagamento total"
       })
     }
 
-    // Se houve pagamento, forma de pagamento é obrigatória
     if (valorPagoFinal > 0 && !formaPagamento) {
       return res.status(400).json({
         error: "Forma de pagamento é obrigatória quando houver valor pago"
       })
     }
 
-    // Se existir cliente informado, validar se pertence à empresa
     if (clienteId) {
       const cliente = await prisma.cliente.findFirst({
         where: {
@@ -150,10 +244,24 @@ export const criarVenda = async (req, res) => {
     }
 
     const venda = await prisma.$transaction(async (tx) => {
+      let contaMensal = null
+
+      if (valorRestante > 0 && clienteId) {
+        contaMensal = await obterOuCriarContaMensal({
+          tx,
+          clienteId,
+          empresaId: req.empresaId,
+          totalFinal,
+          valorPago: valorPagoFinal,
+          vencimento: vencimento ? new Date(vencimento) : null
+        })
+      }
+
       const novaVenda = await tx.venda.create({
         data: {
           clienteId: clienteId ? Number(clienteId) : null,
           empresaId: req.empresaId,
+          contaReceberId: contaMensal ? contaMensal.id : null,
           tipoPreco: tipoPreco || "varejo",
           desconto: Number(descontoFinal),
           totalBruto: Number(totalBruto),
@@ -164,21 +272,20 @@ export const criarVenda = async (req, res) => {
           }
         },
         include: {
-          itens: true
+          itens: true,
+          contaReceber: true
         }
       })
 
       let transacao = null
-      let contaReceber = null
 
-      // Se pagou algo, cria transação financeira
       if (valorPagoFinal > 0) {
         transacao = await tx.transacao.create({
           data: {
             tipo: "entrada",
             valor: Number(valorPagoFinal),
             categoria: "venda",
-            descricao: `Venda #${novaVenda.id}`,
+            descricao: `Pagamento da venda #${novaVenda.id}`,
             formaPagamento: formaPagamento || null,
             status: "ativa",
             empresaId: req.empresaId
@@ -186,43 +293,19 @@ export const criarVenda = async (req, res) => {
         })
       }
 
-      // Se sobrou algo e tem cliente, cria conta a receber
-      if (valorRestante > 0 && clienteId) {
-        const dataVencimento = vencimento ? new Date(vencimento) : null
-
-        let statusConta = "pendente"
-        if (valorPagoFinal > 0 && valorPagoFinal < totalFinal) {
-          statusConta = "parcial"
-        }
-
-        contaReceber = await tx.contaReceber.create({
+      if (contaMensal && valorPagoFinal > 0) {
+        await tx.pagamentoContaReceber.create({
           data: {
-            clienteId: Number(clienteId),
+            contaReceberId: contaMensal.id,
             empresaId: req.empresaId,
-            descricao:
-              descricaoConta ||
-              `Saldo restante da venda #${novaVenda.id}`,
-            valorTotal: Number(totalFinal),
-            valorPago: Number(valorPagoFinal),
-            status: statusConta,
-            vencimento: dataVencimento
+            valor: Number(valorPagoFinal),
+            formaPagamento: formaPagamento || null,
+            descricao: `Entrada da venda #${novaVenda.id}`
           }
         })
+      }
 
-        // se houve entrada parcial, também registra em pagamentoContaReceber
-        if (valorPagoFinal > 0) {
-          await tx.pagamentoContaReceber.create({
-            data: {
-              contaReceberId: contaReceber.id,
-              empresaId: req.empresaId,
-              valor: Number(valorPagoFinal),
-              formaPagamento: formaPagamento || null,
-              descricao: `Entrada inicial da venda #${novaVenda.id}`
-            }
-          })
-        }
-
-        // atualiza status do cliente
+      if (clienteId) {
         const contasDoCliente = await tx.contaReceber.findMany({
           where: {
             clienteId: Number(clienteId),
@@ -230,11 +313,8 @@ export const criarVenda = async (req, res) => {
           }
         })
 
-        const temPendencia = contasDoCliente.some(
-          (conta) =>
-            conta.status === "pendente" ||
-            conta.status === "parcial" ||
-            conta.status === "vencido"
+        const temPendencia = contasDoCliente.some((conta) =>
+          ["pendente", "parcial", "vencido"].includes(conta.status)
         )
 
         await tx.cliente.update({
@@ -250,7 +330,7 @@ export const criarVenda = async (req, res) => {
       return {
         ...novaVenda,
         transacaoFinanceira: transacao,
-        contaReceberGerada: contaReceber
+        contaReceberGerada: contaMensal
       }
     })
 
@@ -271,7 +351,8 @@ export const listarVendas = async (req, res) => {
         empresaId: req.empresaId
       },
       include: {
-        itens: true
+        itens: true,
+        contaReceber: true
       },
       orderBy: {
         createdAt: "desc"

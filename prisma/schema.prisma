@@ -67,6 +67,7 @@ model ContaReceber {
 
   cliente     Cliente  @relation(fields: [clienteId], references: [id])
   pagamentos  PagamentoContaReceber[]
+  vendas Venda[]
 }
 
 model PagamentoContaReceber {
@@ -105,17 +106,19 @@ model Produto {
 }
 
 model Venda {
-  id          Int         @id @default(autoincrement())
-  clienteId   Int?
-  empresaId   Int
-  tipoPreco   String      @default("varejo")
-  desconto    Float       @default(0)
-  totalBruto  Float
-  totalFinal  Float
-  status      String      @default("fechada")
-  createdAt   DateTime    @default(now())
+  id             Int         @id @default(autoincrement())
+  clienteId      Int?
+  empresaId      Int
+  contaReceberId Int?
+  tipoPreco      String      @default("varejo")
+  desconto       Float       @default(0)
+  totalBruto     Float
+  totalFinal     Float
+  status         String      @default("fechada")
+  createdAt      DateTime    @default(now())
 
-  itens       ItemVenda[]
+  itens          ItemVenda[]
+  contaReceber   ContaReceber? @relation(fields: [contaReceberId], references: [id])
 }
 
 model ItemVenda {

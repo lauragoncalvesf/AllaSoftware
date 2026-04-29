@@ -180,20 +180,33 @@ export const detalharCliente = async (req, res) => {
         empresaId: req.empresaId
       },
       include: {
-        itens: true
+        itens: true,
+        contaReceber: true
       },
       orderBy: {
         createdAt: "desc"
       }
     })
-
+    
     const contasReceber = await prisma.contaReceber.findMany({
       where: {
         clienteId: Number(id),
         empresaId: req.empresaId
       },
       include: {
-        pagamentos: true
+        pagamentos: {
+          orderBy: {
+            createdAt: "desc"
+          }
+        },
+        vendas: {
+          include: {
+            itens: true
+          },
+          orderBy: {
+            createdAt: "asc"
+          }
+        }
       },
       orderBy: {
         createdAt: "desc"
@@ -209,37 +222,31 @@ export const detalharCliente = async (req, res) => {
       }))
     )
 
-    pagamentos.sort(
-      (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
-    )
+    pagamentos.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
 
-    const totalComprado = vendas.reduce(
-      (total, venda) => total + Number(venda.totalFinal || 0),
-      0
-    )
+    const totalComprado = vendas.reduce((total, venda) => {
+      return total + Number(venda.totalFinal || 0)
+    }, 0)
 
-    const totalPago = pagamentos.reduce(
-      (total, pagamento) => total + Number(pagamento.valor || 0),
-      0
-    )
+    const totalPago = contasReceber.reduce((total, conta) => {
+      return total + Number(conta.valorPago || 0)
+    }, 0)
 
-    const totalEmAberto = contasReceber.reduce(
-      (total, conta) => total + (Number(conta.valorTotal) - Number(conta.valorPago)),
-      0
-    )
+    const totalEmAberto = contasReceber.reduce((total, conta) => {
+      return total + (Number(conta.valorTotal || 0) - Number(conta.valorPago || 0))
+    }, 0)
 
     const totalVencido = contasReceber
       .filter((conta) => conta.status === "vencido")
-      .reduce(
-        (total, conta) => total + (Number(conta.valorTotal) - Number(conta.valorPago)),
-        0
-      )
+      .reduce((total, conta) => {
+        return total + (Number(conta.valorTotal || 0) - Number(conta.valorPago || 0))
+      }, 0)
 
     const produtosComprados = []
     const servicosRealizados = []
 
     for (const venda of vendas) {
-      for (const item of venda.itens) {
+      for (const item of venda.itens || []) {
         const itemFormatado = {
           vendaId: venda.id,
           nomeItem: item.nomeItem,
@@ -267,24 +274,30 @@ export const detalharCliente = async (req, res) => {
         valor: null,
         data: cliente.createdAt
       },
+
       ...vendas.map((venda) => ({
         tipo: "venda",
         titulo: `Venda #${venda.id}`,
-        descricao: `${venda.itens.length} item(ns)`,
+        descricao: `${venda.itens?.length || 0} item(ns)`,
         valor: venda.totalFinal,
         data: venda.createdAt
       })),
+
       ...contasReceber.map((conta) => ({
         tipo: "conta_receber",
-        titulo: `Conta a receber #${conta.id}`,
-        descricao: conta.descricao || "Conta criada",
-        valor: Number(conta.valorTotal) - Number(conta.valorPago),
+        titulo: conta.descricao || `Conta #${conta.id}`,
+        descricao: `Status: ${conta.status}`,
+        valor: Number(conta.valorTotal || 0) - Number(conta.valorPago || 0),
         data: conta.createdAt
       })),
+
       ...pagamentos.map((pagamento) => ({
         tipo: "pagamento",
         titulo: `Pagamento da conta #${pagamento.contaReceberId}`,
-        descricao: pagamento.descricao || pagamento.contaDescricao || "Pagamento recebido",
+        descricao:
+          pagamento.descricao ||
+          pagamento.contaDescricao ||
+          "Pagamento recebido",
         valor: pagamento.valor,
         data: pagamento.createdAt
       }))
@@ -307,10 +320,11 @@ export const detalharCliente = async (req, res) => {
       pagamentos,
       historico
     })
-  } catch (error) {
-    console.error(error)
-    res.status(500).json({
-      error: "Erro ao detalhar cliente"
-    })
-  }
-}
+} catch (error) {
+  console.error("Erro ao detalhar cliente:", error)
+
+  res.status(500).json({
+    error: "Erro ao detalhar cliente",
+    detalhes: error.message
+  })
+}}

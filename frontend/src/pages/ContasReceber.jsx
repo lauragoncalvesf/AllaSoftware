@@ -1,9 +1,11 @@
 import { useEffect, useMemo, useState } from "react"
+import { useNavigate } from "react-router-dom"
 import AppLayout from "../layouts/AppLayout"
 import api from "../services/api"
 import ClienteSearchSelect from "../components/ClienteSearchSelect"
 
 export default function ContasReceber() {
+  const navigate = useNavigate()
   const usuario = JSON.parse(localStorage.getItem("usuario"))
   const isAdmin = usuario?.role === "admin"
 
@@ -103,7 +105,17 @@ export default function ContasReceber() {
 
   const salvarNovaConta = async (e) => {
     e.preventDefault()
-
+  
+    if (!novaConta.clienteId) {
+      alert("Selecione um cliente para criar a conta.")
+      return
+    }
+  
+    if (!novaConta.valorTotal || Number(novaConta.valorTotal) <= 0) {
+      alert("Informe um valor total válido.")
+      return
+    }
+  
     try {
       await api.post("/contas-receber", {
         clienteId: Number(novaConta.clienteId),
@@ -111,47 +123,55 @@ export default function ContasReceber() {
         valorTotal: Number(novaConta.valorTotal),
         vencimento: novaConta.vencimento || null
       })
-
+  
       setNovaConta({
         clienteId: "",
         descricao: "",
         valorTotal: "",
         vencimento: ""
       })
-      setBuscaClienteNovaConta("")
-      setMostrarSugestoesNovaConta(false)
-
+  
       setMostrarNovaContaModal(false)
       carregarDados()
     } catch (error) {
       console.error("Erro ao criar conta:", error)
+      console.error("Resposta do backend:", error.response?.data)
+  
       alert(error.response?.data?.error || "Erro ao criar conta")
     }
   }
 
   const registrarPagamento = async (e) => {
     e.preventDefault()
-
+  
     if (!contaSelecionada) return
-
+  
+    if (!pagamento.valor || Number(pagamento.valor) <= 0) {
+      alert("Informe um valor de pagamento válido.")
+      return
+    }
+  
     try {
-      await api.post(`/contas-receber/${contaSelecionada.id}/pagamento`, {
+      await api.post(`/contas-receber/${contaSelecionada.id}/pagamentos`, {
         valor: Number(pagamento.valor),
         formaPagamento: pagamento.formaPagamento || null,
         descricao: pagamento.descricao || null
       })
-
+  
       setPagamento({
         valor: "",
         formaPagamento: "",
         descricao: ""
       })
-
+  
       setContaSelecionada(null)
       setMostrarPagamentoModal(false)
       carregarDados()
     } catch (error) {
       console.error("Erro ao registrar pagamento:", error)
+      console.error("Resposta do backend:", error.response?.data)
+      console.error("Status:", error.response?.status)
+  
       alert(error.response?.data?.error || "Erro ao registrar pagamento")
     }
   }
@@ -299,9 +319,13 @@ export default function ContasReceber() {
                     className="grid grid-cols-12 gap-4 px-6 py-5 border-b border-gray-100 last:border-b-0"
                   >
                     <div className="col-span-3">
-                      <p className="font-semibold text-[#2D2E47]">
-                        {conta.cliente?.nome || "Sem cliente"}
-                      </p>
+                    <button
+                      type="button"
+                      onClick={() => navigate(`/clientes/${conta.clienteId}/financeiro`)}
+                      className="font-semibold text-[#2D2E47] hover:text-[#2F8AA3] hover:underline text-left"
+                    >
+                      {conta.cliente?.nome || "Sem cliente"}
+                    </button>
                       <p className="text-sm text-gray-500">
                         Conta #{conta.id}
                       </p>

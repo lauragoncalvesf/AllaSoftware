@@ -15,7 +15,7 @@ import ClienteDetalhe from "./pages/ClienteDetalhe"
 import Servicos from "./pages/Servicos"
 import Produtos from "./pages/Produtos"
 import Vendas from "./pages/Vendas"
-
+import ClienteFinanceiro from "./pages/ClienteFinanceiro" 
 
 
 function App() {
@@ -94,6 +94,15 @@ function App() {
           element={
             <PrivateRoute>
               <ContasReceber />
+            </PrivateRoute>
+          }
+        />
+
+        <Route
+          path="/clientes/:id/financeiro"
+          element={
+            <PrivateRoute>
+              <ClienteFinanceiro />
             </PrivateRoute>
           }
         />
