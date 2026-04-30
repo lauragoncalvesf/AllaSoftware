@@ -1,4 +1,5 @@
 import prisma from "../config/prisma.js"
+import bcrypt from "bcryptjs"
 
 // Criar cliente
 export const criarCliente = async (req, res) => {
@@ -130,6 +131,7 @@ export const atualizarCliente = async (req, res) => {
 export const deletarCliente = async (req, res) => {
   try {
     const { id } = req.params
+    const { senhaConfirmacao } = req.body || {}
 
     const clienteExistente = await prisma.cliente.findFirst({
       where: {
@@ -144,10 +146,84 @@ export const deletarCliente = async (req, res) => {
       })
     }
 
-    await prisma.cliente.delete({
+    // Verificar se tem contas pendentes/parciais/vencidas
+    const contasPendentes = await prisma.contaReceber.findMany({
       where: {
-        id: Number(id)
+        clienteId: Number(id),
+        empresaId: req.empresaId,
+        status: {
+          in: ["pendente", "parcial", "vencido"]
+        }
       }
+    })
+
+    // Se tem contas pendentes, exigir confirmação com senha
+    if (contasPendentes.length > 0) {
+      if (!senhaConfirmacao) {
+        return res.status(400).json({
+          error: "Cliente possui contas pendentes",
+          temContasPendentes: true,
+          mensagem: `Este cliente tem ${contasPendentes.length} conta(s) pendente(s). Para deletá-lo, você precisa confirmar digitando sua senha.`,
+          requerSenha: true
+        })
+      }
+
+      // Validar a senha do usuário autenticado
+      const usuario = await prisma.usuario.findFirst({
+        where: {
+          id: req.usuarioId,
+          empresaId: req.empresaId
+        }
+      })
+
+      if (!usuario) {
+        return res.status(401).json({
+          error: "Usuário não encontrado"
+        })
+      }
+
+      const senhaValida = await bcrypt.compare(senhaConfirmacao, usuario.senha)
+
+      if (!senhaValida) {
+        return res.status(401).json({
+          error: "Senha incorreta"
+        })
+      }
+    }
+
+    // Deletar em cascata: pagamentos → contas → cliente
+    await prisma.$transaction(async (tx) => {
+      // 1. Encontrar todas as contas desse cliente
+      const contasDoCliente = await tx.contaReceber.findMany({
+        where: {
+          clienteId: Number(id),
+          empresaId: req.empresaId
+        }
+      })
+
+      // 2. Deletar todos os pagamentos dessas contas
+      for (const conta of contasDoCliente) {
+        await tx.pagamentoContaReceber.deleteMany({
+          where: {
+            contaReceberId: conta.id
+          }
+        })
+      }
+
+      // 3. Deletar todas as contas do cliente
+      await tx.contaReceber.deleteMany({
+        where: {
+          clienteId: Number(id),
+          empresaId: req.empresaId
+        }
+      })
+
+      // 4. Deletar o cliente
+      await tx.cliente.delete({
+        where: {
+          id: Number(id)
+        }
+      })
     })
 
     res.json({ message: "Cliente deletado com sucesso" })
@@ -180,8 +256,7 @@ export const detalharCliente = async (req, res) => {
         empresaId: req.empresaId
       },
       include: {
-        itens: true,
-        contaReceber: true
+        itens: true
       },
       orderBy: {
         createdAt: "desc"
@@ -213,16 +288,21 @@ export const detalharCliente = async (req, res) => {
       }
     })
 
-    const pagamentos = contasReceber.flatMap((conta) =>
-      conta.pagamentos.map((pagamento) => ({
-        ...pagamento,
-        contaReceberId: conta.id,
-        contaDescricao: conta.descricao,
-        vencimento: conta.vencimento
-      }))
-    )
-
-    pagamentos.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+    // Buscar pagamentos diretamente com relação correta
+    const pagamentos = await prisma.pagamentoContaReceber.findMany({
+      where: {
+        contaReceber: {
+          clienteId: Number(id),
+          empresaId: req.empresaId
+        }
+      },
+      include: {
+        contaReceber: true
+      },
+      orderBy: {
+        createdAt: "desc"
+      }
+    })
 
     const totalComprado = vendas.reduce((total, venda) => {
       return total + Number(venda.totalFinal || 0)
@@ -293,10 +373,10 @@ export const detalharCliente = async (req, res) => {
 
       ...pagamentos.map((pagamento) => ({
         tipo: "pagamento",
-        titulo: `Pagamento da conta #${pagamento.contaReceberId}`,
+        titulo: `Pagamento da conta`,
         descricao:
           pagamento.descricao ||
-          pagamento.contaDescricao ||
+          pagamento.contaReceber.descricao ||
           "Pagamento recebido",
         valor: pagamento.valor,
         data: pagamento.createdAt

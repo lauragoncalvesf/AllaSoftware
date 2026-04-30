@@ -15,6 +15,10 @@ export default function Clientes() {
 
   const [mostrarNovoModal, setMostrarNovoModal] = useState(false)
   const [mostrarEditarModal, setMostrarEditarModal] = useState(false)
+  const [mostrarModalConfirmacao, setMostrarModalConfirmacao] = useState(false)
+  const [senhaConfirmacao, setSenhaConfirmacao] = useState("")
+  const [clienteParaDeletar, setClienteParaDeletar] = useState(null)
+  const [mensagemConfirmacao, setMensagemConfirmacao] = useState("")
 
   const [novoCliente, setNovoCliente] = useState({
     nome: "",
@@ -135,15 +139,49 @@ export default function Clientes() {
   }
 
   const excluirCliente = async (id, nome) => {
-    const confirmar = window.confirm(`Deseja excluir o cliente "${nome}"?`)
-    if (!confirmar) return
+    // const confirmar = window.confirm(`Deseja excluir o cliente "${nome}"?`)
+    // if (!confirmar) return
 
     try {
       await api.delete(`/clientes/${id}`)
       carregarClientes()
     } catch (error) {
+      const dados = error.response?.data || {}
+      
+      // Se tem contas pendentes, pedir confirmação com senha
+      if (dados.temContasPendentes) {
+        setClienteParaDeletar({ id, nome })
+        setMensagemConfirmacao(dados.mensagem || "Este cliente tem contas pendentes. Digite sua senha para confirmar a exclusão.")
+        setMostrarModalConfirmacao(true)
+      } else {
+        console.error("Erro ao excluir cliente:", error)
+        alert(dados.error || "Erro ao excluir cliente")
+      }
+    }
+  }
+
+  const confirmarExclusaoComSenha = async () => {
+    if (!senhaConfirmacao) {
+      alert("Digite sua senha para confirmar")
+      return
+    }
+
+    try {
+      await api.delete(`/clientes/${clienteParaDeletar.id}`, {
+        data: {
+          senhaConfirmacao
+        }
+      })
+      
+      setMostrarModalConfirmacao(false)
+      setSenhaConfirmacao("")
+      setClienteParaDeletar(null)
+      carregarClientes()
+      alert("Cliente excluído com sucesso")
+    } catch (error) {
       console.error("Erro ao excluir cliente:", error)
       alert(error.response?.data?.error || "Erro ao excluir cliente")
+      setSenhaConfirmacao("")
     }
   }
 
@@ -575,6 +613,59 @@ export default function Clientes() {
               </button>
             </div>
           </form>
+        </Modal>
+      )}
+
+      {/* Modal Confirmação com Senha */}
+      {mostrarModalConfirmacao && (
+        <Modal
+          titulo="Confirmar exclusão"
+          onClose={() => {
+            setMostrarModalConfirmacao(false)
+            setSenhaConfirmacao("")
+          }}
+        >
+          <div className="space-y-4">
+            <p className="text-gray-600">{mensagemConfirmacao}</p>
+
+            <div>
+              <label className="block text-sm font-medium text-[#2D2E47] mb-2">
+                Sua senha
+              </label>
+              <input
+                type="password"
+                value={senhaConfirmacao}
+                onChange={(e) => setSenhaConfirmacao(e.target.value)}
+                placeholder="Digite sua senha para confirmar"
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") confirmarExclusaoComSenha()
+                }}
+                className="w-full border border-gray-200 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-[#3E7996]"
+                autoFocus
+              />
+            </div>
+
+            <div className="flex justify-end gap-3 pt-2">
+              <button
+                type="button"
+                onClick={() => {
+                  setMostrarModalConfirmacao(false)
+                  setSenhaConfirmacao("")
+                }}
+                className="px-5 py-2.5 rounded-xl border border-gray-200 text-gray-600 hover:bg-gray-50"
+              >
+                Cancelar
+              </button>
+
+              <button
+                type="button"
+                onClick={confirmarExclusaoComSenha}
+                className="px-5 py-2.5 rounded-xl bg-red-600 text-white hover:opacity-90"
+              >
+                Deletar cliente
+              </button>
+            </div>
+          </div>
         </Modal>
       )}
     </AppLayout>

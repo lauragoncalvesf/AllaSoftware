@@ -276,28 +276,38 @@ export default function ClienteFinanceiro() {
             <div className="p-6 text-gray-500">Nenhum histórico encontrado.</div>
           ) : (
             <div className="divide-y divide-gray-100">
-              {historico.map((evento, index) => (
-                <div
-                  key={`${evento.tipo}-${index}-${evento.data}`}
-                  className="px-5 py-4 flex flex-col md:flex-row md:items-center md:justify-between gap-3"
-                >
-                  <div>
-                    <p className="font-medium text-[#2D2E47]">
-                      {evento.titulo}
-                    </p>
-                    <p className="text-sm text-gray-500 mt-1">
-                      {evento.descricao}
-                    </p>
-                    <p className="text-xs text-gray-400 mt-1">
-                      {formatarDataHora(evento.data)}
-                    </p>
-                  </div>
+              {historico.map((evento, index) => {
+                const { corBg, corTexto, icone } = obterEstiloHistorico(evento.tipo)
+                
+                return (
+                  <div
+                    key={`${evento.tipo}-${index}-${evento.data}`}
+                    className="px-5 py-4 flex flex-col md:flex-row md:items-center md:justify-between gap-3"
+                  >
+                    <div className="flex items-start gap-3">
+                      <div className={`${corBg} p-2 rounded-lg`}>
+                        <span className="text-xl">{icone}</span>
+                      </div>
+                      
+                      <div>
+                        <p className="font-medium text-[#2D2E47]">
+                          {evento.titulo}
+                        </p>
+                        <p className="text-sm text-gray-500 mt-1">
+                          {evento.descricao}
+                        </p>
+                        <p className="text-xs text-gray-400 mt-1">
+                          {formatarDataHora(evento.data)}
+                        </p>
+                      </div>
+                    </div>
 
-                  <div className="font-semibold text-[#2D2E47]">
-                    {evento.valor !== null ? formatarMoeda(evento.valor) : "-"}
+                    <div className={`font-semibold text-lg ${corTexto}`}>
+                      {evento.valor !== null ? formatarMoeda(evento.valor) : "-"}
+                    </div>
                   </div>
-                </div>
-              ))}
+                )
+              })}
             </div>
           )}
         </div>
@@ -315,6 +325,33 @@ function formatarFormaPagamento(forma) {
   }
 
   return formas[forma] || "Não informado"
+}
+
+function obterEstiloHistorico(tipo) {
+  const estilos = {
+    venda: {
+      corBg: "bg-emerald-100",
+      corTexto: "text-emerald-600",
+      icone: "📦"
+    },
+    pagamento: {
+      corBg: "bg-blue-100",
+      corTexto: "text-blue-600",
+      icone: "💳"
+    },
+    conta_receber: {
+      corBg: "bg-red-100",
+      corTexto: "text-red-600",
+      icone: "⚠️"
+    },
+    cliente_cadastrado: {
+      corBg: "bg-purple-100",
+      corTexto: "text-purple-600",
+      icone: "👤"
+    }
+  }
+
+  return estilos[tipo] || { corBg: "bg-gray-100", corTexto: "text-gray-600", icone: "📋" }
 }
 
 function Badge({ texto }) {
