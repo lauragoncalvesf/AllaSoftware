@@ -1,12 +1,16 @@
 import { useEffect, useMemo, useState } from "react"
+import { useSearchParams } from "react-router-dom"
 import AppLayout from "../layouts/AppLayout"
 import api from "../services/api"
 import ClienteSearchSelect from "../components/ClienteSearchSelect"
 
 export default function Vendas() {
+
   const [clientes, setClientes] = useState([])
   const [produtos, setProdutos] = useState([])
   const [servicos, setServicos] = useState([])
+
+  const [searchParams] = useSearchParams()
 
   const [clienteId, setClienteId] = useState("")
   const [buscaCliente, setBuscaCliente] = useState("")
@@ -29,6 +33,19 @@ export default function Vendas() {
   useEffect(() => {
     carregarDados()
   }, [])
+
+  useEffect(() => {
+    const clienteIdUrl = searchParams.get("clienteId")
+    const clienteNomeUrl = searchParams.get("clienteNome")
+
+    if (clienteIdUrl) {
+      setClienteId(clienteIdUrl)
+    }
+
+    if (clienteNomeUrl) {
+      setBuscaCliente(clienteNomeUrl)
+    }
+}, [searchParams])
 
   const carregarDados = async () => {
     try {
@@ -119,10 +136,10 @@ export default function Vendas() {
   }
 
   const salvarVenda = async () => {
-    if (itens.length === 0) {
+    /*if (itens.length === 0) {
       alert("Adicione pelo menos 1 item")
       return
-    }
+    }*/
 
     if (totalFinal < 0) {
       alert("O desconto não pode ser maior que o total da venda")
@@ -144,10 +161,10 @@ export default function Vendas() {
       return
     }
 
-    if (valorPagoNumero > 0 && !formaPagamento) {
+    /*if (valorPagoNumero > 0 && !formaPagamento) {
       alert("Selecione a forma de pagamento")
       return
-    }
+    }*/
 
     try {
       setSalvando(true)
@@ -156,7 +173,7 @@ export default function Vendas() {
         clienteId: clienteId ? Number(clienteId) : null,
         tipoPreco,
         desconto: Number(desconto || 0),
-        formaPagamento: valorPagoNumero > 0 ? formaPagamento : null,
+        formaPagamento: formaPagamento || null,
         valorPago: Number(valorPagoNumero),
         vencimento: valorRestante > 0 ? vencimento || null : null,
         descricaoConta: valorRestante > 0 ? descricaoConta || null : null,
@@ -208,13 +225,14 @@ export default function Vendas() {
             Cliente
           </label>
 
-          <ClienteSearchSelect
-            clientes={clientes}
-            clienteId={clienteId}
-            setClienteId={setClienteId}
-            placeholder="Digite o nome do cliente"
-            permitirSemCliente={true}
-          />
+        <ClienteSearchSelect
+          clientes={clientes}
+          clienteId={clienteId}
+          setClienteId={setClienteId}
+          buscaInicial={buscaCliente}
+          placeholder="Digite o nome do cliente"
+          permitirSemCliente={true}
+        />
 
           <p className="text-xs text-gray-500 mt-2">
             {clienteId

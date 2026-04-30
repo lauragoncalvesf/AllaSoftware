@@ -111,16 +111,18 @@ export const criarVenda = async (req, res) => {
       vencimento
     } = req.body || {}
 
-    if (!itens || !Array.isArray(itens) || itens.length === 0) {
+    /*if (!itens || !Array.isArray(itens) || itens.length === 0) {
       return res.status(400).json({
         error: "A venda precisa ter pelo menos 1 item"
       })
-    }
+    }*/
+
+   const itensRecebidos = Array.isArray(itens) ? itens : []
 
     let totalBruto = 0
     const itensProcessados = []
 
-    for (const item of itens) {
+    for (const item of itensRecebidos) {
       const { tipoItem, referenciaId, quantidade } = item
 
       if (!tipoItem || !referenciaId || !quantidade) {
@@ -222,11 +224,11 @@ export const criarVenda = async (req, res) => {
       })
     }
 
-    if (valorPagoFinal > 0 && !formaPagamento) {
+    /*if (valorPagoFinal > 0 && !formaPagamento) {
       return res.status(400).json({
         error: "Forma de pagamento é obrigatória quando houver valor pago"
       })
-    }
+    }*/
 
     if (clienteId) {
       const cliente = await prisma.cliente.findFirst({

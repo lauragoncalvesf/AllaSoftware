@@ -1,15 +1,20 @@
-import { useState, useMemo } from "react"
+import { useEffect, useState, useMemo } from "react"
 
 export default function ClienteSearchSelect({
   clientes = [],
   clienteId,
   setClienteId,
+  buscaInicial = "",
   placeholder = "Buscar cliente...",
   permitirSemCliente = true,
   onSelect
 }) {
   const [busca, setBusca] = useState("")
   const [mostrar, setMostrar] = useState(false)
+
+  useEffect(() => {
+    setBusca(buscaInicial)
+  } , [buscaInicial])
 
   const clientesFiltrados = useMemo(() => {
     return clientes.filter((cliente) =>

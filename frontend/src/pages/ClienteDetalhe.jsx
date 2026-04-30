@@ -120,10 +120,17 @@ export default function ClienteDetalhe() {
           </p>
         </div>
 
-        <div className="flex justify-end">
+        <div className="flex flex-col sm:flex-row justify-end gap-3">
+          <button
+            onClick={() => navigate(`/vendas?clienteId=${cliente.id}&clienteNome=${encodeURIComponent(cliente.nome)}`)}
+            className="bg-[#2F8AA3] text-white px-5 py-2.5 rounded-xl hover:opacity-90"
+          >
+            Realizar venda para este cliente
+          </button>
+
           <button
             onClick={() => navigate(`/clientes/${cliente.id}/financeiro`)}
-            className="bg-[#2F8AA3] text-white px-5 py-2.5 rounded-xl hover:opacity-90"
+            className="bg-white border border-gray-200 text-[#2D2E47] px-5 py-2.5 rounded-xl hover:bg-gray-50"
           >
             Ver financeiro do cliente
           </button>
