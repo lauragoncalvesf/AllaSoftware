@@ -2,6 +2,12 @@ import { useEffect, useState } from "react"
 import { useNavigate, useParams } from "react-router-dom"
 import AppLayout from "../layouts/AppLayout"
 import api from "../services/api"
+import { formatarMoeda, formatarData, formatarDataHora, formatarFormaPagamento } from "../utils/formatters"
+import Modal from "../components/Modal"
+import ResumoCard from "../components/ResumoCard"
+import StatusBadge from "../components/StatusBadge"
+import CampoInput from "../components/CampoInput"
+import CampoSelect from "../components/CampoSelect.jsx"
 
 export default function ClienteFinanceiro() {
   const { id } = useParams()
@@ -33,23 +39,6 @@ export default function ClienteFinanceiro() {
     } finally {
       setLoading(false)
     }
-  }
-
-  const formatarMoeda = (valor) => {
-    return Number(valor || 0).toLocaleString("pt-BR", {
-      style: "currency",
-      currency: "BRL"
-    })
-  }
-
-  const formatarData = (data) => {
-    if (!data) return "-"
-    return new Date(data).toLocaleDateString("pt-BR")
-  }
-
-  const formatarDataHora = (data) => {
-    if (!data) return "-"
-    return new Date(data).toLocaleString("pt-BR")
   }
 
   if (loading) {
@@ -94,50 +83,44 @@ export default function ClienteFinanceiro() {
   const ultimoPagamento = pagamentos?.[0]
 
   const abrirPagamento = (conta) => {
-  const saldo = Number(conta.valorTotal || 0) - Number(conta.valorPago || 0)
+    const saldo = Number(conta.valorTotal || 0) - Number(conta.valorPago || 0)
 
-  setContaSelecionada(conta)
-  setPagamento({
-    valor: saldo > 0 ? String(saldo) : "",
-    formaPagamento: "",
-    descricao: `Pagamento da ${conta.descricao || `conta #${conta.id}`}`
-  })
-
-  setMostrarPagamentoModal(true)
-}
-
-const registrarPagamento = async (e) => {
-  e.preventDefault()
-
-  if (!contaSelecionada) return
-
-  if (!pagamento.valor || Number(pagamento.valor) <= 0) {
-    alert("Informe um valor de pagamento válido.")
-    return
-  }
-
-  try {
-    await api.post(`/contas-receber/${contaSelecionada.id}/pagamentos`, {
-      valor: Number(pagamento.valor),
-      formaPagamento: pagamento.formaPagamento || null,
-      descricao: pagamento.descricao || null
-    })
-
+    setContaSelecionada(conta)
     setPagamento({
-      valor: "",
+      valor: saldo > 0 ? String(saldo) : "",
       formaPagamento: "",
-      descricao: ""
+      descricao: `Pagamento da ${conta.descricao || `conta #${conta.id}`}`
     })
 
-    setContaSelecionada(null)
-    setMostrarPagamentoModal(false)
-
-    carregarDados()
-  } catch (error) {
-    console.error("Erro ao registrar pagamento:", error)
-    alert(error.response?.data?.error || "Erro ao registrar pagamento")
+    setMostrarPagamentoModal(true)
   }
-}
+
+  const registrarPagamento = async (e) => {
+    e.preventDefault()
+
+    if (!contaSelecionada) return
+
+    if (!pagamento.valor || Number(pagamento.valor) <= 0) {
+      alert("Informe um valor de pagamento válido.")
+      return
+    }
+
+    try {
+      await api.post(`/contas-receber/${contaSelecionada.id}/pagamentos`, {
+        valor: Number(pagamento.valor),
+        formaPagamento: pagamento.formaPagamento || null,
+        descricao: pagamento.descricao || null
+      })
+
+      setPagamento({ valor: "", formaPagamento: "", descricao: "" })
+      setContaSelecionada(null)
+      setMostrarPagamentoModal(false)
+      carregarDados()
+    } catch (error) {
+      console.error("Erro ao registrar pagamento:", error)
+      alert(error.response?.data?.error || "Erro ao registrar pagamento")
+    }
+  }
 
   return (
     <AppLayout>
@@ -207,35 +190,36 @@ const registrarPagamento = async (e) => {
                       </h3>
 
                       <p className="text-sm text-gray-500 mt-1">
-                        Vencimento: {conta.vencimento ? formatarData(conta.vencimento) : "Sem vencimento"}
+                        Vencimento:{" "}
+                        {conta.vencimento ? formatarData(conta.vencimento) : "Sem vencimento"}
                       </p>
                     </div>
 
                     <div className="flex flex-wrap gap-2 text-sm items-center">
-                    <Badge texto={conta.status} />
+                      <StatusBadge status={conta.status} />
 
-                    <span className="px-3 py-1 rounded-full bg-gray-100 text-gray-600">
-                      Total: {formatarMoeda(conta.valorTotal)}
-                    </span>
+                      <span className="px-3 py-1 rounded-full bg-gray-100 text-gray-600">
+                        Total: {formatarMoeda(conta.valorTotal)}
+                      </span>
 
-                    <span className="px-3 py-1 rounded-full bg-emerald-100 text-emerald-700">
-                      Pago: {formatarMoeda(conta.valorPago)}
-                    </span>
+                      <span className="px-3 py-1 rounded-full bg-emerald-100 text-emerald-700">
+                        Pago: {formatarMoeda(conta.valorPago)}
+                      </span>
 
-                    <span className="px-3 py-1 rounded-full bg-amber-100 text-amber-700">
-                      Saldo: {formatarMoeda(saldo)}
-                    </span>
+                      <span className="px-3 py-1 rounded-full bg-amber-100 text-amber-700">
+                        Saldo: {formatarMoeda(saldo)}
+                      </span>
 
-                    {saldo > 0 && conta.status !== "pago" && (
-                      <button
-                        type="button"
-                        onClick={() => abrirPagamento(conta)}
-                        className="px-4 py-1.5 rounded-full bg-[#2F8AA3] text-white text-sm font-medium hover:opacity-90"
-                      >
-                        Pagar débito
-                      </button>
-                    )}
-                  </div>
+                      {saldo > 0 && conta.status !== "pago" && (
+                        <button
+                          type="button"
+                          onClick={() => abrirPagamento(conta)}
+                          className="px-4 py-1.5 rounded-full bg-[#2F8AA3] text-white text-sm font-medium hover:opacity-90"
+                        >
+                          Pagar débito
+                        </button>
+                      )}
+                    </div>
                   </div>
 
                   <div className="p-5 grid grid-cols-1 xl:grid-cols-2 gap-6">
@@ -302,23 +286,23 @@ const registrarPagamento = async (e) => {
                         </p>
                       ) : (
                         <div className="space-y-3">
-                          {conta.pagamentos.map((pagamento) => (
+                          {conta.pagamentos.map((pag) => (
                             <div
-                              key={pagamento.id}
+                              key={pag.id}
                               className="border border-gray-100 rounded-xl p-4 flex items-center justify-between gap-3"
                             >
                               <div>
                                 <p className="font-medium text-[#2D2E47]">
-                                  {pagamento.descricao || `Pagamento #${pagamento.id}`}
+                                  {pag.descricao || `Pagamento #${pag.id}`}
                                 </p>
                                 <p className="text-sm text-gray-500">
-                                  {formatarFormaPagamento(pagamento.formaPagamento)} •{" "}
-                                  {formatarDataHora(pagamento.createdAt)}
+                                  {formatarFormaPagamento(pag.formaPagamento)} •{" "}
+                                  {formatarDataHora(pag.createdAt)}
                                 </p>
                               </div>
 
                               <p className="font-semibold text-emerald-600">
-                                {formatarMoeda(pagamento.valor)}
+                                {formatarMoeda(pag.valor)}
                               </p>
                             </div>
                           ))}
@@ -345,7 +329,7 @@ const registrarPagamento = async (e) => {
             <div className="divide-y divide-gray-100">
               {historico.map((evento, index) => {
                 const { corBg, corTexto, icone } = obterEstiloHistorico(evento.tipo)
-                
+
                 return (
                   <div
                     key={`${evento.tipo}-${index}-${evento.data}`}
@@ -355,14 +339,10 @@ const registrarPagamento = async (e) => {
                       <div className={`${corBg} p-2 rounded-lg`}>
                         <span className="text-xl">{icone}</span>
                       </div>
-                      
+
                       <div>
-                        <p className="font-medium text-[#2D2E47]">
-                          {evento.titulo}
-                        </p>
-                        <p className="text-sm text-gray-500 mt-1">
-                          {evento.descricao}
-                        </p>
+                        <p className="font-medium text-[#2D2E47]">{evento.titulo}</p>
+                        <p className="text-sm text-gray-500 mt-1">{evento.descricao}</p>
                         <p className="text-xs text-gray-400 mt-1">
                           {formatarDataHora(evento.data)}
                         </p>
@@ -379,6 +359,7 @@ const registrarPagamento = async (e) => {
           )}
         </div>
       </div>
+
       {mostrarPagamentoModal && contaSelecionada && (
         <Modal
           titulo="Pagar débito"
@@ -404,12 +385,7 @@ const registrarPagamento = async (e) => {
               label="Valor do pagamento *"
               type="number"
               value={pagamento.valor}
-              onChange={(e) =>
-                setPagamento({
-                  ...pagamento,
-                  valor: e.target.value
-                })
-              }
+              onChange={(e) => setPagamento({ ...pagamento, valor: e.target.value })}
               placeholder="0,00"
               required
             />
@@ -417,12 +393,7 @@ const registrarPagamento = async (e) => {
             <CampoSelect
               label="Forma de pagamento"
               value={pagamento.formaPagamento}
-              onChange={(e) =>
-                setPagamento({
-                  ...pagamento,
-                  formaPagamento: e.target.value
-                })
-              }
+              onChange={(e) => setPagamento({ ...pagamento, formaPagamento: e.target.value })}
               options={[
                 { value: "", label: "Selecione" },
                 { value: "dinheiro", label: "Dinheiro" },
@@ -435,12 +406,7 @@ const registrarPagamento = async (e) => {
             <CampoInput
               label="Descrição"
               value={pagamento.descricao}
-              onChange={(e) =>
-                setPagamento({
-                  ...pagamento,
-                  descricao: e.target.value
-                })
-              }
+              onChange={(e) => setPagamento({ ...pagamento, descricao: e.target.value })}
               placeholder="Ex: pagamento no final do mês"
             />
 
@@ -467,140 +433,13 @@ const registrarPagamento = async (e) => {
   )
 }
 
-function formatarFormaPagamento(forma) {
-  const formas = {
-    dinheiro: "Dinheiro",
-    pix: "Pix",
-    cartao_credito: "Cartão de crédito",
-    cartao_debito: "Cartão de débito"
-  }
-
-  return formas[forma] || "Não informado"
-}
-
 function obterEstiloHistorico(tipo) {
   const estilos = {
-    venda: {
-      corBg: "bg-emerald-100",
-      corTexto: "text-emerald-600",
-      icone: "📦"
-    },
-    pagamento: {
-      corBg: "bg-blue-100",
-      corTexto: "text-blue-600",
-      icone: "💳"
-    },
-    conta_receber: {
-      corBg: "bg-red-100",
-      corTexto: "text-red-600",
-      icone: "⚠️"
-    },
-    cliente_cadastrado: {
-      corBg: "bg-purple-100",
-      corTexto: "text-purple-600",
-      icone: "👤"
-    }
+    venda:             { corBg: "bg-emerald-100", corTexto: "text-emerald-600", icone: "📦" },
+    pagamento:         { corBg: "bg-blue-100",    corTexto: "text-blue-600",    icone: "💳" },
+    conta_receber:     { corBg: "bg-red-100",     corTexto: "text-red-600",     icone: "⚠️" },
+    cliente_cadastrado:{ corBg: "bg-purple-100",  corTexto: "text-purple-600",  icone: "👤" }
   }
 
   return estilos[tipo] || { corBg: "bg-gray-100", corTexto: "text-gray-600", icone: "📋" }
-}
-
-function Badge({ texto }) {
-  const estilos = {
-    pendente: "bg-amber-100 text-amber-700",
-    parcial: "bg-blue-100 text-blue-700",
-    vencido: "bg-red-100 text-red-700",
-    pago: "bg-emerald-100 text-emerald-700"
-  }
-
-  return (
-    <span
-      className={`px-3 py-1 rounded-full text-sm font-semibold ${
-        estilos[texto] || "bg-gray-100 text-gray-600"
-      }`}
-    >
-      {texto}
-    </span>
-  )
-}
-
-function ResumoCard({ titulo, valor }) {
-  return (
-    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5">
-      <p className="text-sm text-gray-500">{titulo}</p>
-      <p className="text-2xl font-bold text-[#2D2E47] mt-2">{valor}</p>
-    </div>
-  )
-}
-
-function Modal({ titulo, children, onClose, largura = "max-w-2xl" }) {
-  return (
-    <div className="fixed inset-0 z-50 bg-black/35 flex items-center justify-center p-4">
-      <div
-        className={`w-full ${largura} bg-white rounded-2xl shadow-xl max-h-[90vh] overflow-y-auto`}
-      >
-        <div className="flex items-center justify-between px-6 py-5 border-b border-gray-100">
-          <h2 className="text-2xl font-bold text-[#2D2E47]">{titulo}</h2>
-
-          <button
-            type="button"
-            onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 text-2xl"
-          >
-            ×
-          </button>
-        </div>
-
-        <div className="p-6">{children}</div>
-      </div>
-    </div>
-  )
-}
-
-function CampoInput({
-  label,
-  value,
-  onChange,
-  placeholder,
-  type = "text",
-  required = false
-}) {
-  return (
-    <div>
-      <label className="block text-sm font-medium text-[#2D2E47] mb-2">
-        {label}
-      </label>
-
-      <input
-        type={type}
-        value={value}
-        onChange={onChange}
-        placeholder={placeholder}
-        required={required}
-        className="w-full border border-gray-200 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-[#3E7996]"
-      />
-    </div>
-  )
-}
-
-function CampoSelect({ label, value, onChange, options = [] }) {
-  return (
-    <div>
-      <label className="block text-sm font-medium text-[#2D2E47] mb-2">
-        {label}
-      </label>
-
-      <select
-        value={value}
-        onChange={onChange}
-        className="w-full border border-gray-200 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-[#3E7996]"
-      >
-        {options.map((option) => (
-          <option key={`${option.value}-${option.label}`} value={option.value}>
-            {option.label}
-          </option>
-        ))}
-      </select>
-    </div>
-  )
 }

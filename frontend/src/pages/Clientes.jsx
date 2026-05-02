@@ -2,6 +2,11 @@ import { useEffect, useMemo, useState } from "react"
 import { useNavigate } from "react-router-dom"
 import AppLayout from "../layouts/AppLayout"
 import api from "../services/api"
+import Modal from "../components/Modal"
+import ResumoCard from "../components/ResumoCard"
+import StatusBadge from "../components/StatusBadge"
+import CampoInput from "../components/CampoInput"
+import CampoTextarea from "../components/CampoTextarea"
 
 export default function Clientes() {
   const navigate = useNavigate()
@@ -105,13 +110,7 @@ export default function Clientes() {
     try {
       await api.post("/clientes", novoCliente)
 
-      setNovoCliente({
-        nome: "",
-        telefone: "",
-        email: "",
-        observacoes: "",
-      })
-
+      setNovoCliente({ nome: "", telefone: "", email: "", observacoes: "" })
       setMostrarNovoModal(false)
       carregarClientes()
     } catch (error) {
@@ -152,11 +151,12 @@ export default function Clientes() {
       carregarClientes()
     } catch (error) {
       const dados = error.response?.data || {}
-      
-      // Se tem contas pendentes, fechar modal simples e abrir com senha
+
       if (dados.temContasPendentes) {
         setMostrarModalSimples(false)
-        setMensagemConfirmacao(dados.mensagem || "Este cliente tem contas pendentes. Digite sua senha para confirmar a exclusão.")
+        setMensagemConfirmacao(
+          dados.mensagem || "Este cliente tem contas pendentes. Digite sua senha para confirmar a exclusão."
+        )
         setMostrarModalConfirmacao(true)
       } else {
         console.error("Erro ao excluir cliente:", error)
@@ -173,11 +173,9 @@ export default function Clientes() {
 
     try {
       await api.delete(`/clientes/${clienteParaDeletar.id}`, {
-        data: {
-          senhaConfirmacao
-        }
+        data: { senhaConfirmacao }
       })
-      
+
       setMostrarModalConfirmacao(false)
       setSenhaConfirmacao("")
       setClienteParaDeletar(null)
@@ -223,60 +221,41 @@ export default function Clientes() {
         {/* Busca + filtros */}
         <div className="flex flex-col xl:flex-row xl:items-center xl:justify-between gap-4">
           <div className="w-full xl:max-w-md">
-            <div className="relative">
-              <input
-                type="text"
-                placeholder="Buscar cliente..."
-                value={busca}
-                onChange={(e) => setBusca(e.target.value)}
-                className="w-full bg-white border border-gray-200 rounded-full pl-4 pr-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-[#3E7996] shadow-sm"
-              />
-            </div>
+            <input
+              type="text"
+              placeholder="Buscar cliente..."
+              value={busca}
+              onChange={(e) => setBusca(e.target.value)}
+              className="w-full bg-white border border-gray-200 rounded-full pl-4 pr-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-[#3E7996] shadow-sm"
+            />
           </div>
 
           <div className="flex flex-wrap items-center gap-2">
-            <button
-              type="button"
-              onClick={() => setStatus("")}
-              className={`px-3 py-1.5 rounded-full text-sm font-medium transition ${
-                status === ""
-                  ? "bg-[#2F8AA3] text-white"
-                  : "bg-white border border-gray-200 text-gray-600 hover:bg-gray-50"
-              }`}
-            >
-              Todos
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setStatus("em_dia")}
-              className={`px-3 py-1.5 rounded-full text-sm font-medium transition ${
-                status === "em_dia"
-                  ? "bg-[#2F8AA3] text-white"
-                  : "bg-white border border-gray-200 text-gray-600 hover:bg-gray-50"
-              }`}
-            >
-              Em dia
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setStatus("pendente")}
-              className={`px-3 py-1.5 rounded-full text-sm font-medium transition ${
-                status === "pendente"
-                  ? "bg-[#2F8AA3] text-white"
-                  : "bg-white border border-gray-200 text-gray-600 hover:bg-gray-50"
-              }`}
-            >
-              Pendente
-            </button>
+            {[
+              { label: "Todos", value: "" },
+              { label: "Em dia", value: "em_dia" },
+              { label: "Pendente", value: "pendente" },
+            ].map((filtro) => (
+              <button
+                key={filtro.value}
+                type="button"
+                onClick={() => setStatus(filtro.value)}
+                className={`px-3 py-1.5 rounded-full text-sm font-medium transition ${
+                  status === filtro.value
+                    ? "bg-[#2F8AA3] text-white"
+                    : "bg-white border border-gray-200 text-gray-600 hover:bg-gray-50"
+                }`}
+              >
+                {filtro.label}
+              </button>
+            ))}
 
             <button
               type="button"
               onClick={() => setOrdem(ordem === "asc" ? "desc" : "asc")}
               className="px-3 py-1.5 rounded-full text-sm font-medium bg-white border border-gray-200 text-gray-600 hover:bg-gray-50 transition"
             >
-              {ordem === "asc" ? "↑ " : "↓"}
+              {ordem === "asc" ? "↑" : "↓"}
             </button>
           </div>
         </div>
@@ -327,9 +306,7 @@ export default function Clientes() {
                   >
                     <div className="col-span-4 flex items-center gap-4 min-w-0">
                       <div
-                        className={`w-12 h-12 rounded-full flex items-center justify-center font-semibold shrink-0 ${getCorAvatar(
-                          index
-                        )}`}
+                        className={`w-12 h-12 rounded-full flex items-center justify-center font-semibold shrink-0 ${getCorAvatar(index)}`}
                       >
                         {getIniciais(cliente.nome)}
                       </div>
@@ -357,15 +334,7 @@ export default function Clientes() {
                     </div>
 
                     <div className="col-span-2 flex items-center">
-                      <span
-                        className={`text-xs font-semibold px-3 py-1 rounded-full ${
-                          cliente.status === "pendente"
-                            ? "bg-amber-100 text-amber-700"
-                            : "bg-emerald-100 text-emerald-700"
-                        }`}
-                      >
-                        {cliente.status === "pendente" ? "Pendente" : "Em dia"}
-                      </span>
+                      <StatusBadge status={cliente.status === "em_dia" ? "pago" : cliente.status} />
                     </div>
 
                     <div className="col-span-2 flex items-center justify-end gap-2">
@@ -396,9 +365,7 @@ export default function Clientes() {
                   >
                     <div className="flex items-start gap-4">
                       <div
-                        className={`w-12 h-12 rounded-full flex items-center justify-center font-semibold shrink-0 ${getCorAvatar(
-                          index
-                        )}`}
+                        className={`w-12 h-12 rounded-full flex items-center justify-center font-semibold shrink-0 ${getCorAvatar(index)}`}
                       >
                         {getIniciais(cliente.nome)}
                       </div>
@@ -412,15 +379,7 @@ export default function Clientes() {
                             {cliente.nome}
                           </button>
 
-                          <span
-                            className={`text-xs font-semibold px-3 py-1 rounded-full ${
-                              cliente.status === "pendente"
-                                ? "bg-amber-100 text-amber-700"
-                                : "bg-emerald-100 text-emerald-700"
-                            }`}
-                          >
-                            {cliente.status === "pendente" ? "Pendente" : "Em dia"}
-                          </span>
+                          <StatusBadge status={cliente.status === "em_dia" ? "pago" : cliente.status} />
                         </div>
 
                         <p className="text-sm text-gray-700 mt-2">
@@ -430,11 +389,11 @@ export default function Clientes() {
                           {cliente.email || "Sem email"}
                         </p>
 
-                        {cliente.observacoes ? (
+                        {cliente.observacoes && (
                           <p className="text-sm text-gray-500 mt-2">
                             {cliente.observacoes}
                           </p>
-                        ) : null}
+                        )}
 
                         <div className="flex gap-2 mt-4">
                           <button
@@ -458,9 +417,7 @@ export default function Clientes() {
               </div>
 
               <div className="px-6 py-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-sm text-gray-500 border-t border-gray-100">
-                <p>
-                  Mostrando {clientes.length} cliente(s)
-                </p>
+                <p>Mostrando {clientes.length} cliente(s)</p>
 
                 <div className="flex items-center gap-2">
                   <button className="px-4 py-2 rounded-lg border border-gray-200 text-gray-300 cursor-not-allowed">
@@ -486,9 +443,7 @@ export default function Clientes() {
             <CampoInput
               label="Nome completo *"
               value={novoCliente.nome}
-              onChange={(e) =>
-                setNovoCliente({ ...novoCliente, nome: e.target.value })
-              }
+              onChange={(e) => setNovoCliente({ ...novoCliente, nome: e.target.value })}
               placeholder="Digite o nome completo"
               required
             />
@@ -496,9 +451,7 @@ export default function Clientes() {
             <CampoInput
               label="Telefone"
               value={novoCliente.telefone}
-              onChange={(e) =>
-                setNovoCliente({ ...novoCliente, telefone: e.target.value })
-              }
+              onChange={(e) => setNovoCliente({ ...novoCliente, telefone: e.target.value })}
               placeholder="(11) 99999-9999"
             />
 
@@ -506,18 +459,14 @@ export default function Clientes() {
               label="Email"
               type="email"
               value={novoCliente.email}
-              onChange={(e) =>
-                setNovoCliente({ ...novoCliente, email: e.target.value })
-              }
+              onChange={(e) => setNovoCliente({ ...novoCliente, email: e.target.value })}
               placeholder="exemplo@email.com"
             />
 
             <CampoTextarea
               label="Observações"
               value={novoCliente.observacoes}
-              onChange={(e) =>
-                setNovoCliente({ ...novoCliente, observacoes: e.target.value })
-              }
+              onChange={(e) => setNovoCliente({ ...novoCliente, observacoes: e.target.value })}
               placeholder="Anotações sobre o cliente (opcional)"
             />
 
@@ -553,12 +502,7 @@ export default function Clientes() {
               <CampoInput
                 label="Nome completo *"
                 value={clienteEditando.nome}
-                onChange={(e) =>
-                  setClienteEditando({
-                    ...clienteEditando,
-                    nome: e.target.value,
-                  })
-                }
+                onChange={(e) => setClienteEditando({ ...clienteEditando, nome: e.target.value })}
                 placeholder="Digite o nome completo"
                 required
               />
@@ -566,12 +510,7 @@ export default function Clientes() {
               <CampoInput
                 label="Telefone"
                 value={clienteEditando.telefone}
-                onChange={(e) =>
-                  setClienteEditando({
-                    ...clienteEditando,
-                    telefone: e.target.value,
-                  })
-                }
+                onChange={(e) => setClienteEditando({ ...clienteEditando, telefone: e.target.value })}
                 placeholder="(11) 99999-9999"
               />
             </div>
@@ -580,24 +519,14 @@ export default function Clientes() {
               label="Email"
               type="email"
               value={clienteEditando.email}
-              onChange={(e) =>
-                setClienteEditando({
-                  ...clienteEditando,
-                  email: e.target.value,
-                })
-              }
+              onChange={(e) => setClienteEditando({ ...clienteEditando, email: e.target.value })}
               placeholder="exemplo@email.com"
             />
 
             <CampoTextarea
               label="Observações"
               value={clienteEditando.observacoes}
-              onChange={(e) =>
-                setClienteEditando({
-                  ...clienteEditando,
-                  observacoes: e.target.value,
-                })
-              }
+              onChange={(e) => setClienteEditando({ ...clienteEditando, observacoes: e.target.value })}
               placeholder="Anotações sobre o cliente"
             />
 
@@ -621,7 +550,7 @@ export default function Clientes() {
         </Modal>
       )}
 
-      {/* Modal Confirmação Simples (sem contas pendentes) */}
+      {/* Modal Confirmação Simples */}
       {mostrarModalSimples && (
         <Modal
           titulo="Confirmar exclusão"
@@ -632,11 +561,10 @@ export default function Clientes() {
         >
           <div className="space-y-4">
             <p className="text-gray-600">
-              Tem certeza que deseja excluir o cliente <strong>{clienteParaDeletar?.nome}</strong>?
+              Tem certeza que deseja excluir o cliente{" "}
+              <strong>{clienteParaDeletar?.nome}</strong>?
             </p>
-            <p className="text-sm text-gray-500">
-              Esta ação não pode ser desfeita.
-            </p>
+            <p className="text-sm text-gray-500">Esta ação não pode ser desfeita.</p>
 
             <div className="flex justify-end gap-3 pt-2">
               <button
@@ -662,7 +590,7 @@ export default function Clientes() {
         </Modal>
       )}
 
-      {/* Modal Confirmação com Senha (com contas pendentes) */}
+      {/* Modal Confirmação com Senha */}
       {mostrarModalConfirmacao && (
         <Modal
           titulo="Confirmar exclusão"
@@ -674,22 +602,13 @@ export default function Clientes() {
           <div className="space-y-4">
             <p className="text-gray-600">{mensagemConfirmacao}</p>
 
-            <div>
-              <label className="block text-sm font-medium text-[#2D2E47] mb-2">
-                Sua senha
-              </label>
-              <input
-                type="password"
-                value={senhaConfirmacao}
-                onChange={(e) => setSenhaConfirmacao(e.target.value)}
-                placeholder="Digite sua senha para confirmar"
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") confirmarExclusaoComSenha()
-                }}
-                className="w-full border border-gray-200 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-[#3E7996]"
-                autoFocus
-              />
-            </div>
+            <CampoInput
+              label="Sua senha"
+              type="password"
+              value={senhaConfirmacao}
+              onChange={(e) => setSenhaConfirmacao(e.target.value)}
+              placeholder="Digite sua senha para confirmar"
+            />
 
             <div className="flex justify-end gap-3 pt-2">
               <button
@@ -715,84 +634,5 @@ export default function Clientes() {
         </Modal>
       )}
     </AppLayout>
-  )
-}
-
-function ResumoCard({ titulo, valor, subtitulo, corIcone }) {
-  return (
-    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 flex items-start gap-4">
-      <div className={`w-12 h-12 rounded-full flex items-center justify-center text-lg font-bold ${corIcone}`}>
-        •
-      </div>
-
-      <div>
-        <p className="text-sm text-gray-500">{titulo}</p>
-        <p className="text-3xl font-bold text-[#2D2E47] mt-1">{valor}</p>
-        <p className="text-sm text-gray-400 mt-1">{subtitulo}</p>
-      </div>
-    </div>
-  )
-}
-
-function Modal({ titulo, children, onClose, largura = "max-w-xl" }) {
-  return (
-    <div className="fixed inset-0 z-50 bg-black/35 flex items-center justify-center p-4">
-      <div className={`w-full ${largura} bg-white rounded-2xl shadow-xl max-h-[90vh] overflow-y-auto`}>
-        <div className="flex items-center justify-between px-6 py-5 border-b border-gray-100">
-          <h2 className="text-2xl font-bold text-[#2D2E47]">{titulo}</h2>
-
-          <button
-            onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 text-2xl"
-          >
-            ×
-          </button>
-        </div>
-
-        <div className="p-6">{children}</div>
-      </div>
-    </div>
-  )
-}
-
-function CampoInput({
-  label,
-  value,
-  onChange,
-  placeholder,
-  type = "text",
-  required = false,
-}) {
-  return (
-    <div>
-      <label className="block text-sm font-medium text-[#2D2E47] mb-2">
-        {label}
-      </label>
-      <input
-        type={type}
-        value={value}
-        onChange={onChange}
-        placeholder={placeholder}
-        required={required}
-        className="w-full border border-gray-200 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-[#3E7996]"
-      />
-    </div>
-  )
-}
-
-function CampoTextarea({ label, value, onChange, placeholder }) {
-  return (
-    <div>
-      <label className="block text-sm font-medium text-[#2D2E47] mb-2">
-        {label}
-      </label>
-      <textarea
-        value={value}
-        onChange={onChange}
-        placeholder={placeholder}
-        rows={4}
-        className="w-full border border-gray-200 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-[#3E7996] resize-none"
-      />
-    </div>
   )
 }

@@ -2,6 +2,8 @@ import { useEffect, useState } from "react"
 import { useNavigate, useParams } from "react-router-dom"
 import AppLayout from "../layouts/AppLayout"
 import api from "../services/api"
+import { formatarData } from "../utils/formatters"
+import StatusBadge from "../components/StatusBadge"
 
 export default function ClienteDetalhe() {
   const { id } = useParams()
@@ -30,11 +32,6 @@ export default function ClienteDetalhe() {
     } finally {
       setLoading(false)
     }
-  }
-
-  const formatarData = (data) => {
-    if (!data) return "-"
-    return new Date(data).toLocaleDateString("pt-BR")
   }
 
   if (loading) {
@@ -89,15 +86,7 @@ export default function ClienteDetalhe() {
             </p>
           </div>
 
-          <span
-            className={`text-sm font-semibold px-4 py-2 rounded-full w-fit ${
-              cliente.status === "pendente"
-                ? "bg-amber-100 text-amber-700"
-                : "bg-emerald-100 text-emerald-700"
-            }`}
-          >
-            {cliente.status === "pendente" ? "Pendente" : "Em dia"}
-          </span>
+          <StatusBadge status={cliente.status === "em_dia" ? "pago" : cliente.status} />
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">

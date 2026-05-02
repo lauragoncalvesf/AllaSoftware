@@ -3,6 +3,8 @@ import { useSearchParams } from "react-router-dom"
 import AppLayout from "../layouts/AppLayout"
 import api from "../services/api"
 import ClienteSearchSelect from "../components/ClienteSearchSelect"
+import { formatarMoeda } from "../utils/formatters"
+import ResumoCard from "../components/ResumoCard"
 
 export default function Vendas() {
 
@@ -96,13 +98,6 @@ export default function Vendas() {
 
   const valorPagoNumero = Number(valorPago || 0)
   const valorRestante = Math.max(totalFinal - valorPagoNumero, 0)
-
-  const formatarMoeda = (valor) => {
-    return Number(valor || 0).toLocaleString("pt-BR", {
-      style: "currency",
-      currency: "BRL",
-    })
-  }
 
   const adicionarItem = () => {
     if (!tipoItem || !referenciaId || !quantidade || quantidade < 1) {
@@ -552,16 +547,6 @@ function Card({ children }) {
   return (
     <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5">
       {children}
-    </div>
-  )
-}
-
-function ResumoCard({ titulo, valor, subtitulo }) {
-  return (
-    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5">
-      <p className="text-sm text-gray-500">{titulo}</p>
-      <p className="text-2xl font-bold text-[#2D2E47] mt-2">{valor}</p>
-      <p className="text-sm text-gray-400 mt-1">{subtitulo}</p>
     </div>
   )
 }

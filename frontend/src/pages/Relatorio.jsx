@@ -1,6 +1,10 @@
 import { useEffect, useMemo, useState } from "react"
 import AppLayout from "../layouts/AppLayout"
 import api from "../services/api"
+import { formatarMoeda, formatarData, formatarFormaPagamento} from "../utils/formatters"
+import ResumoCard from "../components/ResumoCard"
+import CampoInput from "../components/CampoInput"
+import CampoSelect from "../components/CampoSelect"
 
 export default function Relatorio() {
   const [transacoes, setTransacoes] = useState([])
@@ -85,18 +89,6 @@ export default function Relatorio() {
     setCategoria("")
     setDataInicio("")
     setDataFim("")
-  }
-
-  const formatarMoeda = (valor) => {
-    return Number(valor || 0).toLocaleString("pt-BR", {
-      style: "currency",
-      currency: "BRL"
-    })
-  }
-
-  const formatarData = (data) => {
-    if (!data) return "-"
-    return new Date(data).toLocaleDateString("pt-BR")
   }
 
   return (
@@ -288,70 +280,5 @@ export default function Relatorio() {
         </div>
       </div>
     </AppLayout>
-  )
-}
-
-function formatarFormaPagamento(forma) {
-  const formas = {
-    dinheiro: "Dinheiro",
-    pix: "Pix",
-    cartao_credito: "Cartão de crédito",
-    cartao_debito: "Cartão de débito"
-  }
-
-  return formas[forma] || "Não informado"
-}
-
-function ResumoCard({ titulo, valor }) {
-  return (
-    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5">
-      <p className="text-sm text-gray-500">{titulo}</p>
-      <p className="text-2xl font-bold text-[#2D2E47] mt-2">{valor}</p>
-    </div>
-  )
-}
-
-function CampoInput({
-  label,
-  value,
-  onChange,
-  placeholder,
-  type = "text"
-}) {
-  return (
-    <div>
-      <label className="block text-sm font-medium text-[#2D2E47] mb-2">
-        {label}
-      </label>
-      <input
-        type={type}
-        value={value}
-        onChange={onChange}
-        placeholder={placeholder}
-        className="w-full border border-gray-200 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-[#3E7996]"
-      />
-    </div>
-  )
-}
-
-function CampoSelect({ label, value, onChange, options = [] }) {
-  return (
-    <div>
-      <label className="block text-sm font-medium text-[#2D2E47] mb-2">
-        {label}
-      </label>
-
-      <select
-        value={value}
-        onChange={onChange}
-        className="w-full border border-gray-200 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-[#3E7996]"
-      >
-        {options.map((option) => (
-          <option key={option.value} value={option.value}>
-            {option.label}
-          </option>
-        ))}
-      </select>
-    </div>
   )
 }

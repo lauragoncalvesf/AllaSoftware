@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react"
 import AppLayout from "../layouts/AppLayout"
 import api from "../services/api"
+import { formatarMoeda } from "../utils/formatters"
 
 export default function Dashboard() {
   const usuario = JSON.parse(localStorage.getItem("usuario"))
@@ -39,13 +40,6 @@ export default function Dashboard() {
 
     carregarResumo()
   }, [])
-
-  const formatarMoeda = (valor) => {
-    return Number(valor || 0).toLocaleString("pt-BR", {
-      style: "currency",
-      currency: "BRL"
-    })
-  }
 
   if (loading) {
     return (

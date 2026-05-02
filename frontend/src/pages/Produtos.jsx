@@ -1,6 +1,12 @@
 import { useEffect, useMemo, useState } from "react"
 import AppLayout from "../layouts/AppLayout"
 import api from "../services/api"
+import { formatarMoeda } from "../utils/formatters"
+import Modal from "../components/Modal"
+import ResumoCard from "../components/ResumoCard"
+import CampoInput from "../components/CampoInput"
+import CampoSelect from "../components/CampoSelect"
+import CampoTextarea from "../components/CampoTextarea"
 
 export default function Produtos() {
   const usuario = JSON.parse(localStorage.getItem("usuario"))
@@ -60,13 +66,6 @@ export default function Produtos() {
     } finally {
       setLoading(false)
     }
-  }
-
-  const formatarMoeda = (valor) => {
-    return Number(valor || 0).toLocaleString("pt-BR", {
-      style: "currency",
-      currency: "BRL",
-    })
   }
 
   const resumo = useMemo(() => {
@@ -646,109 +645,5 @@ export default function Produtos() {
         </Modal>
       )}
     </AppLayout>
-  )
-}
-
-function ResumoCard({ titulo, valor, subtitulo, corIcone }) {
-  return (
-    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 flex items-start gap-4">
-      <div
-        className={`w-12 h-12 rounded-full flex items-center justify-center text-lg font-bold ${corIcone}`}
-      >
-        •
-      </div>
-
-      <div>
-        <p className="text-sm text-gray-500">{titulo}</p>
-        <p className="text-3xl font-bold text-[#2D2E47] mt-1">{valor}</p>
-        <p className="text-sm text-gray-400 mt-1">{subtitulo}</p>
-      </div>
-    </div>
-  )
-}
-
-function Modal({ titulo, children, onClose, largura = "max-w-2xl" }) {
-  return (
-    <div className="fixed inset-0 z-50 bg-black/35 flex items-center justify-center p-4">
-      <div
-        className={`w-full ${largura} bg-white rounded-2xl shadow-xl max-h-[90vh] overflow-y-auto`}
-      >
-        <div className="flex items-center justify-between px-6 py-5 border-b border-gray-100">
-          <h2 className="text-2xl font-bold text-[#2D2E47]">{titulo}</h2>
-
-          <button
-            onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 text-2xl"
-          >
-            ×
-          </button>
-        </div>
-
-        <div className="p-6">{children}</div>
-      </div>
-    </div>
-  )
-}
-
-function CampoInput({
-  label,
-  value,
-  onChange,
-  placeholder,
-  type = "text",
-  required = false,
-}) {
-  return (
-    <div>
-      <label className="block text-sm font-medium text-[#2D2E47] mb-2">
-        {label}
-      </label>
-      <input
-        type={type}
-        value={value}
-        onChange={onChange}
-        placeholder={placeholder}
-        required={required}
-        className="w-full border border-gray-200 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-[#3E7996]"
-      />
-    </div>
-  )
-}
-
-function CampoTextarea({ label, value, onChange, placeholder }) {
-  return (
-    <div>
-      <label className="block text-sm font-medium text-[#2D2E47] mb-2">
-        {label}
-      </label>
-      <textarea
-        value={value}
-        onChange={onChange}
-        placeholder={placeholder}
-        rows={4}
-        className="w-full border border-gray-200 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-[#3E7996] resize-none"
-      />
-    </div>
-  )
-}
-
-function CampoSelect({ label, value, onChange, options = [] }) {
-  return (
-    <div>
-      <label className="block text-sm font-medium text-[#2D2E47] mb-2">
-        {label}
-      </label>
-      <select
-        value={value}
-        onChange={onChange}
-        className="w-full border border-gray-200 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-[#3E7996]"
-      >
-        {options.map((option) => (
-          <option key={option.value} value={option.value}>
-            {option.label}
-          </option>
-        ))}
-      </select>
-    </div>
   )
 }
