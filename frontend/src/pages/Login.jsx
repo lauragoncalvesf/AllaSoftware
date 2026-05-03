@@ -1,10 +1,12 @@
 import { useState } from "react"
 import { Link } from "react-router-dom"
 import api from "../services/api"
+import ModalAviso from "../components/ModalAviso"
 
 export default function Login() {
   const [email, setEmail] = useState("")
   const [senha, setSenha] = useState("")
+  const [aviso, setAviso] = useState(null)
 
   const handleLogin = async (e) => {
     e.preventDefault()
@@ -26,7 +28,7 @@ export default function Login() {
       window.location.href = "/dashboard"
     } catch (error) {
       console.error("Erro no login:", error)
-      alert(error.response?.data?.error || "Erro no login")
+      setAviso({ titulo: "Erro", mensagem: error.response?.data?.error || "Erro no login" })
     }
   }
 
@@ -85,6 +87,12 @@ export default function Login() {
           </Link>
         </p>
       </form>
+      {aviso && (
+        <ModalAviso
+          {...aviso}
+          onClose={() => setAviso(null)}
+        />
+      )}
     </div>
   )
 }

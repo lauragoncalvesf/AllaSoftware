@@ -7,7 +7,8 @@ import Modal from "../components/Modal"
 import ResumoCard from "../components/ResumoCard"
 import StatusBadge from "../components/StatusBadge"
 import CampoInput from "../components/CampoInput"
-import CampoSelect from "../components/CampoSelect.jsx"
+import CampoSelect from "../components/CampoSelect"
+import ModalAviso from "../components/ModalAviso" 
 
 export default function ClienteFinanceiro() {
   const { id } = useParams()
@@ -17,6 +18,7 @@ export default function ClienteFinanceiro() {
   const [loading, setLoading] = useState(true)
   const [mostrarPagamentoModal, setMostrarPagamentoModal] = useState(false)
   const [contaSelecionada, setContaSelecionada] = useState(null)
+  const [aviso, setAviso] = useState(null)
 
   const [pagamento, setPagamento] = useState({
     valor: "",
@@ -101,7 +103,7 @@ export default function ClienteFinanceiro() {
     if (!contaSelecionada) return
 
     if (!pagamento.valor || Number(pagamento.valor) <= 0) {
-      alert("Informe um valor de pagamento válido.")
+      setAviso({ titulo: "Erro", mensagem: "Informe um valor de pagamento válido." })
       return
     }
 
@@ -118,7 +120,7 @@ export default function ClienteFinanceiro() {
       carregarDados()
     } catch (error) {
       console.error("Erro ao registrar pagamento:", error)
-      alert(error.response?.data?.error || "Erro ao registrar pagamento")
+      setAviso({ titulo: "Erro", mensagem: error.response?.data?.error || "Erro ao registrar pagamento" })
     }
   }
 
@@ -428,6 +430,12 @@ export default function ClienteFinanceiro() {
             </div>
           </form>
         </Modal>
+      )}
+      {aviso && (
+        <ModalAviso
+          {...aviso}
+          onClose={() => setAviso(null)}
+        />
       )}
     </AppLayout>
   )

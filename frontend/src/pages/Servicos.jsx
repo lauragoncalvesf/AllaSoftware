@@ -7,6 +7,7 @@ import ResumoCard from "../components/ResumoCard"
 import CampoInput from "../components/CampoInput"
 import CampoSelect from "../components/CampoSelect" 
 import CampoTextarea from "../components/CampoTextarea"
+import ModalAviso from "../components/ModalAviso" 
 
 export default function Servicos() {
   const usuario = JSON.parse(localStorage.getItem("usuario"))
@@ -21,6 +22,7 @@ export default function Servicos() {
 
   const [mostrarNovoModal, setMostrarNovoModal] = useState(false)
   const [mostrarEditarModal, setMostrarEditarModal] = useState(false)
+  const [aviso, setAviso] = useState(null)
 
   const [novoServico, setNovoServico] = useState({
     nome: "",
@@ -102,7 +104,7 @@ export default function Servicos() {
       carregarServicos()
     } catch (error) {
       console.error("Erro ao criar serviço:", error)
-      alert(error.response?.data?.error || "Erro ao criar serviço")
+      setAviso({ titulo: "Erro", mensagem: error.response?.data?.error || "Erro ao criar serviço" })
     }
   }
 
@@ -124,7 +126,7 @@ export default function Servicos() {
       carregarServicos()
     } catch (error) {
       console.error("Erro ao editar serviço:", error)
-      alert(error.response?.data?.error || "Erro ao editar serviço")
+      setAviso({ titulo: "Erro", mensagem: error.response?.data?.error || "Erro ao editar serviço" })
     }
   }
 
@@ -137,7 +139,7 @@ export default function Servicos() {
       carregarServicos()
     } catch (error) {
       console.error("Erro ao excluir serviço:", error)
-      alert(error.response?.data?.error || "Erro ao excluir serviço")
+      setAviso({ titulo: "Erro", mensagem: error.response?.data?.error || "Erro ao excluir serviço" })
     }
   }
 
@@ -598,6 +600,12 @@ export default function Servicos() {
           </form>
         </Modal>
       )}
+      {aviso && (
+        <ModalAviso
+          {...aviso}
+          onClose={() => setAviso(null)}
+        />
+      )}     
     </AppLayout>
   )
 }

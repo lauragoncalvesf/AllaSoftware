@@ -7,6 +7,7 @@ import ResumoCard from "../components/ResumoCard"
 import StatusBadge from "../components/StatusBadge"
 import CampoInput from "../components/CampoInput"
 import CampoSelect from "../components/CampoSelect"
+import ModalAviso from "../components/ModalAviso"
 
 
 export default function Transacoes() {
@@ -18,6 +19,7 @@ export default function Transacoes() {
   const [status, setStatus] = useState("ativa")
 
   const [mostrarModal, setMostrarModal] = useState(false)
+  const [aviso, setAviso] = useState(null)
 
   const [novaTransacao, setNovaTransacao] = useState({
     tipo: "entrada",
@@ -90,7 +92,7 @@ export default function Transacoes() {
       carregarTransacoes()
     } catch (error) {
       console.error("Erro ao criar transação:", error)
-      alert(error.response?.data?.error || "Erro ao criar transação")
+      setAviso({ titulo: "Erro", mensagem: error.response?.data?.error || "Erro ao criar transação" })
     }
   }
 
@@ -103,7 +105,7 @@ export default function Transacoes() {
       carregarTransacoes()
     } catch (error) {
       console.error("Erro ao cancelar transação:", error)
-      alert(error.response?.data?.error || "Erro ao cancelar transação")
+      setAviso({ titulo: "Erro", mensagem: error.response?.data?.error || "Erro ao cancelar transação" })
     }
   }
 
@@ -119,7 +121,7 @@ export default function Transacoes() {
       console.error("Resposta:", error.response?.data)
       console.error("Status:", error.response?.status)
     
-      alert(error.response?.data?.error || "Erro ao executar ação")
+      setAviso({ titulo: "Erro", mensagem: error.response?.data?.error || "Erro ao executar ação" })
     }
   }
 
@@ -521,6 +523,12 @@ export default function Transacoes() {
             </div>
           </form>
         </Modal>
+      )}
+      {aviso && (
+        <ModalAviso
+          {...aviso}
+            onClose={() => setAviso(null)}
+        />
       )}
     </AppLayout>
   )

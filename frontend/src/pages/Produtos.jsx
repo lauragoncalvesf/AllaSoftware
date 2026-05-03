@@ -7,6 +7,7 @@ import ResumoCard from "../components/ResumoCard"
 import CampoInput from "../components/CampoInput"
 import CampoSelect from "../components/CampoSelect"
 import CampoTextarea from "../components/CampoTextarea"
+import ModalAviso from "../components/ModalAviso"
 
 export default function Produtos() {
   const usuario = JSON.parse(localStorage.getItem("usuario"))
@@ -21,6 +22,7 @@ export default function Produtos() {
 
   const [mostrarNovoModal, setMostrarNovoModal] = useState(false)
   const [mostrarEditarModal, setMostrarEditarModal] = useState(false)
+  const [aviso, setAviso] = useState(null)
 
   const [novoProduto, setNovoProduto] = useState({
     nome: "",
@@ -122,7 +124,7 @@ export default function Produtos() {
       carregarProdutos()
     } catch (error) {
       console.error("Erro ao criar produto:", error)
-      alert(error.response?.data?.error || "Erro ao criar produto")
+      setAviso({ titulo: "Erro", mensagem: error.response?.data?.error || "Erro ao criar produto" })
     }
   }
 
@@ -145,7 +147,7 @@ export default function Produtos() {
       carregarProdutos()
     } catch (error) {
       console.error("Erro ao editar produto:", error)
-      alert(error.response?.data?.error || "Erro ao editar produto")
+      setAviso({ titulo: "Erro", mensagem: error.response?.data?.error || "Erro ao editar produto" })
     }
   }
 
@@ -158,7 +160,7 @@ export default function Produtos() {
       carregarProdutos()
     } catch (error) {
       console.error("Erro ao excluir produto:", error)
-      alert(error.response?.data?.error || "Erro ao excluir produto")
+      setAviso({ titulo: "Erro", mensagem: error.response?.data?.error || "Erro ao excluir produto" })
     }
   }
 
@@ -643,6 +645,12 @@ export default function Produtos() {
             </div>
           </form>
         </Modal>
+      )}
+      {aviso && (
+        <ModalAviso
+          {...aviso}
+          onClose={() => setAviso(null)}
+        />
       )}
     </AppLayout>
   )

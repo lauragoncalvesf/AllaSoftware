@@ -7,6 +7,7 @@ import ResumoCard from "../components/ResumoCard"
 import StatusBadge from "../components/StatusBadge"
 import CampoInput from "../components/CampoInput"
 import CampoTextarea from "../components/CampoTextarea"
+import ModalAviso from "../components/ModalAviso"
 
 export default function Clientes() {
   const navigate = useNavigate()
@@ -25,6 +26,7 @@ export default function Clientes() {
   const [senhaConfirmacao, setSenhaConfirmacao] = useState("")
   const [clienteParaDeletar, setClienteParaDeletar] = useState(null)
   const [mensagemConfirmacao, setMensagemConfirmacao] = useState("")
+  const [aviso, setAviso] = useState(null)
 
   const [novoCliente, setNovoCliente] = useState({
     nome: "",
@@ -115,7 +117,7 @@ export default function Clientes() {
       carregarClientes()
     } catch (error) {
       console.error("Erro ao criar cliente:", error)
-      alert(error.response?.data?.error || "Erro ao criar cliente")
+      setAviso({ titulo: "Erro", mensagem: error.response?.data?.error || "Erro ao criar cliente" })
     }
   }
 
@@ -134,7 +136,7 @@ export default function Clientes() {
       carregarClientes()
     } catch (error) {
       console.error("Erro ao editar cliente:", error)
-      alert(error.response?.data?.error || "Erro ao editar cliente")
+      setAviso({ titulo: "Erro", mensagem: error.response?.data?.error || "Erro ao editar cliente" })
     }
   }
 
@@ -160,14 +162,14 @@ export default function Clientes() {
         setMostrarModalConfirmacao(true)
       } else {
         console.error("Erro ao excluir cliente:", error)
-        alert(dados.error || "Erro ao excluir cliente")
+        setAviso({ titulo: "Erro", mensagem: dados.error || "Erro ao excluir cliente" })
       }
     }
   }
 
   const confirmarExclusaoComSenha = async () => {
     if (!senhaConfirmacao) {
-      alert("Digite sua senha para confirmar")
+      setAviso({ titulo: "Erro", mensagem: "Digite sua senha para confirmar" })
       return
     }
 
@@ -180,10 +182,10 @@ export default function Clientes() {
       setSenhaConfirmacao("")
       setClienteParaDeletar(null)
       carregarClientes()
-      alert("Cliente excluído com sucesso")
+      setAviso({ titulo: "Sucesso", mensagem: "Cliente excluído com sucesso" })
     } catch (error) {
       console.error("Erro ao excluir cliente:", error)
-      alert(error.response?.data?.error || "Erro ao excluir cliente")
+      setAviso({ titulo: "Erro", mensagem: error.response?.data?.error || "Erro ao excluir cliente" })
       setSenhaConfirmacao("")
     }
   }
@@ -632,6 +634,12 @@ export default function Clientes() {
             </div>
           </div>
         </Modal>
+      )}
+      {aviso && (
+        <ModalAviso
+          {...aviso}
+          onClose={() => setAviso(null)}
+        />
       )}
     </AppLayout>
   )

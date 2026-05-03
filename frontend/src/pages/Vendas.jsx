@@ -3,6 +3,7 @@ import { useSearchParams } from "react-router-dom"
 import AppLayout from "../layouts/AppLayout"
 import api from "../services/api"
 import ClienteSearchSelect from "../components/ClienteSearchSelect"
+import ModalAviso from "../components/ModalAviso"
 
 export default function Vendas() {
   const [searchParams] = useSearchParams()
@@ -28,6 +29,7 @@ export default function Vendas() {
 
   const [salvando, setSalvando] = useState(false)
   const [carrinhoAberto, setCarrinhoAberto] = useState(false)
+  const [aviso, setAviso] = useState(null)
 
   useEffect(() => {
     carregarDados()
@@ -142,19 +144,19 @@ export default function Vendas() {
 
   const salvarVenda = async () => {
     if (totalFinal < 0) {
-      alert("O desconto não pode ser maior que o total da venda")
+      setAviso({ titulo: "Desconto inválido", mensagem: "O desconto não pode ser maior que o total da venda" })
       return
     }
     if (valorPagoNum < 0) {
-      alert("O valor pago não pode ser negativo")
+      setAviso({ titulo: "Valor pago inválido", mensagem: "O valor pago não pode ser negativo" })
       return
     }
     if (valorPagoNum > totalFinal) {
-      alert("O valor pago não pode ser maior que o total final")
+      setAviso({ titulo: "Valor pago inválido", mensagem: "O valor pago não pode ser maior que o total final" })
       return
     }
     if (!clienteId && valorPagoNum < totalFinal) {
-      alert("Venda sem cliente só pode ser finalizada com pagamento total")
+      setAviso({ titulo: "Venda inválida", mensagem: "Venda sem cliente só pode ser finalizada com pagamento total" })
       return
     }
 
@@ -175,7 +177,7 @@ export default function Vendas() {
         })),
       })
 
-      alert("Venda criada com sucesso!")
+      setAviso({ titulo: "Sucesso!", mensagem: "A venda foi registrada com sucesso." })
 
       setItens([])
       setDesconto("")
@@ -189,7 +191,7 @@ export default function Vendas() {
       setTipoPreco("varejo")
     } catch (error) {
       console.error("Erro ao salvar venda:", error)
-      alert(error.response?.data?.error || "Erro ao salvar venda")
+      setAviso({ titulo: "Erro", mensagem: error.response?.data?.error || "Erro ao salvar venda" })
     } finally {
       setSalvando(false)
     }
@@ -335,6 +337,12 @@ export default function Vendas() {
           </div>
         </div>
       </div>
+      {aviso && (
+        <ModalAviso
+          {...aviso}
+          onClose={() => setAviso(null)}
+        />
+      )}
     </AppLayout>
   )
 }

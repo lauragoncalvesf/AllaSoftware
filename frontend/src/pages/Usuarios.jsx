@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react"
 import AppLayout from "../layouts/AppLayout"
 import api from "../services/api"
+import ModalAviso from "../components/ModalAviso"
 
 export default function Usuarios() {
   const [usuarios, setUsuarios] = useState([])
@@ -14,6 +15,7 @@ export default function Usuarios() {
     senha: "",
     role: "funcionario"
   })
+  const [aviso, setAviso] = useState(null)
 
   useEffect(() => {
     carregarUsuarios()
@@ -47,7 +49,7 @@ export default function Usuarios() {
       carregarUsuarios()
     } catch (error) {
       console.error(error)
-      alert(error.response?.data?.error || "Erro ao criar usuário")
+      setAviso({ titulo: "Erro", mensagem: error.response?.data?.error || "Erro ao criar usuário" })
     }
   }
 
@@ -201,6 +203,12 @@ export default function Usuarios() {
             </form>
           </div>
         </div>
+      )}
+      {aviso && (
+        <ModalAviso
+          {...aviso}
+          onClose={() => setAviso(null)}
+        />
       )}
     </AppLayout>
   )

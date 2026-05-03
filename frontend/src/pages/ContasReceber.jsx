@@ -9,6 +9,7 @@ import ResumoCard from "../components/ResumoCard"
 import StatusBadge from "../components/StatusBadge"
 import CampoInput from "../components/CampoInput"
 import CampoSelect from "../components/CampoSelect"
+import ModalAviso from "../components/ModalAviso" 
 
 export default function ContasReceber() {
   const navigate = useNavigate()
@@ -19,6 +20,7 @@ export default function ContasReceber() {
   const [clientes, setClientes] = useState([])  
   const [loading, setLoading] = useState(true)
 
+  const [aviso, setAviso] = useState(null)
   const [status, setStatus] = useState("")
   const [clienteIdFiltro, setClienteIdFiltro] = useState("")
 
@@ -113,12 +115,12 @@ export default function ContasReceber() {
     e.preventDefault()
   
     if (!novaConta.clienteId) {
-      alert("Selecione um cliente para criar a conta.")
+      setAviso({ titulo: "Erro", mensagem: "Selecione um cliente para criar a conta." })
       return
     }
   
     if (!novaConta.valorTotal || Number(novaConta.valorTotal) <= 0) {
-      alert("Informe um valor total válido.")
+      setAviso({ titulo: "Erro", mensagem: "Informe um valor total válido." })
       return
     }
   
@@ -143,7 +145,7 @@ export default function ContasReceber() {
       console.error("Erro ao criar conta:", error)
       console.error("Resposta do backend:", error.response?.data)
   
-      alert(error.response?.data?.error || "Erro ao criar conta")
+      setAviso({ titulo: "Erro", mensagem: error.response?.data?.error || "Erro ao criar conta" })
     }
   }
 
@@ -153,7 +155,7 @@ export default function ContasReceber() {
     if (!contaSelecionada) return
   
     if (!pagamento.valor || Number(pagamento.valor) <= 0) {
-      alert("Informe um valor de pagamento válido.")
+      setAviso({ titulo: "Erro", mensagem: "Informe um valor de pagamento válido." })
       return
     }
   
@@ -178,7 +180,7 @@ export default function ContasReceber() {
       console.error("Resposta do backend:", error.response?.data)
       console.error("Status:", error.response?.status)
   
-      alert(error.response?.data?.error || "Erro ao registrar pagamento")
+      setAviso({ titulo: "Erro", mensagem: error.response?.data?.error || "Erro ao registrar pagamento" })
     }
   }
 
@@ -584,6 +586,12 @@ export default function ContasReceber() {
             </div>
           </form>
         </Modal>
+      )}
+      {aviso && (
+        <ModalAviso
+          {...aviso}
+          onClose={() => setAviso(null)}
+        />
       )}
     </AppLayout>
   )
