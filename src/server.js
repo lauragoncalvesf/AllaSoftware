@@ -17,6 +17,7 @@ import vendaRoutes from "./routes/vendaRoutes.js"
 import { securityHeaders } from "./middlewares/security.js"
 import { limiterGeral, limiterLogin } from "./middlewares/rateLimiter.js"
 import { errorHandler } from "./middlewares/errorHandler.js"
+import relatorioRoutes from "./routes/relatorioRoutes.js"
 
 const app = express()
 
@@ -51,6 +52,8 @@ usuarioRoutes(app)
 servicoRoutes(app)
 produtoRoutes(app)
 vendaRoutes(app)
+relatorioRoutes(app)
+
 
 // 🧪 Rota de teste
 app.get("/teste", auth, (req, res) => {

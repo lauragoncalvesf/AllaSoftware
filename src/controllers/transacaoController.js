@@ -1,4 +1,5 @@
 import prisma from "../config/prisma.js"
+import { gerarComprovanteTransacaoCancelada, imprimirTermico } from "../services/comprovanteService.js"
 
 //  Criar transação
 export const criarTransacao = async (req, res) => {
@@ -249,10 +250,22 @@ export const cancelarTransacao = async (req, res) => {
       }
     })
 
-    res.json({
+    const respostaCancelamento = {
       message: "Transação cancelada com sucesso",
       transacao: transacaoCancelada
-    })
+    }
+
+    try {
+      const { texto } = await gerarComprovanteTransacaoCancelada(
+        { transacaoOriginal: transacaoCancelada, tipo: "cancelamento" },
+        { nome: process.env.EMPRESA_NOME }
+      )
+      await imprimirTermico(texto)
+      res.json(respostaCancelamento)
+    } catch (errComprovante) {
+      console.error("[Comprovante] Cancelamento:", errComprovante)
+      res.json(respostaCancelamento)
+    }
   } catch (error) {
     console.error(error)
     res.status(500).json({
@@ -303,11 +316,23 @@ export const estornarTransacao = async (req, res) => {
       }
     })
 
-    res.json({
+    const respostaEstorno = {
       message: "Transação estornada com sucesso",
       transacaoOriginal: originalAtualizada,
       transacaoEstorno
-    })
+    }
+
+    try {
+      const { texto } = await gerarComprovanteTransacaoCancelada(
+        { transacaoOriginal: originalAtualizada, transacaoEstorno, tipo: "estorno" },
+        { nome: process.env.EMPRESA_NOME }
+      )
+      await imprimirTermico(texto)
+      res.json(respostaEstorno)
+    } catch (errComprovante) {
+      console.error("[Comprovante] Estorno:", errComprovante)
+      res.json(respostaEstorno)
+    }
   } catch (error) {
     console.error(error)
     res.status(500).json({

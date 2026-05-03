@@ -1,4 +1,5 @@
 import prisma from "../config/prisma.js"
+import { gerarComprovanteVenda, imprimirTermico } from "../services/comprovanteService.js"
 
 const calcularStatusConta = (valorTotal, valorPago, vencimento) => {
   if (valorPago >= valorTotal) return "pago"
@@ -324,7 +325,17 @@ export const criarVenda = async (req, res) => {
       }
     })
 
-    res.status(201).json(venda)
+    try {
+      const empresa = { nome: process.env.EMPRESA_NOME, cnpj: process.env.EMPRESA_CNPJ }
+      const { pdf, texto } = await gerarComprovanteVenda(venda, empresa)
+      await imprimirTermico(texto, pdf)          // imprime na térmica se configurada
+      res.status(201).json(venda)
+    } 
+    catch (errComprovante) {
+      console.error("[Comprovante] Venda:", errComprovante)
+      res.status(201).json(venda)           // venda salva; comprovante falhou → não interrompe
+    }
+
   } catch (error) {
     console.error(error)
     res.status(500).json({

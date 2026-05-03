@@ -1,4 +1,5 @@
 import prisma from "../config/prisma.js"
+import { gerarComprovantePagamentoConta, imprimirTermico } from "../services/comprovanteService.js"
 
 const calcularStatusConta = (valorTotal, valorPago, vencimento) => {
   if (valorPago >= valorTotal) return "pago"
@@ -268,12 +269,31 @@ export const registrarPagamentoConta = async (req, res) => {
       }
     })
 
-    res.json({
+    const resposta = {
       message: "Pagamento registrado com sucesso",
       pagamento,
       conta: contaAtualizada,
-      saldoRestante: contaAtualizada.valorTotal - contaAtualizada.valorPago, transacaoFinanceira: transacao
-    })
+      saldoRestante: contaAtualizada.valorTotal - contaAtualizada.valorPago,
+      transacaoFinanceira: transacao
+    }
+
+    try {
+      const empresa = { nome: process.env.EMPRESA_NOME }
+      const { texto } = await gerarComprovantePagamentoConta(
+        {
+          pagamento,
+          conta: { ...contaAtualizada, cliente: conta.cliente },
+          saldoRestante: resposta.saldoRestante,
+          transacaoFinanceira: transacao
+        },
+        empresa
+      )
+      await imprimirTermico(texto)
+      res.json(resposta)
+    } catch (errComprovante) {
+      console.error("[Comprovante] Pagamento:", errComprovante)
+      res.json(resposta)
+    }
   } catch (error) {
     console.error(error)
     res.status(500).json({
