@@ -3,6 +3,8 @@ import { useSearchParams } from "react-router-dom"
 import AppLayout from "../layouts/AppLayout"
 import api from "../services/api"
 import ClienteSearchSelect from "../components/ClienteSearchSelect"
+import { formatarMoeda } from "../utils/formatters"
+import ResumoCard from "../components/ResumoCard"
 
 export default function Vendas() {
   const [searchParams] = useSearchParams()
@@ -55,11 +57,46 @@ export default function Vendas() {
     }
   }
 
-  const formatarMoeda = (valor) =>
-    Number(valor || 0).toLocaleString("pt-BR", {
+  const clientesFiltrados = clientes.filter((cliente) =>
+    cliente.nome.toLowerCase().includes(buscaCliente.toLowerCase())
+  )
+
+  const opcoesAtuais = tipoItem === "produto" ? produtos : servicos
+
+  const itemSelecionado = opcoesAtuais.find(
+    (item) => String(item.id) === String(referenciaId)
+  )
+
+  const precoAtual = useMemo(() => {
+    if (!itemSelecionado) return 0
+
+    if (tipoItem === "produto") {
+      if (tipoPreco === "atacado" && itemSelecionado.precoAtacado) {
+        return Number(itemSelecionado.precoAtacado)
+      }
+      return Number(itemSelecionado.precoVarejo || 0)
+    }
+
+    return Number(itemSelecionado.preco || 0)
+  }, [itemSelecionado, tipoItem, tipoPreco])
+
+  const totalBruto = useMemo(() => {
+    return itens.reduce((acc, item) => acc + Number(item.subtotal || 0), 0)
+  }, [itens])
+
+  const totalFinal = useMemo(() => {
+    return totalBruto - Number(desconto || 0)
+  }, [totalBruto, desconto])
+
+  const valorPagoNumero = Number(valorPago || 0)
+  const valorRestante = Math.max(totalFinal - valorPagoNumero, 0)
+
+  const formatarMoeda = (valor) => {
+    return Number(valor || 0).toLocaleString("pt-BR", {
       style: "currency",
       currency: "BRL",
     })
+  }
 
   const precoDe = (item, tipo) => {
     if (tipo === "produto") {
@@ -755,19 +792,12 @@ function WrenchIcon({ className = "" }) {
   )
 }
 
-function PlusIcon({ className = "" }) {
+function ResumoCard({ titulo, valor, subtitulo }) {
   return (
-    <svg
-      className={className}
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M5 12h14" />
-      <path d="M12 5v14" />
-    </svg>
+    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5">
+      <p className="text-sm text-gray-500">{titulo}</p>
+      <p className="text-2xl font-bold text-[#2D2E47] mt-2">{valor}</p>
+      <p className="text-sm text-gray-400 mt-1">{subtitulo}</p>
+    </div>
   )
 }

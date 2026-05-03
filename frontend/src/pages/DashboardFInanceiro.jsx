@@ -12,6 +12,8 @@ import {
   BarChart,
   Bar
 } from "recharts"
+import { formatarMoeda, formatarFormaPagamento } from "../utils/formatters"
+import ResumoCard from "../components/ResumoCard"
 
 export default function DashboardFinanceiro() {
   const [dados, setDados] = useState(null)
@@ -30,13 +32,6 @@ export default function DashboardFinanceiro() {
     } finally {
       setLoading(false)
     }
-  }
-
-  const formatarMoeda = (valor) => {
-    return Number(valor || 0).toLocaleString("pt-BR", {
-      style: "currency",
-      currency: "BRL"
-    })
   }
 
   const formatarDataCurta = (data) => {
@@ -232,35 +227,6 @@ export default function DashboardFinanceiro() {
         </div>
       </div>
     </AppLayout>
-  )
-}
-
-function formatarFormaPagamento(forma) {
-  const formas = {
-    dinheiro: "Dinheiro",
-    pix: "Pix",
-    cartao_credito: "Cartão de crédito",
-    cartao_debito: "Cartão de débito"
-  }
-
-  return formas[forma] || "Não informado"
-}
-
-function ResumoCard({ titulo, valor, subtitulo, corIcone }) {
-  return (
-    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 flex items-start gap-4">
-      <div
-        className={`w-12 h-12 rounded-full flex items-center justify-center text-lg font-bold ${corIcone}`}
-      >
-        •
-      </div>
-
-      <div>
-        <p className="text-sm text-gray-500">{titulo}</p>
-        <p className="text-2xl font-bold text-[#2D2E47] mt-1">{valor}</p>
-        <p className="text-sm text-gray-400 mt-1">{subtitulo}</p>
-      </div>
-    </div>
   )
 }
 

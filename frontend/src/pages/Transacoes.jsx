@@ -1,6 +1,13 @@
 import { useEffect, useMemo, useState } from "react"
 import AppLayout from "../layouts/AppLayout"
 import api from "../services/api"
+import { formatarMoeda, formatarData, formatarFormaPagamento} from "../utils/formatters"
+import Modal from "../components/Modal"
+import ResumoCard from "../components/ResumoCard"
+import StatusBadge from "../components/StatusBadge"
+import CampoInput from "../components/CampoInput"
+import CampoSelect from "../components/CampoSelect"
+
 
 export default function Transacoes() {
   const [transacoes, setTransacoes] = useState([])
@@ -58,18 +65,6 @@ export default function Transacoes() {
       total: transacoes.length
     }
   }, [transacoes])
-
-  const formatarMoeda = (valor) => {
-    return Number(valor || 0).toLocaleString("pt-BR", {
-      style: "currency",
-      currency: "BRL"
-    })
-  }
-
-  const formatarData = (data) => {
-    if (!data) return "-"
-    return new Date(data).toLocaleDateString("pt-BR")
-  }
 
   const criarTransacao = async (e) => {
     e.preventDefault()
@@ -530,132 +525,3 @@ export default function Transacoes() {
     </AppLayout>
   )
 }
-
-function formatarFormaPagamento(forma) {
-  const formas = {
-    dinheiro: "Dinheiro",
-    pix: "Pix",
-    cartao_credito: "Cartão de crédito",
-    cartao_debito: "Cartão de débito"
-  }
-
-  return formas[forma] || "Não informado"
-}
-
-function StatusBadge({ status }) {
-  const estilos = {
-    ativa: "bg-emerald-100 text-emerald-700",
-    cancelada: "bg-gray-100 text-gray-600",
-    estornada: "bg-amber-100 text-amber-700"
-  }
-
-  const labels = {
-    ativa: "Ativa",
-    cancelada: "Cancelada",
-    estornada: "Estornada"
-  }
-
-  return (
-    <span
-      className={`text-xs font-semibold px-3 py-1 rounded-full ${
-        estilos[status] || "bg-gray-100 text-gray-600"
-      }`}
-    >
-      {labels[status] || status}
-    </span>
-  )
-}
-
-function ResumoCard({ titulo, valor, subtitulo, corIcone }) {
-  return (
-    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 flex items-start gap-4">
-      <div
-        className={`w-12 h-12 rounded-full flex items-center justify-center text-lg font-bold ${corIcone}`}
-      >
-        •
-      </div>
-
-      <div>
-        <p className="text-sm text-gray-500">{titulo}</p>
-        <p className="text-2xl font-bold text-[#2D2E47] mt-1">{valor}</p>
-        <p className="text-sm text-gray-400 mt-1">{subtitulo}</p>
-      </div>
-    </div>
-  )
-}
-
-function Modal({ titulo, children, onClose, largura = "max-w-2xl" }) {
-  return (
-    <div className="fixed inset-0 z-50 bg-black/35 flex items-center justify-center p-4">
-      <div
-        className={`w-full ${largura} bg-white rounded-2xl shadow-xl max-h-[90vh] overflow-y-auto`}
-      >
-        <div className="flex items-center justify-between px-6 py-5 border-b border-gray-100">
-          <h2 className="text-2xl font-bold text-[#2D2E47]">{titulo}</h2>
-
-          <button
-            onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 text-2xl"
-          >
-            ×
-          </button>
-        </div>
-
-        <div className="p-6">{children}</div>
-      </div>
-    </div>
-  )
-}
-
-function CampoInput({
-  label,
-  value,
-  onChange,
-  placeholder,
-  type = "text",
-  required = false
-}) {
-  return (
-    <div>
-      <label className="block text-sm font-medium text-[#2D2E47] mb-2">
-        {label}
-      </label>
-      <input
-        type={type}
-        value={value}
-        onChange={onChange}
-        placeholder={placeholder}
-        required={required}
-        className="w-full border border-gray-200 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-[#3E7996]"
-      />
-    </div>
-  )
-}
-
-function CampoSelect({
-  label,
-  value,
-  onChange,
-  options = [],
-  required = false
-}) {
-  return (
-    <div>
-      <label className="block text-sm font-medium text-[#2D2E47] mb-2">
-        {label}
-      </label>
-      <select
-        value={value}
-        onChange={onChange}
-        required={required}
-        className="w-full border border-gray-200 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-[#3E7996]"
-      >
-        {options.map((option) => (
-          <option key={`${option.value}-${option.label}`} value={option.value}>
-            {option.label}
-          </option>
-        ))}
-      </select>
-    </div>
-  )
-} 
