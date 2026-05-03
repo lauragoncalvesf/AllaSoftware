@@ -86,7 +86,7 @@ export default function Sidebar() {
               onClick={() => navigate("/financeiro/dashboard")}
               className={getNavButtonClass("/financeiro/dashboard")}
             >
-              Dashboard FInanceiro
+              Dashboard Financeiro
             </button>
 
             <button
