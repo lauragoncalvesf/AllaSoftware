@@ -25,7 +25,10 @@
     "express-rate-limit": "^7.1.5",
     "helmet": "^7.1.0",
     "jsonwebtoken": "^9.0.3",
-    "nodemailer": "^6.10.1",
+    "node-thermal-printer": "^4.6.0",
+    "nodemailer": "^8.0.7",
+    "pdf-to-printer": "^5.8.0",
+    "pdfkit": "^0.18.0",
     "prisma": "^5.22.0",
     "zod": "^3.22.4"
   },
