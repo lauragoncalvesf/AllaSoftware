@@ -1,5 +1,6 @@
 // Cobre status de contas a receber: pendente, parcial, vencido, pago
-// E status de transações: ativa, cancelada, estornada
+// Status de transações: ativa, cancelada, estornada
+// Status de agendamentos: agendado, concluido, cancelado
 const estilos = {
   pendente:  "bg-amber-100 text-amber-700",
   parcial:   "bg-blue-100 text-blue-700",
@@ -7,7 +8,10 @@ const estilos = {
   pago:      "bg-emerald-100 text-emerald-700",
   ativa:     "bg-emerald-100 text-emerald-700",
   cancelada: "bg-gray-100 text-gray-600",
-  estornada: "bg-amber-100 text-amber-700"
+  estornada: "bg-amber-100 text-amber-700",
+  agendado:  "bg-amber-100 text-amber-700",
+  concluido: "bg-emerald-100 text-emerald-700",
+  cancelado: "bg-red-100 text-red-700"
 }
 
 const labels = {
@@ -17,7 +21,10 @@ const labels = {
   pago:      "Pago",
   ativa:     "Ativa",
   cancelada: "Cancelada",
-  estornada: "Estornada"
+  estornada: "Estornada",
+  agendado:  "Agendado",
+  concluido: "Concluído",
+  cancelado: "Cancelado"
 }
 
 export default function StatusBadge({ status }) {

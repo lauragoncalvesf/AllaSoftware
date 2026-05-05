@@ -16,6 +16,7 @@ import Servicos from "./pages/Servicos"
 import Produtos from "./pages/Produtos"
 import Vendas from "./pages/Vendas"
 import ClienteFinanceiro from "./pages/ClienteFinanceiro" 
+import Agendamentos from "./pages/Agendamentos"
 
 
 function App() {
@@ -121,6 +122,15 @@ function App() {
           element={
             <PrivateRoute>
               <DashboardFinanceiro />
+            </PrivateRoute>
+          }
+        />
+
+        <Route
+          path="/agendamentos"
+          element={
+            <PrivateRoute>
+              <Agendamentos />
             </PrivateRoute>
           }
         />

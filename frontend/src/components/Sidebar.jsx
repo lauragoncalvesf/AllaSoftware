@@ -73,6 +73,13 @@ export default function Sidebar() {
           Contas a Receber
         </button>
 
+        <button
+          onClick={() => navigate("/agendamentos")}
+          className={getNavButtonClass("/agendamentos")}
+        >
+          Agendamentos
+        </button>
+
         {usuario?.role === "admin" && (
           <>
             <button
