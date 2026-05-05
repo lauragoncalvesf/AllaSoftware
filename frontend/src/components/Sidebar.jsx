@@ -11,27 +11,69 @@ export default function Sidebar() {
     navigate("/")
   }
 
-  // Função para verificar se é rota ativa
+  const nomeUsuario = usuario?.nome || "Usuário"
+  const inicialUsuario = nomeUsuario.charAt(0).toUpperCase()
+
+  const perfilUsuario =
+    usuario?.role === "admin"
+      ? "Admin"
+      : usuario?.role === "funcionario"
+      ? "Funcionário"
+      : "Empresa"
+
   const isActive = (path) => location.pathname === path
 
-  // Função para retornar classe de estilo baseado se está ativo
   const getNavButtonClass = (path) => {
-    const baseClass = "w-full text-left px-4 py-2 rounded-lg transition-colors"
+    const baseClass =
+      "w-full text-left px-4 py-2.5 rounded-xl transition-colors text-sm"
+
     return isActive(path)
-      ? `${baseClass} bg-[#3E7996] text-white font-semibold`
-      : `${baseClass} hover:bg-white/10`
+      ? `${baseClass} bg-[#3E7996] text-white font-semibold shadow-sm`
+      : `${baseClass} text-white/85 hover:bg-white/10 hover:text-white`
   }
 
   return (
     <aside className="fixed left-0 top-0 w-64 h-screen bg-[#2D2E47] text-white flex flex-col overflow-y-auto">
-      <div className="p-6 border-b border-white/10">
-        <h1 className="text-xl font-bold">Sistema ALLA</h1>
-        <p className="text-sm text-white/70 mt-2">{usuario?.nome}</p>
-        <p className="text-xs text-white/50">Perfil: {usuario?.role}</p>
-      </div>
+          <div className="p-5 border-b border-white/10">
+  <div className="mb-4">
+    <h1 className="text-xl font-bold text-white leading-tight">
+      Sistema ALLA
+    </h1>
+
+  </div>
+
+  <button
+    type="button"
+    onClick={() => navigate("/perfil")}
+    className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl transition text-left ${
+      isActive("/perfil")
+        ? "bg-[#3E7996] shadow-sm"
+        : "bg-white/5 hover:bg-white/10"
+    }`}
+  >
+    <div className="w-9 h-9 rounded-full bg-white text-[#2F8AA3] flex items-center justify-center text-sm font-bold shadow-sm shrink-0">
+      {inicialUsuario || "U"}
+    </div>
+
+    <div className="min-w-0 flex-1">
+      <p className="text-sm font-semibold text-white truncate">
+        {nomeUsuario}
+      </p>
+
+      <p className="text-[11px] text-white/55 truncate">
+        {perfilUsuario}
+      </p>
+    </div>
+
+    <span className="text-white/35 text-sm">
+      ›
+    </span>
+  </button>
+</div>
 
       <nav className="flex-1 p-4 space-y-2">
         <button
+          type="button"
           onClick={() => navigate("/dashboard")}
           className={getNavButtonClass("/dashboard")}
         >
@@ -39,6 +81,7 @@ export default function Sidebar() {
         </button>
 
         <button
+          type="button"
           onClick={() => navigate("/clientes")}
           className={getNavButtonClass("/clientes")}
         >
@@ -46,6 +89,7 @@ export default function Sidebar() {
         </button>
 
         <button
+          type="button"
           onClick={() => navigate("/servicos")}
           className={getNavButtonClass("/servicos")}
         >
@@ -53,6 +97,7 @@ export default function Sidebar() {
         </button>
 
         <button
+          type="button"
           onClick={() => navigate("/produtos")}
           className={getNavButtonClass("/produtos")}
         >
@@ -60,6 +105,7 @@ export default function Sidebar() {
         </button>
 
         <button
+          type="button"
           onClick={() => navigate("/vendas")}
           className={getNavButtonClass("/vendas")}
         >
@@ -67,6 +113,7 @@ export default function Sidebar() {
         </button>
 
         <button
+          type="button"
           onClick={() => navigate("/contas-receber")}
           className={getNavButtonClass("/contas-receber")}
         >
@@ -74,6 +121,7 @@ export default function Sidebar() {
         </button>
 
         <button
+          type="button"
           onClick={() => navigate("/agendamentos")}
           className={getNavButtonClass("/agendamentos")}
         >
@@ -82,41 +130,54 @@ export default function Sidebar() {
 
         {usuario?.role === "admin" && (
           <>
-            <button
-              onClick={() => navigate("/transacoes")}
-              className={getNavButtonClass("/transacoes")}
-            >
-              Financeiro
-            </button>
+            <div className="pt-3 mt-3 border-t border-white/10">
+              <p className="px-4 text-[11px] uppercase tracking-wide text-white/40 mb-2">
+                Administração
+              </p>
 
-            <button
-              onClick={() => navigate("/financeiro/dashboard")}
-              className={getNavButtonClass("/financeiro/dashboard")}
-            >
-              Dashboard Financeiro
-            </button>
+              <div className="space-y-2">
+                <button
+                  type="button"
+                  onClick={() => navigate("/transacoes")}
+                  className={getNavButtonClass("/transacoes")}
+                >
+                  Financeiro
+                </button>
 
-            <button
-              onClick={() => navigate("/usuarios")}
-              className={getNavButtonClass("/usuarios")}
-            >
-              Usuários
-            </button>
+                <button
+                  type="button"
+                  onClick={() => navigate("/financeiro/dashboard")}
+                  className={getNavButtonClass("/financeiro/dashboard")}
+                >
+                  Dashboard Financeiro
+                </button>
 
-            <button
-              onClick={() => navigate("/relatorios/financeiro")}
-              className={getNavButtonClass("/relatorios/financeiro")}
-            >
-              Relatórios
-            </button>
+                <button
+                  type="button"
+                  onClick={() => navigate("/usuarios")}
+                  className={getNavButtonClass("/usuarios")}
+                >
+                  Usuários
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => navigate("/relatorios/financeiro")}
+                  className={getNavButtonClass("/relatorios/financeiro")}
+                >
+                  Relatórios
+                </button>
+              </div>
+            </div>
           </>
         )}
       </nav>
 
       <div className="p-4 border-t border-white/10">
         <button
+          type="button"
           onClick={logout}
-          className="w-full bg-[#3E7996] py-2 rounded-lg hover:opacity-90"
+          className="w-full bg-[#3E7996] py-2.5 rounded-xl hover:opacity-90 text-sm font-medium"
         >
           Sair
         </button>

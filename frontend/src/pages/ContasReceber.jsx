@@ -67,13 +67,6 @@ export default function ContasReceber() {
     }
   }
 
-  const formatarMoeda = (valor) => {
-    return Number(valor || 0).toLocaleString("pt-BR", {
-      style: "currency",
-      currency: "BRL"
-    })
-  }
-
   const formatarData = (data) => {
     if (!data) return "Sem vencimento"
     return new Date(data).toLocaleDateString("pt-BR")

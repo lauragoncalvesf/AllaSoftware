@@ -17,6 +17,7 @@ import Produtos from "./pages/Produtos"
 import Vendas from "./pages/Vendas"
 import ClienteFinanceiro from "./pages/ClienteFinanceiro" 
 import Agendamentos from "./pages/Agendamentos"
+import Perfil from "./pages/Perfil"
 
 
 function App() {
@@ -143,6 +144,16 @@ function App() {
             </PrivateRoute>
           }
         />
+
+        <Route 
+          path="/perfil"
+          element={
+            <PrivateRoute>
+              <Perfil />
+            </PrivateRoute>
+          }
+        />
+        
       </Routes>
     </BrowserRouter>
   )
