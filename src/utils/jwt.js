@@ -4,8 +4,8 @@ import jwt from "jsonwebtoken"
 export const gerarAccessToken = (empresaId, usuarioId, role) => {
   return jwt.sign(
     { empresaId, usuarioId, role },
-    process.env.JWT_SECRET
-    // Sem expiração - token permanece válido
+    process.env.JWT_SECRET,
+    { expiresIn: "2h" }
   )
 }
 

@@ -106,7 +106,7 @@ export const login = async (req, res) => {
 
     if (!empresa) {
       return res.status(404).json({
-        error: "Empresa não encontrada"
+        error: "Credenciais inválidas"
       })
     }
 
@@ -115,7 +115,7 @@ export const login = async (req, res) => {
     if (!senhaValida) {
       await registrarAuditoria(empresa.id, null, ACOES_AUDITORIA.PERMISSAO_NEGADA, ENTIDADES_AUDITORIA.EMPRESA, "Tentativa de login com senha inválida")
       return res.status(401).json({
-        error: "Senha inválida"
+        error: "Credenciais inválidas"
       })
     }
 
@@ -154,7 +154,7 @@ export const loginUsuario = async (req, res) => {
 
     if (!usuario) {
       return res.status(404).json({
-        error: "Usuário não encontrado"
+        error: "Credenciais inválidas"
       })
     }
 
@@ -163,7 +163,7 @@ export const loginUsuario = async (req, res) => {
     if (!senhaValida) {
       await registrarAuditoria(usuario.empresaId, usuario.id, ACOES_AUDITORIA.PERMISSAO_NEGADA, ENTIDADES_AUDITORIA.USUARIO, "Tentativa de login com senha inválida")
       return res.status(401).json({
-        error: "Senha inválida"
+        error: "Credenciais inválidas"
       })
     }
 
