@@ -11,9 +11,7 @@ import CampoTextarea from "../components/CampoTextarea"
 import ClienteSearchSelect from "../components/ClienteSearchSelect.jsx"
 import { formatarData, formatarDataHora } from "../utils/formatters"
 
-/* ===========================================================
-   Paleta por status (mesma identidade #2F8AA3 do app)
-   =========================================================== */
+
 const STATUS_CORES = {
   agendado: {
     bg: "bg-[#2F8AA3]",
@@ -543,9 +541,7 @@ export default function Agendamentos() {
   )
 }
 
-/* =================================================================
-   VISÃO MÊS — grid 7xN, dias com mini cards de agendamentos
-   ================================================================= */
+
 function VisaoMes({ dataReferencia, agendamentos, onClickEvento, onClickDia, onIrParaDia }) {
   const dias = useMemo(() => gerarGridMes(dataReferencia), [dataReferencia])
   const hojeStr = new Date().toDateString()
@@ -622,9 +618,7 @@ function VisaoMes({ dataReferencia, agendamentos, onClickEvento, onClickDia, onI
   )
 }
 
-/* =================================================================
-   VISÃO SEMANA — colunas por dia, linhas por hora
-   ================================================================= */
+
 function VisaoSemana({ dataReferencia, agendamentos, onClickEvento, onClickSlot }) {
   const ini = useMemo(() => inicioSemana(dataReferencia), [dataReferencia])
   const dias = useMemo(
@@ -714,9 +708,7 @@ function FragmentoHora({ hora, dias, agendamentos, onClickEvento, onClickSlot })
   )
 }
 
-/* =================================================================
-   VISÃO DIA — uma única coluna larga
-   ================================================================= */
+
 function VisaoDia({ dataReferencia, agendamentos, onClickEvento, onClickSlot }) {
   const horas = Array.from({ length: HORA_FINAL - HORA_INICIAL }, (_, i) => HORA_INICIAL + i)
   const eventosDoDia = agendamentos
@@ -800,9 +792,7 @@ function FragmentoHoraDia({ hora, slot, eventos, onClickEvento, onClickSlot }) {
   )
 }
 
-/* =================================================================
-   VISÃO LISTA — agrupada por dia, no estilo card
-   ================================================================= */
+
 function VisaoLista({ agendamentos, onEditar, onAtualizarStatus, onExcluir }) {
   const grupos = useMemo(() => {
     const map = new Map()
@@ -897,9 +887,7 @@ function VisaoLista({ agendamentos, onEditar, onAtualizarStatus, onExcluir }) {
   )
 }
 
-/* =================================================================
-   DETALHES (modal ao clicar num evento)
-   ================================================================= */
+
 function DetalhesAgendamento({ agendamento, onEditar, onAtualizarStatus, onExcluir }) {
   const cor = STATUS_CORES[agendamento.status] || STATUS_CORES.agendado
   return (
@@ -966,9 +954,7 @@ function InfoBox({ label, valor }) {
   )
 }
 
-/* =================================================================
-   AUX
-   ================================================================= */
+
 function FiltroBotao({ ativo, texto, onClick }) {
   return (
     <button
