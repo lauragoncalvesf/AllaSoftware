@@ -1,11 +1,21 @@
+import { useState } from "react"
 import Sidebar from "../components/Sidebar"
 
 export default function AppLayout({ children }) {
-  return (
-    <div className="flex min-h-screen bg-gray-100">
-      <Sidebar />
+  const [sidebarAberta, setSidebarAberta] = useState(true)
 
-      <main className="flex-1 ml-64 p-6">
+  return (
+    <div className="min-h-screen bg-gray-50">
+      <Sidebar
+        aberta={sidebarAberta}
+        setAberta={setSidebarAberta}
+      />
+
+      <main
+        className={`min-h-screen p-6 transition-all duration-300 ${
+          sidebarAberta ? "ml-64" : "ml-14"
+        }`}
+      >
         {children}
       </main>
     </div>
