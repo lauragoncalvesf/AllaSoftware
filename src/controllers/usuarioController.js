@@ -103,22 +103,46 @@ export const deletarUsuario = async (req, res) => {
 // ─── Ver perfil do usuário logado ───────────────────────────
 export const verPerfil = async (req, res) => {
   try {
-    // Se for login da empresa (sem usuarioId), retorna dados da empresa
-    if (!req.usuarioId) {
-      const empresa = await prisma.empresa.findUnique({
-        where: { id: req.empresaId },
-        select: { id: true, nome: true, email: true, createdAt: true }
-      })
-
-      if (!empresa) {
-        return res.status(404).json({ error: "Empresa não encontrada" })
+    const empresa = await prisma.empresa.findUnique({
+      where: {
+        id: req.empresaId
+      },
+      select: {
+        id: true,
+        nome: true,
+        email: true,
+        cpfCnpj: true,
+        celular: true,
+        cep: true,
+        rua: true,
+        numero: true,
+        complemento: true,
+        bairro: true,
+        cidade: true,
+        estado: true,
+        createdAt: true
       }
+    })
 
-      return res.json({ tipo: "empresa", ...empresa })
+    if (!empresa) {
+      return res.status(404).json({
+        error: "Empresa não encontrada"
+      })
+    }
+
+    if (!req.usuarioId) {
+      return res.json({
+        tipo: "empresa",
+        ...empresa,
+        empresa
+      })
     }
 
     const usuario = await prisma.usuario.findFirst({
-      where: { id: req.usuarioId, empresaId: req.empresaId },
+      where: {
+        id: req.usuarioId,
+        empresaId: req.empresaId
+      },
       select: {
         id: true,
         nome: true,
@@ -129,32 +153,77 @@ export const verPerfil = async (req, res) => {
     })
 
     if (!usuario) {
-      return res.status(404).json({ error: "Usuário não encontrado" })
+      return res.status(404).json({
+        error: "Usuário não encontrado"
+      })
     }
 
-    res.json({ tipo: "usuario", ...usuario })
+    res.json({
+      tipo: "usuario",
+      ...usuario,
+      empresa
+    })
   } catch (error) {
     console.error("Erro ao buscar perfil:", error)
-    res.status(500).json({ error: "Erro ao buscar perfil" })
+
+    res.status(500).json({
+      error: "Erro ao buscar perfil"
+    })
   }
 }
 
 // ─── Atualizar perfil do usuário logado ─────────────────────
 export const atualizarPerfil = async (req, res) => {
   try {
-    const { nome, senhaAtual, novaSenha } = req.body || {}
+    const {
+      nome,
+      senhaAtual,
+      novaSenha,
 
-    // Login de empresa
+      empresaNome,
+      cpfCnpj,
+      celular,
+      cep,
+      rua,
+      numero,
+      complemento,
+      bairro,
+      cidade,
+      estado
+    } = req.body || {}
+
+    const camposEmpresaRecebidos = {
+      nome: empresaNome,
+      cpfCnpj,
+      celular,
+      cep,
+      rua,
+      numero,
+      complemento,
+      bairro,
+      cidade,
+      estado
+    }
+
+    const deveAtualizarEmpresa = Object.values(camposEmpresaRecebidos).some(
+      (valor) => valor !== undefined
+    )
+
+    // LOGIN COMO EMPRESA
     if (!req.usuarioId) {
       const empresa = await prisma.empresa.findUnique({
-        where: { id: req.empresaId }
+        where: {
+          id: req.empresaId
+        }
       })
 
       if (!empresa) {
-        return res.status(404).json({ error: "Empresa não encontrada" })
+        return res.status(404).json({
+          error: "Empresa não encontrada"
+        })
       }
 
-      const dados = {}
+      const dadosEmpresa = {}
 
       if (nome) {
         if (!senhaAtual) {
@@ -171,33 +240,58 @@ export const atualizarPerfil = async (req, res) => {
           })
         }
 
-        dados.nome = nome
+        dadosEmpresa.nome = nome
       }
 
-      if (Object.keys(dados).length === 0) {
+      if (deveAtualizarEmpresa) {
+        if (empresaNome !== undefined) dadosEmpresa.nome = empresaNome || null
+        if (cpfCnpj !== undefined) dadosEmpresa.cpfCnpj = cpfCnpj || null
+        if (celular !== undefined) dadosEmpresa.celular = celular || null
+        if (cep !== undefined) dadosEmpresa.cep = cep || null
+        if (rua !== undefined) dadosEmpresa.rua = rua || null
+        if (numero !== undefined) dadosEmpresa.numero = numero || null
+        if (complemento !== undefined) dadosEmpresa.complemento = complemento || null
+        if (bairro !== undefined) dadosEmpresa.bairro = bairro || null
+        if (cidade !== undefined) dadosEmpresa.cidade = cidade || null
+        if (estado !== undefined) dadosEmpresa.estado = estado || null
+      }
+
+      if (Object.keys(dadosEmpresa).length === 0) {
         return res.status(400).json({
           error: "Nenhuma informação para atualizar"
         })
       }
 
       const empresaAtualizada = await prisma.empresa.update({
-        where: { id: req.empresaId },
-        data: dados,
+        where: {
+          id: req.empresaId
+        },
+        data: dadosEmpresa,
         select: {
           id: true,
           nome: true,
           email: true,
+          cpfCnpj: true,
+          celular: true,
+          cep: true,
+          rua: true,
+          numero: true,
+          complemento: true,
+          bairro: true,
+          cidade: true,
+          estado: true,
           createdAt: true
         }
       })
 
       return res.json({
         tipo: "empresa",
-        ...empresaAtualizada
+        ...empresaAtualizada,
+        empresa: empresaAtualizada
       })
     }
 
-    // Login de usuário
+    // LOGIN COMO USUÁRIO
     const usuario = await prisma.usuario.findFirst({
       where: {
         id: req.usuarioId,
@@ -211,7 +305,7 @@ export const atualizarPerfil = async (req, res) => {
       })
     }
 
-    const dados = {}
+    const dadosUsuario = {}
 
     if (nome) {
       if (!senhaAtual) {
@@ -228,7 +322,7 @@ export const atualizarPerfil = async (req, res) => {
         })
       }
 
-      dados.nome = nome
+      dadosUsuario.nome = nome
     }
 
     if (novaSenha) {
@@ -252,20 +346,74 @@ export const atualizarPerfil = async (req, res) => {
         })
       }
 
-      dados.senha = await bcrypt.hash(novaSenha, 10)
+      dadosUsuario.senha = await bcrypt.hash(novaSenha, 10)
     }
 
-    if (Object.keys(dados).length === 0) {
+    if (Object.keys(dadosUsuario).length > 0) {
+      await prisma.usuario.update({
+        where: {
+          id: req.usuarioId
+        },
+        data: dadosUsuario
+      })
+    }
+
+    let empresaAtualizada = null
+
+    if (deveAtualizarEmpresa) {
+      if (usuario.role !== "admin") {
+        return res.status(403).json({
+          error: "Apenas administradores podem alterar dados da empresa"
+        })
+      }
+
+      const dadosEmpresa = {}
+
+      if (empresaNome !== undefined) dadosEmpresa.nome = empresaNome || null
+      if (cpfCnpj !== undefined) dadosEmpresa.cpfCnpj = cpfCnpj || null
+      if (celular !== undefined) dadosEmpresa.celular = celular || null
+      if (cep !== undefined) dadosEmpresa.cep = cep || null
+      if (rua !== undefined) dadosEmpresa.rua = rua || null
+      if (numero !== undefined) dadosEmpresa.numero = numero || null
+      if (complemento !== undefined) dadosEmpresa.complemento = complemento || null
+      if (bairro !== undefined) dadosEmpresa.bairro = bairro || null
+      if (cidade !== undefined) dadosEmpresa.cidade = cidade || null
+      if (estado !== undefined) dadosEmpresa.estado = estado || null
+
+      empresaAtualizada = await prisma.empresa.update({
+        where: {
+          id: req.empresaId
+        },
+        data: dadosEmpresa,
+        select: {
+          id: true,
+          nome: true,
+          email: true,
+          cpfCnpj: true,
+          celular: true,
+          cep: true,
+          rua: true,
+          numero: true,
+          complemento: true,
+          bairro: true,
+          cidade: true,
+          estado: true,
+          createdAt: true
+        }
+      })
+    }
+
+    if (Object.keys(dadosUsuario).length === 0 && !deveAtualizarEmpresa) {
       return res.status(400).json({
         error: "Nenhuma informação para atualizar"
       })
     }
 
-    const atualizado = await prisma.usuario.update({
+    const usuarioAtualizado = await prisma.usuario.findFirst({
       where: {
-        id: req.usuarioId
+        id: req.usuarioId,
+        empresaId: req.empresaId
       },
-      data: dados,
       select: {
         id: true,
         nome: true,
@@ -275,9 +423,31 @@ export const atualizarPerfil = async (req, res) => {
       }
     })
 
+    const empresa = empresaAtualizada || await prisma.empresa.findUnique({
+      where: {
+        id: req.empresaId
+      },
+      select: {
+        id: true,
+        nome: true,
+        email: true,
+        cpfCnpj: true,
+        celular: true,
+        cep: true,
+        rua: true,
+        numero: true,
+        complemento: true,
+        bairro: true,
+        cidade: true,
+        estado: true,
+        createdAt: true
+      }
+    })
+
     res.json({
       tipo: "usuario",
-      ...atualizado
+      ...usuarioAtualizado,
+      empresa
     })
   } catch (error) {
     console.error("Erro ao atualizar perfil:", error)

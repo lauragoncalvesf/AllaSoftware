@@ -5,22 +5,6 @@ export default function Sidebar({ aberta = true, setAberta }) {
   const location = useLocation()
   const usuario = JSON.parse(localStorage.getItem("usuario"))
 
-  const logout = () => {
-    localStorage.removeItem("token")
-    localStorage.removeItem("usuario")
-    navigate("/")
-  }
-
-  const nomeUsuario = usuario?.nome || "Usuário"
-  const inicialUsuario = nomeUsuario.charAt(0).toUpperCase()
-
-  const perfilUsuario =
-    usuario?.role === "admin"
-      ? "Admin"
-      : usuario?.role === "funcionario"
-      ? "Funcionário"
-      : "Empresa"
-
   const isActive = (path) => location.pathname === path
 
   const getNavButtonClass = (path) => {
@@ -44,14 +28,9 @@ export default function Sidebar({ aberta = true, setAberta }) {
           ☰
         </button>
 
-        <button
-          type="button"
-          onClick={() => navigate("/perfil")}
-          className="w-10 h-10 rounded-full bg-white text-[#2F8AA3] flex items-center justify-center text-sm font-bold shadow-sm mt-4"
-          title={nomeUsuario}
-        >
-          {inicialUsuario || "U"}
-        </button>
+        <div className="mt-6 text-[10px] font-bold text-white/40 rotate-90 whitespace-nowrap">
+          ALLA
+        </div>
       </aside>
     )
   }
@@ -59,11 +38,15 @@ export default function Sidebar({ aberta = true, setAberta }) {
   return (
     <aside className="fixed left-0 top-0 w-64 h-screen bg-[#2D2E47] text-white flex flex-col overflow-y-auto z-40 transition-all duration-300">
       <div className="p-5 border-b border-white/10">
-        <div className="flex items-start justify-between gap-3 mb-4">
+        <div className="flex items-start justify-between gap-3">
           <div>
             <h1 className="text-xl font-bold text-white leading-tight">
               Sistema ALLA
             </h1>
+
+            <p className="text-xs text-white/45 mt-1">
+              Gestão inteligente
+            </p>
           </div>
 
           <button
@@ -75,34 +58,6 @@ export default function Sidebar({ aberta = true, setAberta }) {
             ‹
           </button>
         </div>
-
-        <button
-          type="button"
-          onClick={() => navigate("/perfil")}
-          className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl transition text-left ${
-            isActive("/perfil")
-              ? "bg-[#3E7996] shadow-sm"
-              : "bg-white/5 hover:bg-white/10"
-          }`}
-        >
-          <div className="w-9 h-9 rounded-full bg-white text-[#2F8AA3] flex items-center justify-center text-sm font-bold shadow-sm shrink-0">
-            {inicialUsuario || "U"}
-          </div>
-
-          <div className="min-w-0 flex-1">
-            <p className="text-sm font-semibold text-white truncate">
-              {nomeUsuario}
-            </p>
-
-            <p className="text-[11px] text-white/55 truncate">
-              {perfilUsuario}
-            </p>
-          </div>
-
-          <span className="text-white/35 text-sm">
-            ›
-          </span>
-        </button>
       </div>
 
       <nav className="flex-1 p-4 space-y-2">
@@ -204,16 +159,6 @@ export default function Sidebar({ aberta = true, setAberta }) {
           </div>
         )}
       </nav>
-
-      <div className="p-4 border-t border-white/10">
-        <button
-          type="button"
-          onClick={logout}
-          className="w-full bg-[#3E7996] py-2.5 rounded-xl hover:opacity-90 text-sm font-medium"
-        >
-          Sair
-        </button>
-      </div>
     </aside>
   )
 }
