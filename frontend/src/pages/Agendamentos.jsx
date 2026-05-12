@@ -61,10 +61,16 @@ export default function Agendamentos() {
   const [agendamentoEditandoId, setAgendamentoEditandoId] = useState(null)
   const [agendamentoSelecionado, setAgendamentoSelecionado] = useState(null)
 
+  const usuarioLogado = JSON.parse(localStorage.getItem("usuario"))
+
+  const [profissionais, setProfissionais] = useState([])
+  const [profissionalFiltro, setProfissionalFiltro] = useState("")
+
   const [form, setForm] = useState({
     clienteId: "",
     clienteNome: "",
     servicoId: "",
+    profissionalId: "", 
     titulo: "",
     descricao: "",
     dataHora: "",
@@ -73,16 +79,18 @@ export default function Agendamentos() {
   })
 
   useEffect(() => { carregarBase() }, [])
-  useEffect(() => { carregarAgendamentos() }, [statusFiltro, dataInicio, dataFim])
+  useEffect(() => { carregarAgendamentos() }, [statusFiltro, dataInicio, dataFim, profissionalFiltro])
 
   const carregarBase = async () => {
     try {
-      const [clientesRes, servicosRes] = await Promise.all([
+      const [clientesRes, servicosRes, profissionaisRes] = await Promise.all([
         api.get("/clientes"),
-        api.get("/servicos")
+        api.get("/servicos"),
+        api.get("/profissionais")
       ])
       setClientes(clientesRes.data || [])
       setServicos(servicosRes.data || [])
+      setProfissionais(profissionaisRes.data || [])
     } catch (error) {
       console.error("Erro ao carregar base de agendamentos:", error)
       setAviso({
@@ -103,6 +111,7 @@ export default function Agendamentos() {
         fim.setHours(23, 59, 59, 999)
         params.append("dataFim", fim.toISOString())
       }
+      if (profissionalFiltro) params.append("profissionalId", profissionalFiltro)
       const response = await api.get(`/agendamentos?${params.toString()}`)
       setAgendamentos(response.data || [])
     } catch (error) {
@@ -124,14 +133,28 @@ export default function Agendamentos() {
     }
   }, [agendamentos])
 
+  const obterProfissionalPadrao = () => {
+    if (
+      usuarioLogado?.profissional === true &&
+      usuarioLogado?.preSelecionarAgendamento === true &&
+      usuarioLogado?.id
+    ) {
+      return String(usuarioLogado.id)
+    }
+
+    return ""
+  }
+
   /* ============== AÇÕES ============== */
   const abrirNovoAgendamento = (dataPreenchida = null) => {
+    const profissionalPadrao = obterProfissionalPadrao()
     setModoEdicao(false)
     setAgendamentoEditandoId(null)
     setForm({
       clienteId: "",
       clienteNome: "",
       servicoId: "",
+      profissionalId: profissionalPadrao,
       titulo: "",
       descricao: "",
       dataHora: dataPreenchida ? formatarDataHoraInput(dataPreenchida) : "",
@@ -149,6 +172,7 @@ export default function Agendamentos() {
       clienteId: agendamento.clienteId ? String(agendamento.clienteId) : "",
       clienteNome: agendamento.cliente?.nome || "",
       servicoId: agendamento.servicoId ? String(agendamento.servicoId) : "",
+      profissionalId: agendamento.profissionalId ? String(agendamento.profissionalId) : "",
       titulo: agendamento.titulo || "",
       descricao: agendamento.descricao || "",
       dataHora: formatarDataHoraInput(agendamento.dataHora),
@@ -168,11 +192,16 @@ export default function Agendamentos() {
       setAviso({ titulo: "Atenção", mensagem: "Informe a data e hora do agendamento." })
       return
     }
+    if (!form.profissionalId) {
+      setAviso({ titulo: "Atenção", mensagem: "Informe o profissional do agendamento." })
+      return
+    }
     try {
       setSalvando(true)
       const payload = {
         clienteId: form.clienteId ? Number(form.clienteId) : null,
         servicoId: form.servicoId ? Number(form.servicoId) : null,
+        profissionalId: form.profissionalId ? Number(form.profissionalId) : null,
         titulo: form.titulo,
         descricao: form.descricao || null,
         dataHora: form.dataHora,
@@ -239,6 +268,7 @@ export default function Agendamentos() {
     setStatusFiltro("")
     setDataInicio("")
     setDataFim("")
+    setProfissionalFiltro("")
   }
 
   /* ============== NAVEGAÇÃO DE DATAS ============== */
@@ -356,6 +386,23 @@ export default function Agendamentos() {
             ))}
           </div>
 
+          {/* Filtros */}
+          <div className="flex flex-wrap items-center gap-2">
+            {/* Profissional */}
+            <select
+              value={profissionalFiltro}
+              onChange={(e) => setProfissionalFiltro(e.target.value)}
+              className="bg-white border border-gray-200 rounded-md px-2 py-1 text-xs outline-none focus:ring-2 focus:ring-[#3E7996]"
+            >
+              <option value="">Todos os profissionais</option>
+
+              {profissionais.map((profissional) => (
+                <option key={profissional.id} value={profissional.id}>
+                  {profissional.nome}
+                </option>
+              ))}
+            </select>
+          
           {/* Datas */}
           <div className="flex items-center gap-1.5">
             <input
@@ -364,7 +411,9 @@ export default function Agendamentos() {
               onChange={(e) => setDataInicio(e.target.value)}
               className="bg-white border border-gray-200 rounded-md px-2 py-1 text-xs outline-none focus:ring-2 focus:ring-[#3E7996]"
             />
+
             <span className="text-xs text-gray-400">→</span>
+            
             <input
               type="date"
               value={dataFim}
@@ -385,6 +434,8 @@ export default function Agendamentos() {
             </div>
           </div>
         </div>
+        </div>
+
 
         {/* ===== Linha 3: Calendário ocupa todo o resto da viewport ===== */}
         <div className="flex-1 min-h-0 overflow-hidden">
@@ -475,6 +526,25 @@ export default function Agendamentos() {
                 }
               />
             </div>
+            <CampoSelect
+              label="Profissional *"
+              value={form.profissionalId}
+              onChange={(e) =>
+                setForm({
+                  ...form,
+                  profissionalId: e.target.value
+                })
+              }
+              options={[
+                { value: "", label: "Selecione um profissional" },
+                ...profissionais.map((profissional) => ({
+                  value: String(profissional.id),
+                  label: `${profissional.nome}${
+                    profissional.cargo ? ` - ${profissional.cargo}` : ""
+                  }`
+                }))
+              ]}
+            />
             <CampoSelect
               label="Serviço"
               value={form.servicoId}
