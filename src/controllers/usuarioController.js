@@ -85,7 +85,7 @@ const obterPermissoesPorRole = (role) => {
 // ─── Criar usuário ───────────────────────────────────────────
 export const criarUsuario = async (req, res) => {
   try {
-    const { nome, email, senha, role, cargo, status, permissoes } = req.body || {}
+    const { nome, email, senha, role, cargo, status, permissoes, tipoEquipe, profissional, preSelecionarAgendamento } = req.body || {}
 
     if (!nome || !email || !senha) {
       return res.status(400).json({
@@ -116,6 +116,12 @@ export const criarUsuario = async (req, res) => {
         cargo: cargo || null,
         status: status || "ativo",
         permissoes: permissoes || obterPermissoesPorRole(roleFinal),
+        tipoEquipe: tipoEquipe || "profissional",
+        profissional: profissional !== undefined ? Boolean(profissional) : true,
+        preSelecionarAgendamento:
+          preSelecionarAgendamento !== undefined
+            ? Boolean(preSelecionarAgendamento)
+            : true,
         empresaId: req.empresaId
       }
     })
@@ -128,6 +134,9 @@ export const criarUsuario = async (req, res) => {
       cargo: usuario.cargo,
       status: usuario.status,
       permissoes: usuario.permissoes,
+      tipoEquipe: usuario.tipoEquipe,
+      profissional: usuario.profissional,
+      preSelecionarAgendamento: usuario.preSelecionarAgendamento,
       empresaId: usuario.empresaId
     })
   } catch (error) {
@@ -149,6 +158,9 @@ export const listarUsuarios = async (req, res) => {
         cargo: true,
         status: true,
         permissoes: true,
+        tipoEquipe: true,
+        profissional: true,
+        preSelecionarAgendamento: true,
         empresaId: true,
         createdAt: true,
         updatedAt: true
@@ -194,7 +206,7 @@ export const deletarUsuario = async (req, res) => {
 export const atualizarUsuario = async (req, res) => {
   try {
     const { id } = req.params
-    const { nome, email, role, cargo, status, permissoes, senha } = req.body || {}
+    const { nome, email, role, cargo, status, permissoes, senha, tipoEquipe, profissional, preSelecionarAgendamento } = req.body || {}
 
     if (role && !["admin", "funcionario"].includes(role)) {
       return res.status(400).json({
@@ -235,6 +247,11 @@ export const atualizarUsuario = async (req, res) => {
     if (cargo !== undefined) dados.cargo = cargo || null
     if (status !== undefined) dados.status = status
     if (permissoes !== undefined) dados.permissoes = permissoes
+    if (tipoEquipe !== undefined) dados.tipoEquipe = tipoEquipe
+    if (profissional !== undefined) dados.profissional = Boolean(profissional)
+    if (preSelecionarAgendamento !== undefined) {
+      dados.preSelecionarAgendamento = Boolean(preSelecionarAgendamento)
+    }
 
     if (senha) {
       dados.senha = await bcrypt.hash(senha, 10)
@@ -253,6 +270,9 @@ export const atualizarUsuario = async (req, res) => {
         cargo: true,
         status: true,
         permissoes: true,
+        tipoEquipe: true,
+        profissional: true,
+        preSelecionarAgendamento: true,
         empresaId: true,
         createdAt: true,
         updatedAt: true
@@ -320,6 +340,9 @@ export const alterarStatusUsuario = async (req, res) => {
         cargo: true,
         status: true,
         permissoes: true,
+        tipoEquipe: true,
+        profissional: true,
+        preSelecionarAgendamento: true,
         empresaId: true,
         createdAt: true,
         updatedAt: true
@@ -384,6 +407,13 @@ export const verPerfil = async (req, res) => {
         nome: true,
         email: true,
         role: true,
+        cargo: true,
+        status: true,
+        permissoes: true,
+        tipoEquipe: true,
+        profissional: true,
+        preSelecionarAgendamento: true,
+        permissoes: true,
         createdAt: true
       }
     })
@@ -694,3 +724,35 @@ export const atualizarPerfil = async (req, res) => {
   }
 }
 
+export const listarProfissionais = async (req, res) => {
+  try {
+    const profissionais = await prisma.usuario.findMany({
+      where: {
+        empresaId: req.empresaId,
+        status: "ativo",
+        profissional: true
+      },
+      select: {
+        id: true,
+        nome: true,
+        email: true,
+        cargo: true,
+        role: true,
+        tipoEquipe: true,
+        profissional: true,
+        preSelecionarAgendamento: true
+      },
+      orderBy: {
+        nome: "asc"
+      }
+    })
+
+    res.json(profissionais)
+  } catch (error) {
+    console.error("Erro ao listar profissionais:", error)
+
+    res.status(500).json({
+      error: "Erro ao listar profissionais"
+    })
+  }
+}

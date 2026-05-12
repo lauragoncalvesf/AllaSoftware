@@ -86,6 +86,9 @@ export default function Equipe() {
     role: "funcionario",
     cargo: "",
     status: "ativo",
+    tipoEquipe: "profissional",
+    profissional: true,
+    preSelecionarAgendamento: true,
     permissoes: permissoesPadraoFuncionario
   })
 
@@ -120,6 +123,9 @@ export default function Equipe() {
       role: "funcionario",
       cargo: "",
       status: "ativo",
+      tipoEquipe: "profissional",
+      profissional: true,
+      preSelecionarAgendamento: true,
       permissoes: permissoesPadraoFuncionario
     })
 
@@ -137,6 +143,12 @@ export default function Equipe() {
       role: usuario.role || "funcionario",
       cargo: usuario.cargo || "",
       status: usuario.status || "ativo",
+      tipoEquipe: usuario.tipoEquipe || "profissional",
+      profissional: usuario.profissional !== undefined ? Boolean(usuario.profissional) : true,
+      preSelecionarAgendamento:
+        usuario.preSelecionarAgendamento !== undefined
+        ? Boolean(usuario.preSelecionarAgendamento)
+        : true,
       permissoes:
         usuario.permissoes ||
         (usuario.role === "admin" ? permissoesAdmin : permissoesPadraoFuncionario)
@@ -173,6 +185,9 @@ export default function Equipe() {
         role: form.role,
         cargo: form.cargo || null,
         status: form.status,
+        tipoEquipe: form.tipoEquipe,
+        profissional: form.profissional,
+        preSelecionarAgendamento: form.preSelecionarAgendamento,
         permissoes: form.role === "admin" ? permissoesAdmin : form.permissoes
       }
 
@@ -333,6 +348,23 @@ export default function Equipe() {
                         <p className="text-sm text-gray-400 mt-1">
                           {usuario.cargo || "Sem cargo informado"}
                         </p>
+                        <p className="text-xs text-gray-400 mt-1">
+                            {usuario.tipoEquipe === "admin"
+                                ? "Admin da equipe"
+                                : usuario.tipoEquipe === "secretaria"
+                                ? "Secretaria/Recepcionista"
+                                : "Profissional"}
+                        </p>
+                        {usuario.profissional ? (
+                            <p className="text-xs text-[#2F8AA3] mt-1">
+                                Aparece na agenda
+                            </p>
+                            ) : (
+                            <p className="text-xs text-gray-400 mt-1">
+                                Não aparece na agenda
+                            </p>
+                            )}
+                        
                       </div>
                     </div>
 
@@ -452,6 +484,79 @@ export default function Equipe() {
                 />
               </div>
             </div>
+
+            <div>
+                <h3 className="text-sm font-semibold text-[#2D2E47] mb-3">
+                    Configuração da equipe
+                </h3>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <CampoSelect
+                    label="Tipo na equipe"
+                    value={form.tipoEquipe}
+                    onChange={(e) => {
+                        const tipo = e.target.value
+
+                        setForm((prev) => ({
+                        ...prev,
+                        tipoEquipe: tipo,
+                        profissional: tipo === "secretaria" ? prev.profissional : true,
+                        preSelecionarAgendamento:
+                            tipo === "secretaria" ? false : prev.preSelecionarAgendamento
+                        }))
+                    }}
+                    options={[
+                        { value: "admin", label: "Admin" },
+                        { value: "profissional", label: "Profissional" },
+                        { value: "secretaria", label: "Secretaria/Recepcionista" }
+                    ]}
+                    />
+
+                    <div className="bg-gray-50 rounded-xl p-4">
+                    <p className="text-sm font-medium text-[#2D2E47] mb-3">
+                        Agenda
+                    </p>
+
+                    <label className="flex items-center gap-3 text-sm text-gray-600 mb-3">
+                        <input
+                        type="checkbox"
+                        checked={form.profissional}
+                        onChange={(e) =>
+                            setForm({
+                            ...form,
+                            profissional: e.target.checked,
+                            preSelecionarAgendamento: e.target.checked
+                                ? form.preSelecionarAgendamento
+                                : false
+                            })
+                        }
+                        />
+
+                        Aparece como profissional na agenda
+                    </label>
+
+                    <label className="flex items-center gap-3 text-sm text-gray-600">
+                        <input
+                        type="checkbox"
+                        checked={form.preSelecionarAgendamento}
+                        disabled={!form.profissional}
+                        onChange={(e) =>
+                            setForm({
+                            ...form,
+                            preSelecionarAgendamento: e.target.checked
+                            })
+                        }
+                        />
+
+                        Pré-selecionar ao criar agendamento
+                    </label>
+
+                    <p className="text-xs text-gray-400 mt-3">
+                        Use pré-seleção para profissionais que normalmente agendam para si mesmos.
+                    </p>
+                    </div>
+                </div>
+                </div>
 
             {form.role !== "admin" && (
               <div>

@@ -50,6 +50,11 @@ export const register = async (req, res) => {
         email,
         senha: hash,
         role: "admin",
+        cargo: "Administrador",
+        status: "ativo",
+        tipoEquipe: "admin",
+        profissional: true,
+        preSelecionarAgendamento: true,
         empresaId: empresa.id
       }
     })
@@ -85,6 +90,12 @@ export const register = async (req, res) => {
         nome: usuarioAdmin.nome,
         email: usuarioAdmin.email,
         role: usuarioAdmin.role,
+        cargo: usuarioAdmin.cargo,
+        status: usuarioAdmin.status,
+        permissoes: usuarioAdmin.permissoes,
+        tipoEquipe: usuarioAdmin.tipoEquipe,
+        profissional: usuarioAdmin.profissional,
+        preSelecionarAgendamento: usuarioAdmin.preSelecionarAgendamento,
         empresaId: usuarioAdmin.empresaId
       }
     })
@@ -190,6 +201,9 @@ export const loginUsuario = async (req, res) => {
         cargo: usuario.cargo,
         status: usuario.status,
         permissoes: usuario.permissoes,
+        tipoEquipe: usuario.tipoEquipe,
+        profissional: usuario.profissional,
+        preSelecionarAgendamento: usuario.preSelecionarAgendamento,
         empresaId: usuario.empresaId
       }
     })

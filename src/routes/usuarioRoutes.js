@@ -5,7 +5,8 @@ import {
   alterarStatusUsuario,
   deletarUsuario,
   verPerfil,
-  atualizarPerfil
+  atualizarPerfil,
+  listarProfissionais
 } from "../controllers/usuarioController.js"
 
 import { auth } from "../middlewares/auth.js"
@@ -24,4 +25,6 @@ export default (app) => {
 
   // Pode manter por enquanto, mas vamos usar mais "inativar" do que excluir
   app.delete("/usuarios/:id", auth, permitirRoles("admin"), deletarUsuario)
+
+  app.get("/profissionais", auth, listarProfissionais)
 }
