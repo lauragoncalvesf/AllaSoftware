@@ -9,7 +9,7 @@ import CampoInput from "../components/CampoInput"
 import CampoSelect from "../components/CampoSelect"
 import CampoTextarea from "../components/CampoTextarea"
 import ClienteSearchSelect from "../components/ClienteSearchSelect.jsx"
-import { formatarData, formatarDataHora } from "../utils/formatters"
+import { formatarData, formatarDataHora, formatarMoeda } from "../utils/formatters"
 
 
 const STATUS_CORES = {
@@ -65,6 +65,17 @@ export default function Agendamentos() {
 
   const [profissionais, setProfissionais] = useState([])
   const [profissionalFiltro, setProfissionalFiltro] = useState("")
+
+  const [mostrarModalConclusao, setMostrarModalConclusao] = useState(false)
+  const [agendamentoConcluir, setAgendamentoConcluir] = useState(null)
+
+  const [formConclusao, setFormConclusao] = useState({
+    valorPago: "",
+    formaPagamento: "",
+    fiado: false,
+    vencimento: "",
+    observacoesPagamento: ""
+  })
 
   const [form, setForm] = useState({
     clienteId: "",
@@ -226,7 +237,29 @@ export default function Agendamentos() {
     }
   }
 
+ const abrirConclusaoAgendamento = (agendamento) => {
+  const valor = Number(
+    agendamento.valorServico || agendamento.servico?.preco || 0
+  )
+
+  setAgendamentoConcluir(agendamento)
+  setFormConclusao({
+    valorPago: valor ? String(valor) : "",
+    formaPagamento: "",
+    fiado: false,
+    vencimento: "",
+    observacoesPagamento: ""
+  })
+
+  setMostrarModalConclusao(true)
+}
+
   const atualizarStatus = async (agendamento, novoStatus) => {
+    if (novoStatus === "concluido") {
+      abrirConclusaoAgendamento(agendamento)
+      return
+    }
+
     try {
       await api.put(`/agendamentos/${agendamento.id}`, { status: novoStatus })
       setAgendamentoSelecionado(null)
@@ -237,6 +270,64 @@ export default function Agendamentos() {
         titulo: "Erro",
         mensagem: error.response?.data?.error || "Erro ao atualizar status"
       })
+    }
+  }
+
+  const concluirAgendamento = async (e) => {
+    e.preventDefault()
+
+    if (!agendamentoConcluir) return
+
+    const valorPagoNumero = Number(formConclusao.valorPago || 0)
+
+    if (valorPagoNumero < 0) {
+      setAviso({
+        titulo: "Atenção",
+        mensagem: "O valor pago não pode ser negativo."
+      })
+      return
+    }
+
+    if (valorPagoNumero > 0 && !formConclusao.formaPagamento) {
+      setAviso({
+        titulo: "Atenção",
+        mensagem: "Informe a forma de pagamento."
+      })
+      return
+    }
+
+    try {
+      setSalvando(true)
+
+      await api.post(`/agendamentos/${agendamentoConcluir.id}/concluir`, {
+        valorPago: valorPagoNumero,
+        formaPagamento: formConclusao.formaPagamento || null,
+        fiado: formConclusao.fiado,
+        vencimento: formConclusao.vencimento || null,
+        observacoesPagamento: formConclusao.observacoesPagamento || null
+      })
+
+      setMostrarModalConclusao(false)
+      setAgendamentoConcluir(null)
+      setAgendamentoSelecionado(null)
+
+      carregarAgendamentos()
+
+      setAviso({
+        titulo: "Sucesso",
+        mensagem: "Agendamento concluído e venda registrada com sucesso!"
+      })
+    } catch (error) {
+      console.error("Erro ao concluir agendamento:", error)
+
+      setAviso({
+        titulo: "Erro",
+        mensagem:
+          error.response?.data?.error ||
+          "Erro ao concluir agendamento"
+      })
+    } finally {
+      setSalvando(false)
     }
   }
 
@@ -298,6 +389,12 @@ export default function Agendamentos() {
     }
     return "Lista de agendamentos"
   }, [visao, dataReferencia])
+
+  const servicoSelecionado = servicos.find(
+    (servico) => String(servico.id) === String(form.servicoId)
+  )
+
+  const valorServicoSelecionado = servicoSelecionado?.preco || 0
 
   return (
     <AppLayout>
@@ -549,18 +646,41 @@ export default function Agendamentos() {
               label="Serviço"
               value={form.servicoId}
               onChange={(e) => {
-                const servicoSelecionado = servicos.find((s) => String(s.id) === String(e.target.value))
+                const servico = servicos.find(
+                  (item) => String(item.id) === String(e.target.value)
+                )
+
                 setForm({
                   ...form,
                   servicoId: e.target.value,
-                  titulo: !form.titulo && servicoSelecionado ? servicoSelecionado.nome : form.titulo
+                  titulo: !form.titulo && servico ? servico.nome : form.titulo
                 })
               }}
               options={[
                 { value: "", label: "Sem serviço" },
-                ...servicos.map((s) => ({ value: String(s.id), label: s.nome }))
+                ...servicos.map((servico) => ({
+                  value: String(servico.id),
+                  label: `${servico.nome} - ${formatarMoeda(servico.preco)}`
+                }))
               ]}
             />
+
+            {form.servicoId && (
+              <div className="bg-[#2F8AA3]/10 border border-[#2F8AA3]/20 rounded-xl p-4">
+                <p className="text-sm text-gray-500">
+                  Valor do serviço selecionado
+                </p>
+
+                <p className="text-2xl font-bold text-[#2D2E47] mt-1">
+                  {formatarMoeda(valorServicoSelecionado)}
+                </p>
+
+                <p className="text-xs text-gray-400 mt-1">
+                  Esse valor será salvo no agendamento.
+                </p>
+              </div>
+            )}
+
             <CampoInput
               label="Data e hora *"
               type="datetime-local"
@@ -601,6 +721,144 @@ export default function Agendamentos() {
                 disabled={salvando}
                 className="px-5 py-2.5 rounded-xl bg-[#2F8AA3] text-white hover:opacity-90 disabled:opacity-50"
               >{salvando ? "Salvando..." : "Salvar Agendamento"}</button>
+            </div>
+          </form>
+        </Modal>
+      )}
+
+      {mostrarModalConclusao && agendamentoConcluir && (
+        <Modal
+          titulo="Concluir agendamento"
+          onClose={() => {
+            setMostrarModalConclusao(false)
+            setAgendamentoConcluir(null)
+          }}
+        >
+          <form onSubmit={concluirAgendamento} className="space-y-4">
+            <div className="bg-gray-50 rounded-xl p-4">
+              <p className="text-sm text-gray-500">Atendimento</p>
+              <p className="font-semibold text-[#2D2E47] mt-1">
+                {agendamentoConcluir.titulo}
+              </p>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-4">
+                <InfoBox
+                  label="Cliente"
+                  valor={agendamentoConcluir.cliente?.nome || "Sem cliente"}
+                />
+
+                <InfoBox
+                  label="Serviço"
+                  valor={agendamentoConcluir.servico?.nome || "Sem serviço"}
+                />
+
+                <InfoBox
+                  label="Profissional"
+                  valor={agendamentoConcluir.profissional?.nome || "-"}
+                />
+
+                <InfoBox
+                  label="Valor"
+                  valor={formatarMoeda(
+                    agendamentoConcluir.valorServico ||
+                      agendamentoConcluir.servico?.preco ||
+                      0
+                  )}
+                />
+              </div>
+            </div>
+
+            <CampoInput
+              label="Valor pago agora"
+              type="number"
+              value={formConclusao.valorPago}
+              onChange={(e) =>
+                setFormConclusao({
+                  ...formConclusao,
+                  valorPago: e.target.value
+                })
+              }
+              placeholder="0,00"
+            />
+
+            <CampoSelect
+              label="Forma de pagamento"
+              value={formConclusao.formaPagamento}
+              onChange={(e) =>
+                setFormConclusao({
+                  ...formConclusao,
+                  formaPagamento: e.target.value
+                })
+              }
+              options={[
+                { value: "", label: "Selecione" },
+                { value: "dinheiro", label: "Dinheiro" },
+                { value: "pix", label: "Pix" },
+                { value: "cartao_debito", label: "Cartão de débito" },
+                { value: "cartao_credito", label: "Cartão de crédito" }
+              ]}
+            />
+
+            <label className="flex items-center gap-3 bg-amber-50 border border-amber-100 rounded-xl p-4 text-sm text-amber-800">
+              <input
+                type="checkbox"
+                checked={formConclusao.fiado}
+                onChange={(e) =>
+                  setFormConclusao({
+                    ...formConclusao,
+                    fiado: e.target.checked
+                  })
+                }
+              />
+
+              Deixar saldo em aberto / cliente vai pagar depois
+            </label>
+
+            {formConclusao.fiado && (
+              <CampoInput
+                label="Vencimento"
+                type="date"
+                value={formConclusao.vencimento}
+                onChange={(e) =>
+                  setFormConclusao({
+                    ...formConclusao,
+                    vencimento: e.target.value
+                  })
+                }
+              />
+            )}
+
+            <CampoTextarea
+              label="Observação do pagamento"
+              value={formConclusao.observacoesPagamento}
+              onChange={(e) =>
+                setFormConclusao({
+                  ...formConclusao,
+                  observacoesPagamento: e.target.value
+                })
+              }
+              placeholder="Ex: pagamento parcial, combinado para fim do mês..."
+            />
+
+            <div className="flex justify-end gap-3 pt-2">
+              <button
+                type="button"
+                onClick={() => {
+                  setMostrarModalConclusao(false)
+                  setAgendamentoConcluir(null)
+                }}
+                className="px-5 py-2.5 rounded-xl border border-gray-200 text-gray-600 hover:bg-gray-50"
+              >
+                Cancelar
+              </button>
+
+              <button
+                type="submit"
+                disabled={salvando}
+                className="px-5 py-2.5 rounded-xl bg-[#2F8AA3] text-white hover:opacity-90 disabled:opacity-50"
+              >
+                {salvando ? "Concluindo..." : "Concluir e registrar venda"}
+              </button>
             </div>
           </form>
         </Modal>
@@ -920,7 +1178,9 @@ function VisaoLista({ agendamentos, onEditar, onAtualizarStatus, onExcluir }) {
                       </div>
                       <p className="text-sm text-gray-500 mt-0.5 truncate">
                         {(a.cliente?.nome || "Sem cliente")}
+                        {a.profissional?.nome ? ` · ${a.profissional.nome}` : ""}
                         {a.servico?.nome ? ` · ${a.servico.nome}` : ""}
+                        {a.valorServico ? ` · ${formatarMoeda(a.valorServico)}` : ""}
                         {a.descricao ? ` · ${a.descricao}` : ""}
                       </p>
                     </div>
@@ -973,10 +1233,13 @@ function DetalhesAgendamento({ agendamento, onEditar, onAtualizarStatus, onExclu
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <InfoBox label="Cliente" valor={agendamento.cliente?.nome || "Sem cliente"} />
+        <InfoBox label="Profissional" valor={agendamento.profissional?.nome || "Sem profissional"} />
         <InfoBox label="Serviço" valor={agendamento.servico?.nome || "Sem serviço"} />
+        <InfoBox label="Valor" valor={agendamento.valorServico ? formatarMoeda(agendamento.valorServico) : "-"} />
         <InfoBox label="Criado em" valor={formatarData(agendamento.createdAt)} />
         <InfoBox label="Status" valor={capitalizar(agendamento.status)} />
       </div>
+
       {agendamento.descricao && (
         <div>
           <p className="text-xs uppercase text-gray-400 font-semibold mb-1">Descrição</p>

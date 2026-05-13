@@ -2,7 +2,8 @@ import {
   criarAgendamento,
   listarAgendamentos,
   atualizarAgendamento,
-  excluirAgendamento
+  excluirAgendamento, 
+  concluirAgendamento
 } from "../controllers/agendamentoController.js"
 
 import { auth } from "../middlewares/auth.js"
@@ -12,4 +13,5 @@ export default (app) => {
   app.get("/agendamentos", auth, listarAgendamentos)
   app.put("/agendamentos/:id", auth, atualizarAgendamento)
   app.delete("/agendamentos/:id", auth, excluirAgendamento)
+  app.post("/agendamentos/:id/concluir", auth, concluirAgendamento)
 }
