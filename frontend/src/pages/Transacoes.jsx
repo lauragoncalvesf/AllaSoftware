@@ -21,6 +21,8 @@ export default function Transacoes() {
   const [mostrarModal, setMostrarModal] = useState(false)
   const [aviso, setAviso] = useState(null)
 
+  const [tipoFiltro, setTipoFiltro] = useState("")
+
   const [novaTransacao, setNovaTransacao] = useState({
     tipo: "entrada",
     valor: "",
@@ -29,9 +31,27 @@ export default function Transacoes() {
     formaPagamento: ""
   })
 
+  const [categoriasDisponiveis, setCategoriasDisponiveis] = useState({
+    entrada: [],
+    saida: []
+  })
+
+  const carregarCategorias = async () => {
+    try {
+      const response = await api.get("/transacoes/categorias")
+      setCategoriasDisponiveis(response.data || { entrada: [], saida: [] })
+    } catch (error) {
+      console.error("Erro ao carregar categorias:", error)
+    }
+  }
+
+  useEffect(() => {
+    carregarCategorias()
+  }, [])
+
   useEffect(() => {
     carregarTransacoes()
-  }, [periodo, categoria, status])
+  }, [periodo, categoria, status, tipoFiltro])
 
   const carregarTransacoes = async () => {
     try {
@@ -41,6 +61,7 @@ export default function Transacoes() {
       if (periodo) params.append("periodo", periodo)
       if (categoria) params.append("categoria", categoria)
       if (status) params.append("status", status)
+      if (tipoFiltro) params.append("tipo", tipoFiltro)
 
       const response = await api.get(`/transacoes?${params.toString()}`)
       setTransacoes(response.data || [])
@@ -231,6 +252,16 @@ export default function Transacoes() {
           </div>
 
           <div className="flex flex-col md:flex-row gap-3 w-full xl:w-auto">
+            <select
+              value={tipoFiltro}
+              onChange={(e) => setTipoFiltro(e.target.value)}
+              className="w-full md:w-48 bg-white border border-gray-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-[#3E7996]"
+            >
+              <option value="">Todos os tipos</option>
+              <option value="entrada">Entradas</option>
+              <option value="saida">Saídas</option>
+            </select>
+
             <input
               type="text"
               value={categoria}
@@ -439,7 +470,8 @@ export default function Transacoes() {
                 onChange={(e) =>
                   setNovaTransacao({
                     ...novaTransacao,
-                    tipo: e.target.value
+                    tipo: e.target.value,
+                    categoria: "" 
                   })
                 }
                 options={[
@@ -463,7 +495,7 @@ export default function Transacoes() {
               />
             </div>
 
-            <CampoInput
+            <CampoSelect
               label="Categoria"
               value={novaTransacao.categoria}
               onChange={(e) =>
@@ -472,7 +504,13 @@ export default function Transacoes() {
                   categoria: e.target.value
                 })
               }
-              placeholder="Ex: venda, aluguel, fornecedor"
+              options={[
+                { value: "", label: "Selecione" },
+                ...(categoriasDisponiveis[novaTransacao.tipo] || []).map((categoria) => ({
+                  value: categoria,
+                  label: categoria
+                }))
+              ]}
             />
 
             <CampoSelect

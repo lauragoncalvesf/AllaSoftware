@@ -1,6 +1,33 @@
 import prisma from "../config/prisma.js"
 import { gerarComprovanteTransacaoCancelada, imprimirTermico } from "../services/comprovanteService.js"
 
+const CATEGORIAS_TRANSACOES = {
+  entrada: [
+    "Serviço",
+    "Produto",
+    "Venda",
+    "Pagamento de cliente",
+    "Outro"
+  ],
+  saida: [
+    "Produto/Estoque",
+    "Material",
+    "Aluguel",
+    "Conta fixa",
+    "Marketing",
+    "Comissão",
+    "Pagamento funcionário",
+    "Manutenção",
+    "Outro"
+  ]
+}
+
+const categoriaValida = (tipo, categoria) => {
+  if (!categoria) return true
+
+  return CATEGORIAS_TRANSACOES[tipo]?.includes(categoria)
+} 
+
 //  Criar transação
 export const criarTransacao = async (req, res) => {
   try {
@@ -18,6 +45,11 @@ export const criarTransacao = async (req, res) => {
       })
     }
 
+    if (!categoriaValida(tipo, categoria)) {
+      return res.status(400).json({
+        error: "Categoria inválida para este tipo de transação"
+      })
+    }
     const transacao = await prisma.transacao.create({
       data: {
         tipo,
@@ -41,7 +73,7 @@ export const criarTransacao = async (req, res) => {
 // Listar transações
 export const listarTransacoes = async (req, res) => {
   try {
-    const { status, periodo, categoria } = req.query
+    const { status, periodo, categoria, tipo } = req.query
 
     const agora = new Date()
     let dataInicial = null
@@ -76,6 +108,10 @@ export const listarTransacoes = async (req, res) => {
 
     if (categoria) {
       where.categoria = categoria
+    }
+
+    if (tipo) {
+      where.tipo = tipo
     }
 
     if (dataInicial) {
@@ -187,6 +223,7 @@ export const atualizarTransacao = async (req, res) => {
       })
     }
 
+
     const transacaoExistente = await prisma.transacao.findFirst({
       where: {
         id: Number(id),
@@ -199,7 +236,16 @@ export const atualizarTransacao = async (req, res) => {
       return res.status(404).json({
         error: "Transação ativa não encontrada para esta empresa"
       })
+    }   
+    
+    const tipoFinal = tipo || transacaoExistente?.tipo
+
+    if (!categoriaValida(tipoFinal, categoria)) {
+      return res.status(400).json({
+        error: "Categoria inválida para este tipo de transação"
+      })
     }
+
 
     const transacaoAtualizada = await prisma.transacao.update({
       where: {
@@ -343,26 +389,10 @@ export const estornarTransacao = async (req, res) => {
 
 export const listarCategoriasTransacoes = async (req, res) => {
   try {
-    const transacoes = await prisma.transacao.findMany({
-      where: {
-        empresaId: req.empresaId
-      },
-      select: {
-        categoria: true
-      }
-    })
-
-    const categorias = [
-      ...new Set(
-        transacoes
-          .map((transacao) => transacao.categoria)
-          .filter((categoria) => categoria)
-      )
-    ]
-
-    res.json(categorias)
+    res.json(CATEGORIAS_TRANSACOES)
   } catch (error) {
     console.error(error)
+
     res.status(500).json({
       error: "Erro ao listar categorias"
     })
