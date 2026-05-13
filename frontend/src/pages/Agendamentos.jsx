@@ -91,7 +91,7 @@ export default function Agendamentos() {
       })
     }
   }
-
+ 
   const carregarAgendamentos = async () => {
     try {
       setLoading(true)
