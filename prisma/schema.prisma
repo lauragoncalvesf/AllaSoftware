@@ -14,19 +14,38 @@ model Empresa {
   senha     String
   createdAt DateTime @default(now())
 
+  cpfCnpj     String?
+  celular    String?
+  cep         String?
+  rua         String?
+  numero      String?
+  complemento String?
+  bairro      String?
+  cidade      String?
+  estado      String?
+
   usuarios Usuario[]
 }
 
 model Usuario {
-  id        Int      @id @default(autoincrement())
-  nome      String
-  email     String   @unique
-  senha     String
-  role      String   @default("funcionario")
-  empresaId Int
-  createdAt DateTime @default(now())
+  id          Int      @id @default(autoincrement())
+  nome        String
+  email       String   @unique
+  senha       String
+  role        String   @default("funcionario")
+  cargo       String?
+  status      String   @default("ativo")
+  permissoes  Json?
+  empresaId   Int
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @default(now()) @updatedAt
 
-  empresa    Empresa  @relation(fields: [empresaId], references: [id])
+  tipoEquipe                 String   @default("profissional")
+  profissional               Boolean  @default(true)
+  preSelecionarAgendamento   Boolean  @default(true)
+
+  empresa     Empresa  @relation(fields: [empresaId], references: [id])
+  agendamentosProfissional Agendamento[] @relation("ProfissionalAgendamentos")
 }
 
 model Cliente {
@@ -113,6 +132,7 @@ model Venda {
   clienteId      Int?
   empresaId      Int
   contaReceberId Int?
+
   tipoPreco      String      @default("varejo")
   desconto       Float       @default(0)
   totalBruto     Float
@@ -121,6 +141,7 @@ model Venda {
   createdAt      DateTime    @default(now())
 
   itens          ItemVenda[]
+  agendamento Agendamento?
   contaReceber   ContaReceber? @relation(fields: [contaReceberId], references: [id])
 }
 
@@ -156,20 +177,32 @@ model AuditLog {
 }
 
 model Agendamento {
-  id          Int      @id @default(autoincrement())
-  clienteId   Int?
-  servicoId   Int?
-  empresaId   Int
+  id             Int      @id @default(autoincrement())
+  clienteId      Int?
+  servicoId      Int?
+  profissionalId Int?
+  empresaId      Int
+  vendaId        Int?     @unique
 
-  titulo      String
-  descricao   String?
-  dataHora    DateTime
-  status      String   @default("agendado")
-  observacoes String?
+  titulo         String
+  descricao      String?
+  dataHora       DateTime
+  status         String   @default("agendado")
+  valorServico   Float?
+  observacoes    String?
 
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @default(now()) @updatedAt
 
-  cliente     Cliente? @relation(fields: [clienteId], references: [id])
-  servico     Servico? @relation(fields: [servicoId], references: [id])
+  cliente        Cliente? @relation(fields: [clienteId], references: [id])
+  servico        Servico? @relation(fields: [servicoId], references: [id])
+  profissional   Usuario? @relation("ProfissionalAgendamentos", fields: [profissionalId], references: [id])
+  venda          Venda?   @relation(fields: [vendaId], references: [id])
+
+  @@index([empresaId])
+  @@index([clienteId])
+  @@index([servicoId])
+  @@index([profissionalId])
+  @@index([status])
+  @@index([dataHora])
 }

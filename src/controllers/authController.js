@@ -50,14 +50,19 @@ export const register = async (req, res) => {
         email,
         senha: hash,
         role: "admin",
+        cargo: "Administrador",
+        status: "ativo",
+        tipoEquipe: "admin",
+        profissional: true,
+        preSelecionarAgendamento: true,
         empresaId: empresa.id
       }
     })
 
-    // 📧 Enviar email de boas-vindas
+    // Enviar email de boas-vindas
     await enviarEmailRegistro(email, nomeEmpresa, nomeUsuario)
 
-    // 📋 Registrar auditoria
+    //  Registrar auditoria
     await registrarAuditoria(
       empresa.id,
       usuarioAdmin.id,
@@ -85,6 +90,12 @@ export const register = async (req, res) => {
         nome: usuarioAdmin.nome,
         email: usuarioAdmin.email,
         role: usuarioAdmin.role,
+        cargo: usuarioAdmin.cargo,
+        status: usuarioAdmin.status,
+        permissoes: usuarioAdmin.permissoes,
+        tipoEquipe: usuarioAdmin.tipoEquipe,
+        profissional: usuarioAdmin.profissional,
+        preSelecionarAgendamento: usuarioAdmin.preSelecionarAgendamento,
         empresaId: usuarioAdmin.empresaId
       }
     })
@@ -167,6 +178,12 @@ export const loginUsuario = async (req, res) => {
       })
     }
 
+    if (usuario.status !== "ativo") {
+      return res.status(403).json({
+        error: "Usuário desativado. Entre em contato com o administrador."
+      })
+    }
+
     // Gerar tokens
     const accessToken = gerarAccessToken(usuario.empresaId, usuario.id, usuario.role)
     const refreshToken = gerarRefreshToken(usuario.empresaId, usuario.id)
@@ -181,6 +198,12 @@ export const loginUsuario = async (req, res) => {
         nome: usuario.nome,
         email: usuario.email,
         role: usuario.role,
+        cargo: usuario.cargo,
+        status: usuario.status,
+        permissoes: usuario.permissoes,
+        tipoEquipe: usuario.tipoEquipe,
+        profissional: usuario.profissional,
+        preSelecionarAgendamento: usuario.preSelecionarAgendamento,
         empresaId: usuario.empresaId
       }
     })

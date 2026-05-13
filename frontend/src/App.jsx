@@ -1,48 +1,83 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom"
+
 import Login from "./pages/Login"
 import EsqueceuSenha from "./pages/EsqueceuSenha"
 import ResetarSenha from "./pages/ResetarSenha"
 import CadastroEmpresa from "./pages/CadastroEmpresa"
+
 import Dashboard from "./pages/Dashboard"
 import Clientes from "./pages/Clientes"
-import Transacoes from "./pages/Transacoes"
-import ContasReceber from "./pages/ContasReceber"
-import Usuarios from "./pages/Usuarios"
-import DashboardFinanceiro from "./pages/DashboardFInanceiro"
-import Relatorio from "./pages/Relatorio"
-import PrivateRoute from "./routes/PrivateRoute"
 import ClienteDetalhe from "./pages/ClienteDetalhe"
+import ClienteFinanceiro from "./pages/ClienteFinanceiro"
+
 import Servicos from "./pages/Servicos"
 import Produtos from "./pages/Produtos"
 import Vendas from "./pages/Vendas"
-import ClienteFinanceiro from "./pages/ClienteFinanceiro" 
+import ContasReceber from "./pages/ContasReceber"
 import Agendamentos from "./pages/Agendamentos"
-import Perfil from "./pages/Perfil"
 
+import Transacoes from "./pages/Transacoes"
+import DashboardFinanceiro from "./pages/DashboardFInanceiro"
+import Relatorio from "./pages/Relatorio"
+
+import Usuarios from "./pages/Usuarios"
+import Equipe from "./pages/Equipe"
+import Perfil from "./pages/Perfil"
+import AcessoNegado from "./pages/AcessoNegado"
+
+import PrivateRoute from "./routes/PrivateRoute"
+import PermissaoRoute from "./components/PermissaoRoute"
 
 function App() {
   return (
     <BrowserRouter>
       <Routes>
+        {/* Públicas */}
         <Route path="/" element={<Login />} />
         <Route path="/cadastro-empresa" element={<CadastroEmpresa />} />
         <Route path="/esqueceu-senha" element={<EsqueceuSenha />} />
         <Route path="/resetar-senha" element={<ResetarSenha />} />
 
+        {/* Acesso negado */}
         <Route
-          path="/dashboard"
+          path="/acesso-negado"
           element={
             <PrivateRoute>
-              <Dashboard />
+              <AcessoNegado />
             </PrivateRoute>
           }
         />
 
+        {/* Perfil: todo usuário logado pode acessar */}
+        <Route
+          path="/perfil"
+          element={
+            <PrivateRoute>
+              <Perfil />
+            </PrivateRoute>
+          }
+        />
+
+        {/* Dashboard */}
+        <Route
+          path="/dashboard"
+          element={
+            <PrivateRoute>
+              <PermissaoRoute modulo="dashboard">
+                <Dashboard />
+              </PermissaoRoute>
+            </PrivateRoute>
+          }
+        />
+
+        {/* Clientes */}
         <Route
           path="/clientes"
           element={
             <PrivateRoute>
-              <Clientes />
+              <PermissaoRoute modulo="clientes">
+                <Clientes />
+              </PermissaoRoute>
             </PrivateRoute>
           }
         />
@@ -51,51 +86,9 @@ function App() {
           path="/clientes/:id"
           element={
             <PrivateRoute>
-              <ClienteDetalhe />
-            </PrivateRoute>
-          }
-        />
-
-        <Route
-          path="/servicos"
-          element={
-            <PrivateRoute>
-              <Servicos />
-            </PrivateRoute>
-          }
-        />
-
-        <Route 
-          path="/produtos" 
-          element={
-            <PrivateRoute>  
-              <Produtos />
-                </PrivateRoute>
-          }   
-        />
-        <Route
-          path="/vendas"
-          element={
-            <PrivateRoute>
-              <Vendas />
-            </PrivateRoute>
-          }
-      />
-
-        <Route
-          path="/transacoes"
-          element={
-            <PrivateRoute>
-              <Transacoes />
-            </PrivateRoute>
-          }
-        />
-
-        <Route
-          path="/contas-receber"
-          element={
-            <PrivateRoute>
-              <ContasReceber />
+              <PermissaoRoute modulo="clientes">
+                <ClienteDetalhe />
+              </PermissaoRoute>
             </PrivateRoute>
           }
         />
@@ -104,16 +97,81 @@ function App() {
           path="/clientes/:id/financeiro"
           element={
             <PrivateRoute>
-              <ClienteFinanceiro />
+              <PermissaoRoute modulo="contasReceber">
+                <ClienteFinanceiro />
+              </PermissaoRoute>
             </PrivateRoute>
           }
         />
 
+        {/* Serviços */}
         <Route
-          path="/usuarios"
+          path="/servicos"
           element={
             <PrivateRoute>
-              <Usuarios />
+              <PermissaoRoute modulo="servicos">
+                <Servicos />
+              </PermissaoRoute>
+            </PrivateRoute>
+          }
+        />
+
+        {/* Produtos */}
+        <Route
+          path="/produtos"
+          element={
+            <PrivateRoute>
+              <PermissaoRoute modulo="produtos">
+                <Produtos />
+              </PermissaoRoute>
+            </PrivateRoute>
+          }
+        />
+
+        {/* Vendas */}
+        <Route
+          path="/vendas"
+          element={
+            <PrivateRoute>
+              <PermissaoRoute modulo="vendas">
+                <Vendas />
+              </PermissaoRoute>
+            </PrivateRoute>
+          }
+        />
+
+        {/* Contas a receber */}
+        <Route
+          path="/contas-receber"
+          element={
+            <PrivateRoute>
+              <PermissaoRoute modulo="contasReceber">
+                <ContasReceber />
+              </PermissaoRoute>
+            </PrivateRoute>
+          }
+        />
+
+        {/* Agendamentos */}
+        <Route
+          path="/agendamentos"
+          element={
+            <PrivateRoute>
+              <PermissaoRoute modulo="agendamentos">
+                <Agendamentos />
+              </PermissaoRoute>
+            </PrivateRoute>
+          }
+        />
+
+        {/* Financeiro */}
+        <Route
+          path="/transacoes"
+          element={
+            <PrivateRoute>
+              <PermissaoRoute modulo="financeiro">
+                <Transacoes />
+              </PermissaoRoute>
             </PrivateRoute>
           }
         />
@@ -122,38 +180,48 @@ function App() {
           path="/financeiro/dashboard"
           element={
             <PrivateRoute>
-              <DashboardFinanceiro />
+              <PermissaoRoute modulo="financeiro">
+                <DashboardFinanceiro />
+              </PermissaoRoute>
             </PrivateRoute>
           }
         />
 
+        {/* Equipe / Usuários */}
         <Route
-          path="/agendamentos"
+          path="/equipe"
           element={
             <PrivateRoute>
-              <Agendamentos />
+              <PermissaoRoute modulo="usuarios">
+                <Equipe />
+              </PermissaoRoute>
             </PrivateRoute>
           }
         />
 
+        {/* Mantém rota antiga de usuários funcionando, caso ainda exista link antigo */}
+        <Route
+          path="/usuarios"
+          element={
+            <PrivateRoute>
+              <PermissaoRoute modulo="usuarios">
+                <Usuarios />
+              </PermissaoRoute>
+            </PrivateRoute>
+          }
+        />
+
+        {/* Relatórios */}
         <Route
           path="/relatorios/financeiro"
           element={
             <PrivateRoute>
-              <Relatorio/>
+              <PermissaoRoute modulo="relatorios">
+                <Relatorio />
+              </PermissaoRoute>
             </PrivateRoute>
           }
         />
-
-        <Route 
-          path="/perfil"
-          element={
-            <PrivateRoute>
-              <Perfil />
-            </PrivateRoute>
-          }
-        />
-        
       </Routes>
     </BrowserRouter>
   )

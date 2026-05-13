@@ -1,10 +1,91 @@
 import prisma from "../config/prisma.js"
 import bcrypt from "bcryptjs"
 
+const permissoesPadraoFuncionario = {
+  dashboard: {
+    visualizar: true
+  },
+  clientes: {
+    visualizar: true,
+    criar: true,
+    editar: true,
+    excluir: false
+  },
+  servicos: {
+    visualizar: true,
+    criar: false,
+    editar: false,
+    excluir: false
+  },
+  produtos: {
+    visualizar: true,
+    criar: false,
+    editar: false,
+    excluir: false
+  },
+  vendas: {
+    visualizar: true,
+    criar: true,
+    editar: false,
+    excluir: false
+  },
+  contasReceber: {
+    visualizar: true,
+    criar: false,
+    receberPagamento: true,
+    editar: false,
+    excluir: false
+  },
+  agendamentos: {
+    visualizar: true,
+    criar: true,
+    editar: true,
+    excluir: false
+  },
+  financeiro: {
+    visualizar: false,
+    criar: false,
+    editar: false,
+    excluir: false
+  },
+  relatorios: {
+    visualizar: false
+  },
+  usuarios: {
+    visualizar: false,
+    criar: false,
+    editar: false,
+    excluir: false
+  }
+}
+
+const permissoesAdmin = {
+  dashboard: { visualizar: true },
+  clientes: { visualizar: true, criar: true, editar: true, excluir: true },
+  servicos: { visualizar: true, criar: true, editar: true, excluir: true },
+  produtos: { visualizar: true, criar: true, editar: true, excluir: true },
+  vendas: { visualizar: true, criar: true, editar: true, excluir: true },
+  contasReceber: {
+    visualizar: true,
+    criar: true,
+    receberPagamento: true,
+    editar: true,
+    excluir: true
+  },
+  agendamentos: { visualizar: true, criar: true, editar: true, excluir: true },
+  financeiro: { visualizar: true, criar: true, editar: true, excluir: true },
+  relatorios: { visualizar: true },
+  usuarios: { visualizar: true, criar: true, editar: true, excluir: true }
+}
+
+const obterPermissoesPorRole = (role) => {
+  return role === "admin" ? permissoesAdmin : permissoesPadraoFuncionario
+}
+
 // ─── Criar usuário ───────────────────────────────────────────
 export const criarUsuario = async (req, res) => {
   try {
-    const { nome, email, senha, role } = req.body || {}
+    const { nome, email, senha, role, cargo, status, permissoes, tipoEquipe, profissional, preSelecionarAgendamento } = req.body || {}
 
     if (!nome || !email || !senha) {
       return res.status(400).json({
@@ -31,7 +112,16 @@ export const criarUsuario = async (req, res) => {
         nome,
         email,
         senha: hash,
-        role: role || "funcionario",
+        role: roleFinal,
+        cargo: cargo || null,
+        status: status || "ativo",
+        permissoes: permissoes || obterPermissoesPorRole(roleFinal),
+        tipoEquipe: tipoEquipe || "profissional",
+        profissional: profissional !== undefined ? Boolean(profissional) : true,
+        preSelecionarAgendamento:
+          preSelecionarAgendamento !== undefined
+            ? Boolean(preSelecionarAgendamento)
+            : true,
         empresaId: req.empresaId
       }
     })
@@ -41,6 +131,12 @@ export const criarUsuario = async (req, res) => {
       nome: usuario.nome,
       email: usuario.email,
       role: usuario.role,
+      cargo: usuario.cargo,
+      status: usuario.status,
+      permissoes: usuario.permissoes,
+      tipoEquipe: usuario.tipoEquipe,
+      profissional: usuario.profissional,
+      preSelecionarAgendamento: usuario.preSelecionarAgendamento,
       empresaId: usuario.empresaId
     })
   } catch (error) {
@@ -59,8 +155,15 @@ export const listarUsuarios = async (req, res) => {
         nome: true,
         email: true,
         role: true,
+        cargo: true,
+        status: true,
+        permissoes: true,
+        tipoEquipe: true,
+        profissional: true,
+        preSelecionarAgendamento: true,
         empresaId: true,
-        createdAt: true
+        createdAt: true,
+        updatedAt: true
       },
       orderBy: { nome: "asc" }
     })
@@ -100,61 +203,293 @@ export const deletarUsuario = async (req, res) => {
   }
 }
 
-// ─── Ver perfil do usuário logado ───────────────────────────
-export const verPerfil = async (req, res) => {
+export const atualizarUsuario = async (req, res) => {
   try {
-    // Se for login da empresa (sem usuarioId), retorna dados da empresa
-    if (!req.usuarioId) {
-      const empresa = await prisma.empresa.findUnique({
-        where: { id: req.empresaId },
-        select: { id: true, nome: true, email: true, createdAt: true }
+    const { id } = req.params
+    const { nome, email, role, cargo, status, permissoes, senha, tipoEquipe, profissional, preSelecionarAgendamento } = req.body || {}
+
+    if (role && !["admin", "funcionario"].includes(role)) {
+      return res.status(400).json({
+        error: "Role inválida. Use 'admin' ou 'funcionario'"
       })
-
-      if (!empresa) {
-        return res.status(404).json({ error: "Empresa não encontrada" })
-      }
-
-      return res.json({ tipo: "empresa", ...empresa })
     }
 
-    const usuario = await prisma.usuario.findFirst({
-      where: { id: req.usuarioId, empresaId: req.empresaId },
+    if (status && !["ativo", "inativo"].includes(status)) {
+      return res.status(400).json({
+        error: "Status inválido. Use 'ativo' ou 'inativo'"
+      })
+    }
+
+    const usuarioExistente = await prisma.usuario.findFirst({
+      where: {
+        id: Number(id),
+        empresaId: req.empresaId
+      }
+    })
+
+    if (!usuarioExistente) {
+      return res.status(404).json({
+        error: "Usuário não encontrado para esta empresa"
+      })
+    }
+
+    if (Number(id) === Number(req.usuarioId) && status === "inativo") {
+      return res.status(400).json({
+        error: "Você não pode desativar o próprio usuário logado"
+      })
+    }
+
+    const dados = {}
+
+    if (nome !== undefined) dados.nome = nome
+    if (email !== undefined) dados.email = email
+    if (role !== undefined) dados.role = role
+    if (cargo !== undefined) dados.cargo = cargo || null
+    if (status !== undefined) dados.status = status
+    if (permissoes !== undefined) dados.permissoes = permissoes
+    if (tipoEquipe !== undefined) dados.tipoEquipe = tipoEquipe
+    if (profissional !== undefined) dados.profissional = Boolean(profissional)
+    if (preSelecionarAgendamento !== undefined) {
+      dados.preSelecionarAgendamento = Boolean(preSelecionarAgendamento)
+    }
+
+    if (senha) {
+      dados.senha = await bcrypt.hash(senha, 10)
+    }
+
+    const usuarioAtualizado = await prisma.usuario.update({
+      where: {
+        id: Number(id)
+      },
+      data: dados,
       select: {
         id: true,
         nome: true,
         email: true,
         role: true,
+        cargo: true,
+        status: true,
+        permissoes: true,
+        tipoEquipe: true,
+        profissional: true,
+        preSelecionarAgendamento: true,
+        empresaId: true,
+        createdAt: true,
+        updatedAt: true
+      }
+    })
+
+    res.json(usuarioAtualizado)
+  } catch (error) {
+    console.error("Erro ao atualizar usuário:", error)
+
+    if (error.code === "P2002") {
+      return res.status(400).json({
+        error: "Já existe um usuário com esse email"
+      })
+    }
+
+    res.status(500).json({
+      error: "Erro ao atualizar usuário"
+    })
+  }
+}
+
+export const alterarStatusUsuario = async (req, res) => {
+  try {
+    const { id } = req.params
+    const { status } = req.body || {}
+
+    if (!["ativo", "inativo"].includes(status)) {
+      return res.status(400).json({
+        error: "Status inválido. Use 'ativo' ou 'inativo'"
+      })
+    }
+
+    const usuarioExistente = await prisma.usuario.findFirst({
+      where: {
+        id: Number(id),
+        empresaId: req.empresaId
+      }
+    })
+
+    if (!usuarioExistente) {
+      return res.status(404).json({
+        error: "Usuário não encontrado para esta empresa"
+      })
+    }
+
+    if (Number(id) === Number(req.usuarioId) && status === "inativo") {
+      return res.status(400).json({
+        error: "Você não pode desativar o próprio usuário logado"
+      })
+    }
+
+    const usuarioAtualizado = await prisma.usuario.update({
+      where: {
+        id: Number(id)
+      },
+      data: {
+        status
+      },
+      select: {
+        id: true,
+        nome: true,
+        email: true,
+        role: true,
+        cargo: true,
+        status: true,
+        permissoes: true,
+        tipoEquipe: true,
+        profissional: true,
+        preSelecionarAgendamento: true,
+        empresaId: true,
+        createdAt: true,
+        updatedAt: true
+      }
+    })
+
+    res.json(usuarioAtualizado)
+  } catch (error) {
+    console.error("Erro ao alterar status do usuário:", error)
+
+    res.status(500).json({
+      error: "Erro ao alterar status do usuário"
+    })
+  }
+}
+
+// ─── Ver perfil do usuário logado ───────────────────────────
+export const verPerfil = async (req, res) => {
+  try {
+    const empresa = await prisma.empresa.findUnique({
+      where: {
+        id: req.empresaId
+      },
+      select: {
+        id: true,
+        nome: true,
+        email: true,
+        cpfCnpj: true,
+        celular: true,
+        cep: true,
+        rua: true,
+        numero: true,
+        complemento: true,
+        bairro: true,
+        cidade: true,
+        estado: true,
+        createdAt: true
+      }
+    })
+
+    if (!empresa) {
+      return res.status(404).json({
+        error: "Empresa não encontrada"
+      })
+    }
+
+    if (!req.usuarioId) {
+      return res.json({
+        tipo: "empresa",
+        ...empresa,
+        empresa
+      })
+    }
+
+    const usuario = await prisma.usuario.findFirst({
+      where: {
+        id: req.usuarioId,
+        empresaId: req.empresaId
+      },
+      select: {
+        id: true,
+        nome: true,
+        email: true,
+        role: true,
+        cargo: true,
+        status: true,
+        permissoes: true,
+        tipoEquipe: true,
+        profissional: true,
+        preSelecionarAgendamento: true,
+        permissoes: true,
         createdAt: true
       }
     })
 
     if (!usuario) {
-      return res.status(404).json({ error: "Usuário não encontrado" })
+      return res.status(404).json({
+        error: "Usuário não encontrado"
+      })
     }
 
-    res.json({ tipo: "usuario", ...usuario })
+    res.json({
+      tipo: "usuario",
+      ...usuario,
+      empresa
+    })
   } catch (error) {
     console.error("Erro ao buscar perfil:", error)
-    res.status(500).json({ error: "Erro ao buscar perfil" })
+
+    res.status(500).json({
+      error: "Erro ao buscar perfil"
+    })
   }
 }
 
 // ─── Atualizar perfil do usuário logado ─────────────────────
 export const atualizarPerfil = async (req, res) => {
   try {
-    const { nome, senhaAtual, novaSenha } = req.body || {}
+    const {
+      nome,
+      senhaAtual,
+      novaSenha,
 
-    // Login de empresa
+      empresaNome,
+      cpfCnpj,
+      celular,
+      cep,
+      rua,
+      numero,
+      complemento,
+      bairro,
+      cidade,
+      estado
+    } = req.body || {}
+
+    const camposEmpresaRecebidos = {
+      nome: empresaNome,
+      cpfCnpj,
+      celular,
+      cep,
+      rua,
+      numero,
+      complemento,
+      bairro,
+      cidade,
+      estado
+    }
+
+    const deveAtualizarEmpresa = Object.values(camposEmpresaRecebidos).some(
+      (valor) => valor !== undefined
+    )
+
+    // LOGIN COMO EMPRESA
     if (!req.usuarioId) {
       const empresa = await prisma.empresa.findUnique({
-        where: { id: req.empresaId }
+        where: {
+          id: req.empresaId
+        }
       })
 
       if (!empresa) {
-        return res.status(404).json({ error: "Empresa não encontrada" })
+        return res.status(404).json({
+          error: "Empresa não encontrada"
+        })
       }
 
-      const dados = {}
+      const dadosEmpresa = {}
 
       if (nome) {
         if (!senhaAtual) {
@@ -171,33 +506,58 @@ export const atualizarPerfil = async (req, res) => {
           })
         }
 
-        dados.nome = nome
+        dadosEmpresa.nome = nome
       }
 
-      if (Object.keys(dados).length === 0) {
+      if (deveAtualizarEmpresa) {
+        if (empresaNome !== undefined) dadosEmpresa.nome = empresaNome || null
+        if (cpfCnpj !== undefined) dadosEmpresa.cpfCnpj = cpfCnpj || null
+        if (celular !== undefined) dadosEmpresa.celular = celular || null
+        if (cep !== undefined) dadosEmpresa.cep = cep || null
+        if (rua !== undefined) dadosEmpresa.rua = rua || null
+        if (numero !== undefined) dadosEmpresa.numero = numero || null
+        if (complemento !== undefined) dadosEmpresa.complemento = complemento || null
+        if (bairro !== undefined) dadosEmpresa.bairro = bairro || null
+        if (cidade !== undefined) dadosEmpresa.cidade = cidade || null
+        if (estado !== undefined) dadosEmpresa.estado = estado || null
+      }
+
+      if (Object.keys(dadosEmpresa).length === 0) {
         return res.status(400).json({
           error: "Nenhuma informação para atualizar"
         })
       }
 
       const empresaAtualizada = await prisma.empresa.update({
-        where: { id: req.empresaId },
-        data: dados,
+        where: {
+          id: req.empresaId
+        },
+        data: dadosEmpresa,
         select: {
           id: true,
           nome: true,
           email: true,
+          cpfCnpj: true,
+          celular: true,
+          cep: true,
+          rua: true,
+          numero: true,
+          complemento: true,
+          bairro: true,
+          cidade: true,
+          estado: true,
           createdAt: true
         }
       })
 
       return res.json({
         tipo: "empresa",
-        ...empresaAtualizada
+        ...empresaAtualizada,
+        empresa: empresaAtualizada
       })
     }
 
-    // Login de usuário
+    // LOGIN COMO USUÁRIO
     const usuario = await prisma.usuario.findFirst({
       where: {
         id: req.usuarioId,
@@ -211,7 +571,7 @@ export const atualizarPerfil = async (req, res) => {
       })
     }
 
-    const dados = {}
+    const dadosUsuario = {}
 
     if (nome) {
       if (!senhaAtual) {
@@ -228,7 +588,7 @@ export const atualizarPerfil = async (req, res) => {
         })
       }
 
-      dados.nome = nome
+      dadosUsuario.nome = nome
     }
 
     if (novaSenha) {
@@ -252,20 +612,74 @@ export const atualizarPerfil = async (req, res) => {
         })
       }
 
-      dados.senha = await bcrypt.hash(novaSenha, 10)
+      dadosUsuario.senha = await bcrypt.hash(novaSenha, 10)
     }
 
-    if (Object.keys(dados).length === 0) {
+    if (Object.keys(dadosUsuario).length > 0) {
+      await prisma.usuario.update({
+        where: {
+          id: req.usuarioId
+        },
+        data: dadosUsuario
+      })
+    }
+
+    let empresaAtualizada = null
+
+    if (deveAtualizarEmpresa) {
+      if (usuario.role !== "admin") {
+        return res.status(403).json({
+          error: "Apenas administradores podem alterar dados da empresa"
+        })
+      }
+
+      const dadosEmpresa = {}
+
+      if (empresaNome !== undefined) dadosEmpresa.nome = empresaNome || null
+      if (cpfCnpj !== undefined) dadosEmpresa.cpfCnpj = cpfCnpj || null
+      if (celular !== undefined) dadosEmpresa.celular = celular || null
+      if (cep !== undefined) dadosEmpresa.cep = cep || null
+      if (rua !== undefined) dadosEmpresa.rua = rua || null
+      if (numero !== undefined) dadosEmpresa.numero = numero || null
+      if (complemento !== undefined) dadosEmpresa.complemento = complemento || null
+      if (bairro !== undefined) dadosEmpresa.bairro = bairro || null
+      if (cidade !== undefined) dadosEmpresa.cidade = cidade || null
+      if (estado !== undefined) dadosEmpresa.estado = estado || null
+
+      empresaAtualizada = await prisma.empresa.update({
+        where: {
+          id: req.empresaId
+        },
+        data: dadosEmpresa,
+        select: {
+          id: true,
+          nome: true,
+          email: true,
+          cpfCnpj: true,
+          celular: true,
+          cep: true,
+          rua: true,
+          numero: true,
+          complemento: true,
+          bairro: true,
+          cidade: true,
+          estado: true,
+          createdAt: true
+        }
+      })
+    }
+
+    if (Object.keys(dadosUsuario).length === 0 && !deveAtualizarEmpresa) {
       return res.status(400).json({
         error: "Nenhuma informação para atualizar"
       })
     }
 
-    const atualizado = await prisma.usuario.update({
+    const usuarioAtualizado = await prisma.usuario.findFirst({
       where: {
-        id: req.usuarioId
+        id: req.usuarioId,
+        empresaId: req.empresaId
       },
-      data: dados,
       select: {
         id: true,
         nome: true,
@@ -275,15 +689,70 @@ export const atualizarPerfil = async (req, res) => {
       }
     })
 
+    const empresa = empresaAtualizada || await prisma.empresa.findUnique({
+      where: {
+        id: req.empresaId
+      },
+      select: {
+        id: true,
+        nome: true,
+        email: true,
+        cpfCnpj: true,
+        celular: true,
+        cep: true,
+        rua: true,
+        numero: true,
+        complemento: true,
+        bairro: true,
+        cidade: true,
+        estado: true,
+        createdAt: true
+      }
+    })
+
     res.json({
       tipo: "usuario",
-      ...atualizado
+      ...usuarioAtualizado,
+      empresa
     })
   } catch (error) {
     console.error("Erro ao atualizar perfil:", error)
 
     res.status(500).json({
       error: "Erro ao atualizar perfil"
+    })
+  }
+}
+
+export const listarProfissionais = async (req, res) => {
+  try {
+    const profissionais = await prisma.usuario.findMany({
+      where: {
+        empresaId: req.empresaId,
+        status: "ativo",
+        profissional: true
+      },
+      select: {
+        id: true,
+        nome: true,
+        email: true,
+        cargo: true,
+        role: true,
+        tipoEquipe: true,
+        profissional: true,
+        preSelecionarAgendamento: true
+      },
+      orderBy: {
+        nome: "asc"
+      }
+    })
+
+    res.json(profissionais)
+  } catch (error) {
+    console.error("Erro ao listar profissionais:", error)
+
+    res.status(500).json({
+      error: "Erro ao listar profissionais"
     })
   }
 }
