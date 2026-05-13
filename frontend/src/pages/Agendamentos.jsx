@@ -69,6 +69,9 @@ export default function Agendamentos() {
   const [mostrarModalConclusao, setMostrarModalConclusao] = useState(false)
   const [agendamentoConcluir, setAgendamentoConcluir] = useState(null)
 
+  const [clienteFiltro, setClienteFiltro] = useState("")
+  const [clienteFiltroNome, setClienteFiltroNome] = useState("")
+
   const [formConclusao, setFormConclusao] = useState({
     valorPago: "",
     formaPagamento: "",
@@ -90,7 +93,14 @@ export default function Agendamentos() {
   })
 
   useEffect(() => { carregarBase() }, [])
-  useEffect(() => { carregarAgendamentos() }, [statusFiltro, dataInicio, dataFim, profissionalFiltro])
+  useEffect(() => { carregarAgendamentos() }, [statusFiltro, dataInicio, dataFim, profissionalFiltro, clienteFiltro])
+  useEffect(() => {
+    if (clienteFiltro) {
+      setVisao("lista")
+    } else {
+      setVisao("semana")
+    }
+  }, [clienteFiltro])
 
   const carregarBase = async () => {
     try {
@@ -123,6 +133,7 @@ export default function Agendamentos() {
         params.append("dataFim", fim.toISOString())
       }
       if (profissionalFiltro) params.append("profissionalId", profissionalFiltro)
+      if (clienteFiltro) params.append("clienteId", clienteFiltro)
       const response = await api.get(`/agendamentos?${params.toString()}`)
       setAgendamentos(response.data || [])
     } catch (error) {
@@ -360,6 +371,9 @@ export default function Agendamentos() {
     setDataInicio("")
     setDataFim("")
     setProfissionalFiltro("")
+    setClienteFiltro("")
+    setClienteFiltroNome("")
+    setVisao("semana")
   }
 
   /* ============== NAVEGAÇÃO DE DATAS ============== */
@@ -499,6 +513,29 @@ export default function Agendamentos() {
                 </option>
               ))}
             </select>
+
+            <div className="w-56">
+              <ClienteSearchSelect
+                clientes={clientes}
+                clienteId={clienteFiltro}
+                setClienteId={(id) => {
+                  setClienteFiltro(id)
+
+                  if (!id){
+                    setClienteFiltroNome("")
+                    setVisao("semana")                
+                  }
+                }}
+                buscaInicial={clienteFiltroNome}
+                placeholder="Buscar cliente"
+                permitirSemCliente={true}
+                onSelect={(cliente) => {
+                  setClienteFiltro(String(cliente.id))
+                  setClienteFiltroNome(cliente.nome)
+                  setVisao("lista")
+                }}
+              />
+            </div>
           
           {/* Datas */}
           <div className="flex items-center gap-1.5">
@@ -614,12 +651,22 @@ export default function Agendamentos() {
               <ClienteSearchSelect
                 clientes={clientes}
                 clienteId={form.clienteId}
-                setClienteId={(id) => setForm({ ...form, clienteId: id })}
+                setClienteId={(id) =>
+                  setForm({
+                    ...form,
+                    clienteId: id,
+                    clienteNome: ""
+                  })
+                }
                 buscaInicial={form.clienteNome}
                 placeholder="Digite o nome do cliente"
                 permitirSemCliente={true}
                 onSelect={(cliente) =>
-                  setForm({ ...form, clienteId: String(cliente.id), clienteNome: cliente.nome })
+                  setForm({
+                    ...form,
+                    clienteId: String(cliente.id),
+                    clienteNome: cliente.nome
+                  })
                 }
               />
             </div>
@@ -1235,7 +1282,8 @@ function DetalhesAgendamento({ agendamento, onEditar, onAtualizarStatus, onExclu
         <InfoBox label="Cliente" valor={agendamento.cliente?.nome || "Sem cliente"} />
         <InfoBox label="Profissional" valor={agendamento.profissional?.nome || "Sem profissional"} />
         <InfoBox label="Serviço" valor={agendamento.servico?.nome || "Sem serviço"} />
-        <InfoBox label="Valor" valor={agendamento.valorServico ? formatarMoeda(agendamento.valorServico) : "-"} />
+        <InfoBox label="Valor" valor={agendamento.valorServico ? formatarMoeda(agendamento.valorServico): "-"} />
+        <InfoBox label="Venda vinculada" valor={agendamento.vendaId ? `Venda #${agendamento.vendaId}` : "Ainda não gerou venda"} />
         <InfoBox label="Criado em" valor={formatarData(agendamento.createdAt)} />
         <InfoBox label="Status" valor={capitalizar(agendamento.status)} />
       </div>
