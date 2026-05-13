@@ -1,13 +1,17 @@
-import { useEffect, useMemo, useState } from "react"
+import { useEffect, useState } from "react"
 import AppLayout from "../layouts/AppLayout"
 import api from "../services/api"
-import { formatarMoeda, formatarData, formatarFormaPagamento} from "../utils/formatters"
+import {
+  formatarMoeda,
+  formatarData,
+  formatarFormaPagamento
+} from "../utils/formatters"
 import ResumoCard from "../components/ResumoCard"
 import CampoInput from "../components/CampoInput"
 import CampoSelect from "../components/CampoSelect"
 
 export default function Relatorio() {
-  const [transacoes, setTransacoes] = useState([])
+  const [dados, setDados] = useState(null)
   const [loading, setLoading] = useState(false)
 
   const [tipo, setTipo] = useState("")
@@ -23,13 +27,16 @@ export default function Relatorio() {
     try {
       setLoading(true)
 
-      const response = await api.get("/transacoes", {
+      const response = await api.get("/relatorios/financeiro/dados", {
         params: {
-          status: "ativa"
+          tipo,
+          categoria,
+          dataInicio,
+          dataFim
         }
       })
 
-      setTransacoes(response.data || [])
+      setDados(response.data)
     } catch (error) {
       console.error("Erro ao carregar relatório:", error)
     } finally {
@@ -37,59 +44,27 @@ export default function Relatorio() {
     }
   }
 
-  const transacoesFiltradas = useMemo(() => {
-    return transacoes.filter((transacao) => {
-      const data = new Date(transacao.createdAt)
-
-      if (tipo && transacao.tipo !== tipo) return false
-      if (
-        categoria &&
-        !String(transacao.categoria || "")
-          .toLowerCase()
-          .includes(categoria.toLowerCase())
-      ) {
-        return false
-      }
-
-      if (dataInicio) {
-        const inicio = new Date(dataInicio)
-        inicio.setHours(0, 0, 0, 0)
-        if (data < inicio) return false
-      }
-
-      if (dataFim) {
-        const fim = new Date(dataFim)
-        fim.setHours(23, 59, 59, 999)
-        if (data > fim) return false
-      }
-
-      return true
-    })
-  }, [transacoes, tipo, categoria, dataInicio, dataFim])
-
-  const resumo = useMemo(() => {
-    const entradas = transacoesFiltradas
-      .filter((t) => t.tipo === "entrada")
-      .reduce((acc, t) => acc + Number(t.valor || 0), 0)
-
-    const saidas = transacoesFiltradas
-      .filter((t) => t.tipo === "saida")
-      .reduce((acc, t) => acc + Number(t.valor || 0), 0)
-
-    return {
-      entradas,
-      saidas,
-      saldo: entradas - saidas,
-      total: transacoesFiltradas.length
-    }
-  }, [transacoesFiltradas])
-
-  const limparFiltros = () => {
+  const limparFiltros = async () => {
     setTipo("")
     setCategoria("")
     setDataInicio("")
     setDataFim("")
+
+    try {
+      setLoading(true)
+
+      const response = await api.get("/relatorios/financeiro/dados")
+      setDados(response.data)
+    } catch (error) {
+      console.error("Erro ao limpar filtros:", error)
+    } finally {
+      setLoading(false)
+    }
   }
+
+  const resumo = dados?.resumo || {}
+  const transacoes = dados?.transacoes || []
+  const vendas = dados?.vendas || []
 
   return (
     <AppLayout>
@@ -98,16 +73,54 @@ export default function Relatorio() {
           <h1 className="text-2xl md:text-3xl font-bold text-[#2D2E47]">
             Relatório Financeiro
           </h1>
+
           <p className="text-sm text-gray-500 mt-1">
-            Analise entradas, saídas e saldo por período, categoria e tipo.
+            Analise caixa, vendas, custos e lucro bruto por período.
           </p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <ResumoCard titulo="Entradas" valor={formatarMoeda(resumo.entradas)} />
-          <ResumoCard titulo="Saídas" valor={formatarMoeda(resumo.saidas)} />
-          <ResumoCard titulo="Saldo" valor={formatarMoeda(resumo.saldo)} />
-          <ResumoCard titulo="Registros" valor={resumo.total} />
+          <ResumoCard
+            titulo="Entradas"
+            valor={formatarMoeda(resumo.entradas)}
+          />
+
+          <ResumoCard
+            titulo="Saídas"
+            valor={formatarMoeda(resumo.saidas)}
+          />
+
+          <ResumoCard
+            titulo="Saldo de Caixa"
+            valor={formatarMoeda(resumo.saldoCaixa)}
+          />
+
+          <ResumoCard
+            titulo="Em Aberto"
+            valor={formatarMoeda(resumo.totalEmAberto)}
+          />
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <ResumoCard
+            titulo="Faturamento Vendas"
+            valor={formatarMoeda(resumo.faturamentoVendas)}
+          />
+
+          <ResumoCard
+            titulo="Custo Produtos"
+            valor={formatarMoeda(resumo.custoProdutosVendidos)}
+          />
+
+          <ResumoCard
+            titulo="Lucro Bruto Vendas"
+            valor={formatarMoeda(resumo.lucroBrutoVendas)}
+          />
+
+          <ResumoCard
+            titulo="Vendas"
+            valor={resumo.quantidadeVendas || 0}
+          />
         </div>
 
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5">
@@ -115,7 +128,7 @@ export default function Relatorio() {
             Filtros do relatório
           </h2>
 
-          <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-6 gap-4">
             <CampoSelect
               label="Tipo"
               value={tipo}
@@ -131,7 +144,7 @@ export default function Relatorio() {
               label="Categoria"
               value={categoria}
               onChange={(e) => setCategoria(e.target.value)}
-              placeholder="Ex: venda"
+              placeholder="Ex: Venda"
             />
 
             <CampoInput
@@ -147,6 +160,16 @@ export default function Relatorio() {
               value={dataFim}
               onChange={(e) => setDataFim(e.target.value)}
             />
+
+            <div className="flex items-end">
+              <button
+                type="button"
+                onClick={carregarRelatorio}
+                className="w-full px-4 py-3 rounded-xl bg-[#2F8AA3] text-white hover:opacity-90"
+              >
+                Aplicar
+              </button>
+            </div>
 
             <div className="flex items-end">
               <button
@@ -167,13 +190,15 @@ export default function Relatorio() {
             </h2>
 
             <p className="text-sm text-gray-500">
-              {transacoesFiltradas.length} registro(s)
+              {transacoes.length} registro(s)
             </p>
           </div>
 
           {loading ? (
-            <div className="p-6 text-gray-500">Carregando relatório...</div>
-          ) : transacoesFiltradas.length === 0 ? (
+            <div className="p-6 text-gray-500">
+              Carregando relatório...
+            </div>
+          ) : transacoes.length === 0 ? (
             <div className="p-6 text-gray-500">
               Nenhuma transação encontrada para os filtros selecionados.
             </div>
@@ -189,7 +214,7 @@ export default function Relatorio() {
                   <div className="col-span-1 text-right">Valor</div>
                 </div>
 
-                {transacoesFiltradas.map((transacao) => (
+                {transacoes.map((transacao) => (
                   <div
                     key={transacao.id}
                     className="grid grid-cols-12 gap-4 px-6 py-5 border-b border-gray-100 last:border-b-0"
@@ -198,7 +223,9 @@ export default function Relatorio() {
                       <p className="font-semibold text-[#2D2E47]">
                         {transacao.descricao || "Sem descrição"}
                       </p>
-                      <p className="text-sm text-gray-500">#{transacao.id}</p>
+                      <p className="text-sm text-gray-500">
+                        #{transacao.id}
+                      </p>
                     </div>
 
                     <div className="col-span-2 flex items-center text-sm text-gray-600">
@@ -241,7 +268,7 @@ export default function Relatorio() {
               </div>
 
               <div className="xl:hidden p-4 space-y-4">
-                {transacoesFiltradas.map((transacao) => (
+                {transacoes.map((transacao) => (
                   <div
                     key={transacao.id}
                     className="border border-gray-100 rounded-2xl p-4 shadow-sm"
@@ -251,6 +278,7 @@ export default function Relatorio() {
                         <h3 className="font-semibold text-[#2D2E47]">
                           {transacao.descricao || "Sem descrição"}
                         </h3>
+
                         <p className="text-sm text-gray-500 mt-1">
                           {transacao.categoria || "Sem categoria"} •{" "}
                           {formatarData(transacao.createdAt)}
@@ -276,6 +304,58 @@ export default function Relatorio() {
                 ))}
               </div>
             </>
+          )}
+        </div>
+
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+          <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
+            <h2 className="text-lg font-semibold text-[#2D2E47]">
+              Vendas do período
+            </h2>
+
+            <p className="text-sm text-gray-500">
+              {vendas.length} venda(s)
+            </p>
+          </div>
+
+          {loading ? (
+            <div className="p-6 text-gray-500">
+              Carregando vendas...
+            </div>
+          ) : vendas.length === 0 ? (
+            <div className="p-6 text-gray-500">
+              Nenhuma venda encontrada para os filtros selecionados.
+            </div>
+          ) : (
+            <div className="divide-y divide-gray-100">
+              {vendas.map((venda) => (
+                <div
+                  key={venda.id}
+                  className="px-5 py-4 flex flex-col md:flex-row md:items-center md:justify-between gap-3"
+                >
+                  <div>
+                    <p className="font-semibold text-[#2D2E47]">
+                      Venda #{venda.id}
+                    </p>
+
+                    <p className="text-sm text-gray-500 mt-1">
+                      {formatarData(venda.createdAt)} •{" "}
+                      {venda.itens?.length || 0} item(ns)
+                    </p>
+                  </div>
+
+                  <div className="text-left md:text-right">
+                    <p className="font-semibold text-[#2D2E47]">
+                      {formatarMoeda(venda.totalFinal)}
+                    </p>
+
+                    <p className="text-xs text-gray-500">
+                      Total da venda
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
           )}
         </div>
       </div>

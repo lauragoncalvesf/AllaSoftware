@@ -129,6 +129,7 @@ export const criarVenda = async (req, res) => {
       let registro = null
       let nomeItem = ""
       let precoUnitario = 0
+      let custoUnitario = null
 
       if (tipoItem === "produto") {
         registro = await prisma.produto.findFirst({
@@ -145,11 +146,26 @@ export const criarVenda = async (req, res) => {
           })
         }
 
+        if (
+          registro.estoque !== null &&
+          registro.estoque !== undefined &&
+          Number(registro.estoque) < Number(quantidade)
+        ) {
+          return res.status(400).json({
+            error: `Estoque insuficiente para o produto ${registro.nome}. Disponível: ${registro.estoque}`
+          })
+        } 
+
         nomeItem = registro.nome
+
         precoUnitario =
           tipoPreco === "atacado" && registro.precoAtacado
             ? Number(registro.precoAtacado)
             : Number(registro.precoVarejo)
+
+        custoUnitario = registro.precoCusto !== null && registro.precoCusto !== undefined
+          ? Number(registro.precoCusto)
+          : null
       }
 
       if (tipoItem === "servico") {
@@ -169,6 +185,7 @@ export const criarVenda = async (req, res) => {
 
         nomeItem = registro.nome
         precoUnitario = Number(registro.preco)
+        custoUnitario = null
       }
 
       if (!registro) {
@@ -180,12 +197,21 @@ export const criarVenda = async (req, res) => {
       const subtotal = Number(quantidade) * Number(precoUnitario)
       totalBruto += subtotal
 
+      const custoTotal = custoUnitario !== null ? Number(custoUnitario) * Number(quantidade) : null
+
+      const lucroBruto = custoTotal !== null ? Number(subtotal) - Number(custoTotal) : Number(subtotal)
+
       itensProcessados.push({
         tipoItem,
         referenciaId: Number(referenciaId),
         nomeItem,
         quantidade: Number(quantidade),
         precoUnitario: Number(precoUnitario),
+        custoUnitario,
+        custoTotal,
+        lucroBruto,
+        produtoEstoqueControlado: 
+          tipoItem === "produto" && registro.estoque !== null && registro.estoque !== undefined,
         subtotal: Number(subtotal)
       })
     }
@@ -248,6 +274,10 @@ export const criarVenda = async (req, res) => {
         })
       }
 
+      const itensParaCriar = itensProcessados.map(
+        ({ produtoEstoqueControlado, ...item}) => item
+      )
+ 
       const novaVenda = await tx.venda.create({
         data: {
           clienteId: clienteId ? Number(clienteId) : null,
@@ -259,7 +289,7 @@ export const criarVenda = async (req, res) => {
           totalFinal: Number(totalFinal),
           status: "fechada",
           itens: {
-            create: itensProcessados
+            create: itensParaCriar
           }
         },
         include: {
@@ -268,6 +298,21 @@ export const criarVenda = async (req, res) => {
         }
       })
 
+      for (const item of itensProcessados) {
+        if (item.tipoItem === "produto" && item.produtoEstoqueControlado) {
+          await tx.produto.update({
+            where: {
+              id: item.referenciaId
+            },
+            data: {
+              estoque: {
+                decrement: item.quantidade
+              }
+            }
+          })
+        }
+      }
+
       let transacao = null
 
       if (valorPagoFinal > 0) {
@@ -275,7 +320,7 @@ export const criarVenda = async (req, res) => {
           data: {
             tipo: "entrada",
             valor: Number(valorPagoFinal),
-            categoria: "venda",
+            categoria: "Venda",
             descricao: `Pagamento da venda #${novaVenda.id}`,
             formaPagamento: formaPagamento || null,
             status: "ativa",
@@ -338,7 +383,8 @@ export const criarVenda = async (req, res) => {
 
   } catch (error) {
     console.error(error)
-    res.status(500).json({
+    res.status(500)
+    .json({
       error: "Erro ao criar venda"
     })
   }

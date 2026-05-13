@@ -77,21 +77,21 @@ export default function DashboardFinanceiro() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <ResumoCard
             titulo="Lucro Hoje"
-            valor={formatarMoeda(dados?.hoje?.lucro)}
+            valor={formatarMoeda(dados?.hoje?.saldoCaixa)}
             subtitulo="Resultado do dia"
             corIcone="bg-blue-100 text-blue-600"
           />
 
           <ResumoCard
             titulo="Lucro 7 Dias"
-            valor={formatarMoeda(dados?.seteDias?.lucro)}
+            valor={formatarMoeda(dados?.seteDias?.saldoCaixa)}
             subtitulo="Resultado semanal"
             corIcone="bg-emerald-100 text-emerald-600"
           />
 
           <ResumoCard
             titulo="Lucro do Mês"
-            valor={formatarMoeda(dados?.mes?.lucro)}
+            valor={formatarMoeda(dados?.mes?.saldoCaixa)}
             subtitulo="Resultado mensal"
             corIcone="bg-violet-100 text-violet-600"
           />
@@ -118,6 +118,28 @@ export default function DashboardFinanceiro() {
             subtitulo="Contas pendentes"
             corIcone="bg-amber-100 text-amber-600"
           />
+
+          <ResumoCard
+            titulo="Faturamento de Vendas"
+            valor={formatarMoeda(dados?.mes?.faturamentoVendas)}
+            subtitulo="Total vendido no mês"
+            corIcone="bg-cyan-100 text-cyan-600"
+          />
+
+          <ResumoCard
+            titulo="Custo dos Produtos"
+            valor={formatarMoeda(dados?.mes?.custoProdutosVendidos)}
+            subtitulo="Custo dos produtos vendidos"
+            corIcone="bg-orange-100 text-orange-600"
+          />
+
+          <ResumoCard
+            titulo="Lucro Bruto de Vendas"
+            valor={formatarMoeda(dados?.mes?.lucroBrutoVendas)}
+            subtitulo="Vendas menos custo dos produtos"
+            corIcone="bg-emerald-100 text-emerald-600"
+          />
+
         </div>
 
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">

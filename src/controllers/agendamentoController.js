@@ -580,7 +580,10 @@ export const concluirAgendamento = async (req, res) => {
                 nomeItem: agendamento.servico.nome,
                 quantidade: 1,
                 precoUnitario: valorServico,
-                subtotal: valorServico
+                subtotal: valorServico,
+                custoUnitario: null,
+                custoTotal: null,
+                lucroBruto: valorServico
               }
             ]
           }

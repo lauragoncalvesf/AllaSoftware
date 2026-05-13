@@ -29,6 +29,7 @@ export default function Produtos() {
     descricao: "",
     precoVarejo: "",
     precoAtacado: "",
+    precoCusto: "",
     estoque: "",
     status: "ativo",
   })
@@ -39,6 +40,7 @@ export default function Produtos() {
     descricao: "",
     precoVarejo: "",
     precoAtacado: "",
+    precoCusto: "",
     estoque: "",
     status: "ativo",
   })
@@ -90,6 +92,7 @@ export default function Produtos() {
       descricao: produto.descricao || "",
       precoVarejo: produto.precoVarejo ?? "",
       precoAtacado: produto.precoAtacado ?? "",
+      precoCusto: produto.precoCusto ?? "",
       estoque: produto.estoque ?? "",
       status: produto.status || "ativo",
     })
@@ -107,6 +110,9 @@ export default function Produtos() {
         precoAtacado: novoProduto.precoAtacado
           ? Number(novoProduto.precoAtacado)
           : null,
+        precoCusto: novoProduto.precoCusto !== undefined && novoProduto.precoCusto !== ""
+          ? Number(novoProduto.precoCusto)
+          : null,
         estoque: novoProduto.estoque ? Number(novoProduto.estoque) : null,
         status: novoProduto.status,
       })
@@ -116,6 +122,7 @@ export default function Produtos() {
         descricao: "",
         precoVarejo: "",
         precoAtacado: "",
+        precoCusto: "",
         estoque: "",
         status: "ativo",
       })
@@ -138,6 +145,9 @@ export default function Produtos() {
         precoVarejo: Number(produtoEditando.precoVarejo),
         precoAtacado: produtoEditando.precoAtacado
           ? Number(produtoEditando.precoAtacado)
+          : null,
+        precoCusto: produtoEditando.precoCusto !== undefined && produtoEditando.precoCusto !== ""
+          ? Number(produtoEditando.precoCusto)
           : null,
         estoque: produtoEditando.estoque ? Number(produtoEditando.estoque) : null,
         status: produtoEditando.status,
@@ -285,9 +295,10 @@ export default function Produtos() {
               <div className="hidden xl:block">
                 <div className="grid grid-cols-12 gap-4 px-6 py-4 text-sm font-semibold text-gray-500 border-b border-gray-100">
                   <div className="col-span-3">Produto</div>
-                  <div className="col-span-3">Descrição</div>
+                  <div className="col-span-2">Descrição</div>
                   <div className="col-span-2">Preço Varejo</div>
-                  <div className="col-span-2">Preço Atacado</div>
+                  <div className="col-span-2">Preço Custo</div>
+                  <div className="col-span-1">Atacado</div>
                   <div className="col-span-1">Status</div>
                   <div className="col-span-1 text-right">Ações</div>
                 </div>
@@ -303,7 +314,7 @@ export default function Produtos() {
                       </p>
                     </div>
 
-                    <div className="col-span-3 flex items-center min-w-0">
+                    <div className="col-span-2 flex items-center min-w-0">
                       <p className="text-sm text-gray-500 truncate">
                         {produto.descricao || "Sem descrição"}
                       </p>
@@ -316,6 +327,14 @@ export default function Produtos() {
                     </div>
 
                     <div className="col-span-2 flex items-center">
+                      <p className="text-sm text-gray-600">
+                        {produto.precoCusto
+                          ? formatarMoeda(produto.precoCusto)
+                          : "—"}
+                      </p>
+                    </div>
+
+                    <div className="col-span-1 flex items-center">
                       <p className="text-sm text-gray-600">
                         {produto.precoAtacado
                           ? formatarMoeda(produto.precoAtacado)
@@ -475,7 +494,7 @@ export default function Produtos() {
               placeholder="Descreva o produto"
             />
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <CampoInput
                 label="Preço Varejo *"
                 type="number"
@@ -485,6 +504,16 @@ export default function Produtos() {
                 }
                 placeholder="0,00"
                 required
+              />
+
+              <CampoInput
+                label="Preço de Custo"
+                type="number"
+                value={novoProduto.precoCusto}
+                onChange={(e) =>
+                  setNovoProduto({ ...novoProduto, precoCusto: e.target.value })
+                }
+                placeholder="0,00"
               />
 
               <CampoInput
@@ -568,7 +597,7 @@ export default function Produtos() {
               placeholder="Descreva o produto"
             />
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <CampoInput
                 label="Preço Varejo *"
                 type="number"
@@ -591,6 +620,19 @@ export default function Produtos() {
                   setProdutoEditando({
                     ...produtoEditando,
                     precoAtacado: e.target.value,
+                  })
+                }
+                placeholder="0,00"
+              />
+
+              <CampoInput
+                label="Preço de Custo"
+                type="number"
+                value={produtoEditando.precoCusto}
+                onChange={(e) =>
+                  setProdutoEditando({
+                    ...produtoEditando,
+                    precoCusto: e.target.value,
                   })
                 }
                 placeholder="0,00"

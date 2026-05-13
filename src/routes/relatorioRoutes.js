@@ -7,7 +7,7 @@
 
 import { auth } from "../middlewares/auth.js"
 import { permitirRoles } from "../middlewares/permitirRoles.js"
-import { gerarRelatorioPDF } from "../controllers/relatorioController.js"
+import { gerarRelatorioPDF, relatorioFinanceiro } from "../controllers/relatorioController.js"
 
 export default (app) => {
   // GET /relatorios/pdf?periodo=mes  → baixa o PDF do relatório
@@ -16,5 +16,12 @@ export default (app) => {
     auth,
     permitirRoles("admin", "gerente"),
     gerarRelatorioPDF
+  )
+
+  app.get(
+    "/relatorios/financeiro/dados",
+    auth,
+    permitirRoles("admin", "gerente"),
+    relatorioFinanceiro
   )
 }

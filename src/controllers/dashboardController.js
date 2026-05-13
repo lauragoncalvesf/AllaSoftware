@@ -18,6 +18,26 @@ const calcularResumo = (transacoes) => {
   }
 }
 
+const calcularResumoVendas = (itensVenda) => {
+  const faturamentoVendas = itensVenda.reduce((total, item) => {
+    return total + Number(item.subtotal || 0)
+  }, 0)
+
+  const custoProdutosVendidos = itensVenda.reduce((total, item) => {
+    return total + Number(item.custoTotal || 0)
+  }, 0)
+
+  const lucroBrutoVendas = itensVenda.reduce((total, item) => {
+    return total + Number(item.lucroBruto || 0)
+  }, 0)
+
+  return {
+    faturamentoVendas,
+    custoProdutosVendidos,
+    lucroBrutoVendas
+  }
+}
+
 const formatarDia = (data) => {
   return data.toISOString().slice(0, 10)
 }
@@ -100,18 +120,69 @@ export const dashboardFinanceiro = async (req, res) => {
       }
     })
 
+    const itensVendaHoje = await prisma.itemVenda.findMany({
+      where: {
+        venda: {
+          empresaId: req.empresaId,
+          createdAt: {
+            gte: inicioHoje
+          }
+        }
+      },
+      include: {
+        venda: true
+      }
+    })
+
+    const itensVendaSeteDias = await prisma.itemVenda.findMany({
+      where: {
+        venda: {
+          empresaId: req.empresaId,
+          createdAt: {
+            gte: inicioSeteDias
+          }
+        }
+      },
+      include: {
+        venda: true
+      }
+    })
+
+    const itensVendaMes = await prisma.itemVenda.findMany({
+      where: {
+        venda: {
+          empresaId: req.empresaId,
+          createdAt: {
+            gte: inicioMes
+          }
+        }
+      },
+      include: {
+        venda: true
+      }
+    })
+
+    const resumoHojeCaixa = calcularResumo(transacoesHoje)
+    const resumoSeteDiasCaixa = calcularResumo(transacoesSeteDias)
+    const resumoMesCaixa = calcularResumo(transacoesMes)
+
+    const resumoHojeVendas = calcularResumoVendas(itensVendaHoje)
+    const resumoSeteDiasVendas = calcularResumoVendas(itensVendaSeteDias)
+    const resumoMesVendas = calcularResumoVendas(itensVendaMes)
+
     const formasPagamento = transacoesMes
-  .filter((transacao) => transacao.tipo === "entrada" && transacao.formaPagamento)
-  .reduce((acc, transacao) => {
-    const chave = transacao.formaPagamento
+      .filter((transacao) => transacao.tipo === "entrada" && transacao.formaPagamento)
+      .reduce((acc, transacao) => {
+    
+        const chave = transacao.formaPagamento
 
-    if (!acc[chave]) {
-      acc[chave] = 0
-    }
+        if (!acc[chave]) {
+          acc[chave] = 0
+        }
 
-    acc[chave] += transacao.valor
-    return acc
-  }, {})
+        acc[chave] += transacao.valor
+        return acc
+    }, {})
 
     const ultimasTransacoes = await prisma.transacao.findMany({
       where: whereBase,
@@ -196,18 +267,40 @@ export const dashboardFinanceiro = async (req, res) => {
 
       const resumoDia = calcularResumo(transacoesDoDia)
 
+      const itensVendaDoDia = itensVendaSeteDias.filter((item) => {
+        const data = new Date(item.venda.createdAt)
+        return data >= inicioDia && data <= fimDia
+      })
+
+      const resumoVendasDoDia = calcularResumoVendas(itensVendaDoDia)
+
       grafico7Dias.push({
         dia: formatarDia(inicioDia),
         entradas: resumoDia.entradas,
         saidas: resumoDia.saidas,
-        lucro: resumoDia.lucro
+        lucro: resumoDia.lucro,
+        saldoCaixa: resumoDia.lucro,
+        lucroBrutoVendas: resumoVendasDoDia.lucroBrutoVendas,
+        custoProdutosVendidos: resumoVendasDoDia.custoProdutosVendidos,
+        faturamentoVendas: resumoVendasDoDia.faturamentoVendas
       })
     }
 
     res.json({
-      hoje: calcularResumo(transacoesHoje),
-      seteDias: calcularResumo(transacoesSeteDias),
-      mes: calcularResumo(transacoesMes),
+      hoje: { ...resumoHojeCaixa, 
+        saldoCaixa: resumoHojeCaixa.lucro,
+        ...resumoHojeVendas
+      },
+      seteDias: {
+        ...resumoSeteDiasCaixa,
+        saldoCaixa: resumoSeteDiasCaixa.lucro,
+        ...resumoSeteDiasVendas
+      },
+      mes: {
+        ...resumoMesCaixa,
+        saldoCaixa: resumoMesCaixa.lucro,
+        ...resumoMesVendas
+      },
       clientesPendentes,
       contasPendentes,
       contasParciais,

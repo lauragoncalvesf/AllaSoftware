@@ -3,7 +3,7 @@ import prisma from "../config/prisma.js"
 // Criar produto
 export const criarProduto = async (req, res) => {
   try {
-    const { nome, descricao, precoVarejo, precoAtacado, estoque, status } = req.body || {}
+    const { nome, descricao, precoVarejo, precoAtacado, precoCusto, estoque, status } = req.body || {}
 
     if (!nome || precoVarejo === undefined) {
       return res.status(400).json({
@@ -17,6 +17,8 @@ export const criarProduto = async (req, res) => {
         descricao,
         precoVarejo: Number(precoVarejo),
         precoAtacado: precoAtacado ? Number(precoAtacado) : null,
+        precoCusto: precoCusto !== undefined && precoCusto !== "" 
+        ? Number(precoCusto) : null,
         estoque: estoque !== undefined && estoque !== "" ? Number(estoque) : null,
         status: status || "ativo",
         empresaId: req.empresaId
@@ -72,7 +74,7 @@ export const listarProdutos = async (req, res) => {
 export const atualizarProduto = async (req, res) => {
   try {
     const { id } = req.params
-    const { nome, descricao, precoVarejo, precoAtacado, estoque, status } = req.body || {}
+    const { nome, descricao, precoVarejo, precoAtacado, precoCusto, estoque, status } = req.body || {}
 
     const produtoExistente = await prisma.produto.findFirst({
       where: {
@@ -102,6 +104,10 @@ export const atualizarProduto = async (req, res) => {
         estoque:
           estoque !== undefined && estoque !== ""
             ? Number(estoque)
+            : undefined,
+        precoCusto:
+          precoCusto !== undefined && precoCusto !== ""
+            ? Number(precoCusto)
             : undefined,
         status
       }

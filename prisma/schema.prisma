@@ -121,6 +121,7 @@ model Produto {
   descricao     String?
   precoVarejo   Float
   precoAtacado  Float?
+  precoCusto    Float?
   estoque       Int?     
   status        String   @default("ativo")
   empresaId     Int
@@ -153,6 +154,9 @@ model ItemVenda {
   nomeItem      String
   quantidade    Int      @default(1)
   precoUnitario Float
+  custoUnitario Float?
+  custoTotal    Float?
+  lucroBruto    Float?
   subtotal      Float
   createdAt     DateTime @default(now())
 

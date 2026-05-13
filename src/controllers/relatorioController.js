@@ -6,6 +6,42 @@
 import prisma from "../config/prisma.js"
 import { gerarRelatorio, imprimirTermico } from "../services/comprovanteService.js"
 
+const calcularResumoCaixa = (transacoes) => {
+  const entradas = transacoes
+    .filter((transacao) => transacao.tipo === "entrada")
+    .reduce((total, transacao) => total + Number(transacao.valor || 0), 0)
+
+  const saidas = transacoes
+    .filter((transacao) => transacao.tipo === "saida")
+    .reduce((total, transacao) => total + Number(transacao.valor || 0), 0)
+
+  return {
+    entradas,
+    saidas,
+    saldoCaixa: entradas - saidas
+  }
+}
+
+const calcularResumoVendas = (itensVenda) => {
+  const faturamentoVendas = itensVenda.reduce((total, item) => {
+    return total + Number(item.subtotal || 0)
+  }, 0)
+
+  const custoProdutosVendidos = itensVenda.reduce((total, item) => {
+    return total + Number(item.custoTotal || 0)
+  }, 0)
+
+  const lucroBrutoVendas = itensVenda.reduce((total, item) => {
+    return total + Number(item.lucroBruto || 0)
+  }, 0)
+
+  return {
+    faturamentoVendas,
+    custoProdutosVendidos,
+    lucroBrutoVendas
+  }
+}
+
 export const gerarRelatorioPDF = async (req, res) => {
   try {
     const { periodo, imprimir } = req.query
@@ -104,5 +140,127 @@ export const gerarRelatorioPDF = async (req, res) => {
   } catch (error) {
     console.error("[Relatório] Erro ao gerar PDF:", error)
     res.status(500).json({ error: "Erro ao gerar relatório PDF" })
+  }
+}
+
+export const relatorioFinanceiro = async (req, res) => {
+  try {
+    const { tipo, categoria, dataInicio, dataFim } = req.query
+
+    const whereTransacoes = {
+      empresaId: req.empresaId,
+      status: "ativa"
+    }
+
+    const whereVendas = {
+      empresaId: req.empresaId
+    }
+
+    if (tipo) {
+      whereTransacoes.tipo = tipo
+    }
+
+    if (categoria) {
+      whereTransacoes.categoria = categoria
+    }
+
+    if (dataInicio || dataFim) {
+      whereTransacoes.createdAt = {}
+      whereVendas.createdAt = {}
+
+      if (dataInicio) {
+        const inicio = new Date(dataInicio)
+        inicio.setHours(0, 0, 0, 0)
+
+        whereTransacoes.createdAt.gte = inicio
+        whereVendas.createdAt.gte = inicio
+      }
+
+      if (dataFim) {
+        const fim = new Date(dataFim)
+        fim.setHours(23, 59, 59, 999)
+
+        whereTransacoes.createdAt.lte = fim
+        whereVendas.createdAt.lte = fim
+      }
+    }
+
+    const transacoes = await prisma.transacao.findMany({
+      where: whereTransacoes,
+      orderBy: {
+        createdAt: "desc"
+      }
+    })
+
+    const vendas = await prisma.venda.findMany({
+      where: whereVendas,
+      include: {
+        itens: true,
+        contaReceber: true
+      },
+      orderBy: {
+        createdAt: "desc"
+      }
+    })
+
+    const itensVenda = vendas.flatMap((venda) => venda.itens || [])
+
+    const whereContas = {
+      empresaId: req.empresaId,
+      status: {
+        in: ["pendente", "parcial", "vencido"]
+      }
+    }
+
+    if (dataInicio || dataFim) {
+      whereContas.createdAt = {}
+
+      if (dataInicio) {
+        const inicio = new Date(dataInicio)
+        inicio.setHours(0, 0, 0, 0)
+        whereContas.createdAt.gte = inicio
+      }
+
+      if (dataFim) {
+        const fim = new Date(dataFim)
+        fim.setHours(23, 59, 59, 999)
+        whereContas.createdAt.lte = fim
+      }
+    }
+
+    const contasEmAberto = await prisma.contaReceber.findMany({
+      where: whereContas
+    })
+
+    const totalEmAberto = contasEmAberto.reduce((total, conta) => {
+      return total + (Number(conta.valorTotal || 0) - Number(conta.valorPago || 0))
+    }, 0)
+
+    const resumoCaixa = calcularResumoCaixa(transacoes)
+    const resumoVendas = calcularResumoVendas(itensVenda)
+
+    res.json({
+      filtros: {
+        tipo: tipo || "",
+        categoria: categoria || "",
+        dataInicio: dataInicio || "",
+        dataFim: dataFim || ""
+      },
+      resumo: {
+        ...resumoCaixa,
+        ...resumoVendas,
+        totalEmAberto,
+        quantidadeTransacoes: transacoes.length,
+        quantidadeVendas: vendas.length
+      },
+      transacoes,
+      vendas
+    })
+  } catch (error) {
+    console.error("Erro ao gerar relatório financeiro:", error)
+
+    res.status(500).json({
+      error: "Erro ao gerar relatório financeiro"
+    })
   }
 }
