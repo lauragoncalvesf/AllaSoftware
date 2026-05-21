@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import AppLayout from "../layouts/AppLayout"
 import api from "../services/api"
 import {
@@ -10,14 +10,19 @@ import {
   Tooltip,
   CartesianGrid,
   BarChart,
-  Bar
+  Bar,
 } from "recharts"
 import { formatarMoeda, formatarFormaPagamento } from "../utils/formatters"
-import ResumoCard from "../components/ResumoCard"
 
+/**
+ * Dashboard Financeiro — versão compacta.
+ * KPIs menores agrupados por contexto (Resultado, Operação, Vendas),
+ * gráficos preservados (Recharts) e seções com hierarquia clara.
+ */
 export default function DashboardFinanceiro() {
   const [dados, setDados] = useState(null)
   const [loading, setLoading] = useState(true)
+  const [periodo, setPeriodo] = useState("mes") // hoje | 7d | mes
 
   useEffect(() => {
     carregarDados()
@@ -38,237 +43,331 @@ export default function DashboardFinanceiro() {
     if (!data) return "-"
     return new Date(data).toLocaleDateString("pt-BR", {
       day: "2-digit",
-      month: "2-digit"
+      month: "2-digit",
     })
   }
 
-  const grafico7Dias = (dados?.grafico7Dias || []).map((item) => ({
-    ...item,
-    diaFormatado: formatarDataCurta(item.dia)
-  }))
-
-  const formasPagamento = Object.entries(dados?.formasPagamento || {}).map(
-    ([nome, valor]) => ({
-      nome: formatarFormaPagamento(nome),
-      valor
-    })
+  const grafico7Dias = useMemo(
+    () =>
+      (dados?.grafico7Dias || []).map((item) => ({
+        ...item,
+        diaFormatado: formatarDataCurta(item.dia),
+      })),
+    [dados]
   )
+
+  const formasPagamento = useMemo(
+    () =>
+      Object.entries(dados?.formasPagamento || {}).map(([nome, valor]) => ({
+        nome: formatarFormaPagamento(nome),
+        valor,
+      })),
+    [dados]
+  )
+
+  // Bloco "Resultado" muda conforme período selecionado
+  const resultado = useMemo(() => {
+    if (!dados) return {}
+    if (periodo === "hoje") return dados.hoje || {}
+    if (periodo === "7d") return dados.seteDias || {}
+    return dados.mes || {}
+  }, [dados, periodo])
 
   if (loading) {
     return (
       <AppLayout>
-        <p className="text-gray-600">Carregando dashboard financeiro...</p>
+        <div className="animate-pulse space-y-4">
+          <div className="h-6 w-72 bg-gray-200 rounded" />
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <div key={i} className="h-20 bg-gray-100 rounded-xl" />
+            ))}
+          </div>
+          <div className="h-72 bg-gray-100 rounded-2xl" />
+        </div>
       </AppLayout>
     )
   }
 
   return (
     <AppLayout>
-      <div className="space-y-6">
+      {/* Header compacto + seletor de período */}
+      <div className="flex flex-wrap items-end justify-between gap-3 mb-5">
         <div>
-          <h1 className="text-2xl md:text-3xl font-bold text-[#2D2E47]">
+          <h1 className="text-xl md:text-2xl font-semibold text-[#2D2E47]">
             Dashboard Financeiro
           </h1>
-          <p className="text-sm text-gray-500 mt-1">
-            Acompanhe entradas, saídas, lucro, cobranças e formas de pagamento.
+          <p className="text-xs text-gray-500 mt-0.5">
+            Entradas, saídas, lucro, cobranças e formas de pagamento.
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <ResumoCard
-            titulo="Lucro Hoje"
-            valor={formatarMoeda(dados?.hoje?.saldoCaixa)}
-            subtitulo="Resultado do dia"
-            corIcone="bg-blue-100 text-blue-600"
-          />
+        <PeriodoSwitch value={periodo} onChange={setPeriodo} />
+      </div>
 
-          <ResumoCard
-            titulo="Lucro 7 Dias"
-            valor={formatarMoeda(dados?.seteDias?.saldoCaixa)}
-            subtitulo="Resultado semanal"
-            corIcone="bg-emerald-100 text-emerald-600"
-          />
+      {/* Resultado por período */}
+      <SectionTitle>
+        Resultado •{" "}
+        {periodo === "hoje" ? "Hoje" : periodo === "7d" ? "7 dias" : "Mês"}
+      </SectionTitle>
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <Kpi
+          label="Lucro"
+          value={formatarMoeda(resultado?.saldoCaixa)}
+          tone="primary"
+        />
+        <Kpi
+          label="Entradas"
+          value={formatarMoeda(resultado?.entradas)}
+          tone="success"
+        />
+        <Kpi
+          label="Saídas"
+          value={formatarMoeda(resultado?.saidas)}
+          tone="danger"
+        />
+        <Kpi
+          label="Em aberto"
+          value={formatarMoeda(dados?.totalEmAberto)}
+          tone="warning"
+          hint={`${dados?.contasPendentes || 0} contas`}
+        />
+      </div>
 
-          <ResumoCard
-            titulo="Lucro do Mês"
-            valor={formatarMoeda(dados?.mes?.saldoCaixa)}
-            subtitulo="Resultado mensal"
-            corIcone="bg-violet-100 text-violet-600"
-          />
-        </div>
+      {/* Vendas */}
+      <SectionTitle className="mt-6">Vendas do mês</SectionTitle>
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+        <Kpi
+          label="Faturamento"
+          value={formatarMoeda(dados?.mes?.faturamentoVendas)}
+          tone="info"
+        />
+        <Kpi
+          label="Custo dos produtos"
+          value={formatarMoeda(dados?.mes?.custoProdutosVendidos)}
+          tone="muted"
+        />
+        <Kpi
+          label="Lucro bruto"
+          value={formatarMoeda(dados?.mes?.lucroBrutoVendas)}
+          tone="success"
+        />
+      </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <ResumoCard
-            titulo="Entradas do Mês"
-            valor={formatarMoeda(dados?.mes?.entradas)}
-            subtitulo="Receitas ativas"
-            corIcone="bg-emerald-100 text-emerald-600"
-          />
+      {/* Gráficos */}
+      <div className="grid grid-cols-1 xl:grid-cols-3 gap-4 mt-6">
+        <Card className="xl:col-span-2" titulo="Entradas x Saídas — 7 dias">
+          <ResponsiveContainer width="100%" height={240}>
+            <AreaChart data={grafico7Dias}>
+              <defs>
+                <linearGradient id="gradIn" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="#00BAB4" stopOpacity={0.35} />
+                  <stop offset="100%" stopColor="#00BAB4" stopOpacity={0} />
+                </linearGradient>
+                <linearGradient id="gradOut" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="#EF4444" stopOpacity={0.3} />
+                  <stop offset="100%" stopColor="#EF4444" stopOpacity={0} />
+                </linearGradient>
+              </defs>
+              <CartesianGrid strokeDasharray="3 3" stroke="#eef2f6" />
+              <XAxis dataKey="diaFormatado" tick={{ fontSize: 11, fill: "#6b7280" }} />
+              <YAxis tick={{ fontSize: 11, fill: "#6b7280" }} width={56} />
+              <Tooltip
+                formatter={(v) => formatarMoeda(v)}
+                contentStyle={{
+                  borderRadius: 10,
+                  border: "1px solid #e5e7eb",
+                  fontSize: 12,
+                }}
+              />
+              <Area
+                type="monotone"
+                dataKey="entradas"
+                name="Entradas"
+                stroke="#00BAB4"
+                strokeWidth={2}
+                fill="url(#gradIn)"
+              />
+              <Area
+                type="monotone"
+                dataKey="saidas"
+                name="Saídas"
+                stroke="#EF4444"
+                strokeWidth={2}
+                fill="url(#gradOut)"
+              />
+            </AreaChart>
+          </ResponsiveContainer>
+        </Card>
 
-          <ResumoCard
-            titulo="Saídas do Mês"
-            valor={formatarMoeda(dados?.mes?.saidas)}
-            subtitulo="Despesas ativas"
-            corIcone="bg-red-100 text-red-600"
-          />
-
-          <ResumoCard
-            titulo="Total em Aberto"
-            valor={formatarMoeda(dados?.totalEmAberto)}
-            subtitulo="Contas pendentes"
-            corIcone="bg-amber-100 text-amber-600"
-          />
-
-          <ResumoCard
-            titulo="Faturamento de Vendas"
-            valor={formatarMoeda(dados?.mes?.faturamentoVendas)}
-            subtitulo="Total vendido no mês"
-            corIcone="bg-cyan-100 text-cyan-600"
-          />
-
-          <ResumoCard
-            titulo="Custo dos Produtos"
-            valor={formatarMoeda(dados?.mes?.custoProdutosVendidos)}
-            subtitulo="Custo dos produtos vendidos"
-            corIcone="bg-orange-100 text-orange-600"
-          />
-
-          <ResumoCard
-            titulo="Lucro Bruto de Vendas"
-            valor={formatarMoeda(dados?.mes?.lucroBrutoVendas)}
-            subtitulo="Vendas menos custo dos produtos"
-            corIcone="bg-emerald-100 text-emerald-600"
-          />
-
-        </div>
-
-        <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-          <GraficoCard titulo="Entradas x Saídas - últimos 7 dias">
-            <ResponsiveContainer width="100%" height={300}>
-              <AreaChart data={grafico7Dias}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="diaFormatado" />
-                <YAxis />
-                <Tooltip formatter={(value) => formatarMoeda(value)} />
-                <Area
-                  type="monotone"
-                  dataKey="entradas"
-                  name="Entradas"
-                  stroke="#00BAB4"
-                  fill="#00BAB4"
-                  fillOpacity={0.2}
-                />
-                <Area
-                  type="monotone"
-                  dataKey="saidas"
-                  name="Saídas"
-                  stroke="#EF4444"
-                  fill="#EF4444"
-                  fillOpacity={0.15}
-                />
-              </AreaChart>
-            </ResponsiveContainer>
-          </GraficoCard>
-
-          <GraficoCard titulo="Formas de pagamento - mês atual">
-            {formasPagamento.length === 0 ? (
-              <div className="h-[300px] flex items-center justify-center text-gray-500">
-                Nenhum dado de pagamento no mês.
-              </div>
-            ) : (
-              <ResponsiveContainer width="100%" height={300}>
-                <BarChart data={formasPagamento}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="nome" />
-                  <YAxis />
-                  <Tooltip formatter={(value) => formatarMoeda(value)} />
-                  <Bar dataKey="valor" name="Valor" fill="#2F8AA3" radius={[8, 8, 0, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
-            )}
-          </GraficoCard>
-        </div>
-
-        <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-          <div className="xl:col-span-2 bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-            <div className="px-5 py-4 border-b border-gray-100">
-              <h2 className="text-lg font-semibold text-[#2D2E47]">
-                Últimas Transações
-              </h2>
+        <Card titulo="Formas de pagamento">
+          {formasPagamento.length === 0 ? (
+            <div className="h-[240px] flex items-center justify-center text-sm text-gray-500">
+              Nenhum dado no mês.
             </div>
+          ) : (
+            <ResponsiveContainer width="100%" height={240}>
+              <BarChart data={formasPagamento}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#eef2f6" />
+                <XAxis dataKey="nome" tick={{ fontSize: 11, fill: "#6b7280" }} />
+                <YAxis tick={{ fontSize: 11, fill: "#6b7280" }} width={56} />
+                <Tooltip
+                  formatter={(v) => formatarMoeda(v)}
+                  contentStyle={{
+                    borderRadius: 10,
+                    border: "1px solid #e5e7eb",
+                    fontSize: 12,
+                  }}
+                />
+                <Bar
+                  dataKey="valor"
+                  name="Valor"
+                  fill="#2F8AA3"
+                  radius={[6, 6, 0, 0]}
+                />
+              </BarChart>
+            </ResponsiveContainer>
+          )}
+        </Card>
+      </div>
 
-            {(dados?.ultimasTransacoes || []).length === 0 ? (
-              <div className="p-6 text-gray-500">Nenhuma transação encontrada.</div>
-            ) : (
-              <div className="divide-y divide-gray-100">
-                {dados.ultimasTransacoes.map((transacao) => (
-                  <div
-                    key={transacao.id}
-                    className="px-5 py-4 flex flex-col md:flex-row md:items-center md:justify-between gap-3"
-                  >
-                    <div>
-                      <p className="font-medium text-[#2D2E47]">
-                        {transacao.descricao || "Sem descrição"}
-                      </p>
-                      <p className="text-sm text-gray-500 mt-1">
-                        {transacao.categoria || "Sem categoria"} •{" "}
-                        {formatarFormaPagamento(transacao.formaPagamento)}
-                      </p>
-                    </div>
-
-                    <p
-                      className={`font-semibold ${
-                        transacao.tipo === "entrada"
-                          ? "text-emerald-600"
-                          : "text-red-600"
-                      }`}
-                    >
-                      {formatarMoeda(transacao.valor)}
+      {/* Transações + Cobranças */}
+      <div className="grid grid-cols-1 xl:grid-cols-3 gap-4 mt-4">
+        <Card className="xl:col-span-2" titulo="Últimas transações" dense>
+          {(dados?.ultimasTransacoes || []).length === 0 ? (
+            <div className="px-5 py-6 text-sm text-gray-500">
+              Nenhuma transação encontrada.
+            </div>
+          ) : (
+            <ul className="divide-y divide-gray-100 max-h-[280px] overflow-auto">
+              {dados.ultimasTransacoes.map((t) => (
+                <li
+                  key={t.id}
+                  className="px-5 py-2.5 flex items-center justify-between gap-3"
+                >
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium text-[#2D2E47] truncate">
+                      {t.descricao || "Sem descrição"}
+                    </p>
+                    <p className="text-[11px] text-gray-500 truncate">
+                      {t.categoria || "Sem categoria"} •{" "}
+                      {formatarFormaPagamento(t.formaPagamento)}
                     </p>
                   </div>
-                ))}
-              </div>
-            )}
-          </div>
+                  <span
+                    className={`text-sm font-semibold whitespace-nowrap ${
+                      t.tipo === "entrada" ? "text-emerald-600" : "text-red-600"
+                    }`}
+                  >
+                    {t.tipo === "entrada" ? "+" : "−"} {formatarMoeda(t.valor)}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </Card>
 
-          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5">
-            <h2 className="text-lg font-semibold text-[#2D2E47] mb-4">
-              Cobranças
-            </h2>
-
+        <Card titulo="Cobranças" dense>
+          <div className="px-5 py-2">
             <InfoLinha label="Pendentes" valor={dados?.contasPendentes || 0} />
             <InfoLinha label="Parciais" valor={dados?.contasParciais || 0} />
             <InfoLinha label="Pagas" valor={dados?.contasPagas || 0} />
             <InfoLinha label="Vencidas" valor={dados?.contasVencidas || 0} />
             <InfoLinha
-              label="Total Vencido"
+              label="Total vencido"
               valor={formatarMoeda(dados?.totalVencido)}
               destaque
             />
           </div>
-        </div>
+        </Card>
       </div>
     </AppLayout>
   )
 }
 
-function GraficoCard({ titulo, children }) {
+/* ---------- Subcomponentes ---------- */
+
+function SectionTitle({ children, className = "" }) {
   return (
-    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5">
-      <h2 className="text-lg font-semibold text-[#2D2E47] mb-4">
-        {titulo}
-      </h2>
+    <h3
+      className={`text-[11px] font-semibold uppercase tracking-wider text-gray-400 mb-2 ${className}`}
+    >
       {children}
+    </h3>
+  )
+}
+
+function PeriodoSwitch({ value, onChange }) {
+  const opts = [
+    { id: "hoje", label: "Hoje" },
+    { id: "7d", label: "7d" },
+    { id: "mes", label: "Mês" },
+  ]
+  return (
+    <div className="inline-flex bg-white border border-gray-200 rounded-lg p-0.5 shadow-sm">
+      {opts.map((o) => (
+        <button
+          key={o.id}
+          onClick={() => onChange(o.id)}
+          className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${
+            value === o.id
+              ? "bg-[#2F8AA3] text-white shadow-sm"
+              : "text-gray-600 hover:text-[#2D2E47]"
+          }`}
+        >
+          {o.label}
+        </button>
+      ))}
+    </div>
+  )
+}
+
+const TONES = {
+  primary: { dot: "bg-[#2F8AA3]", value: "text-[#2D2E47]" },
+  success: { dot: "bg-emerald-500", value: "text-emerald-600" },
+  danger: { dot: "bg-red-500", value: "text-red-600" },
+  warning: { dot: "bg-amber-500", value: "text-amber-600" },
+  info: { dot: "bg-cyan-500", value: "text-cyan-700" },
+  muted: { dot: "bg-gray-400", value: "text-gray-700" },
+}
+
+function Kpi({ label, value, hint, tone = "primary" }) {
+  const t = TONES[tone] || TONES.primary
+  return (
+    <div className="bg-white border border-gray-100 rounded-xl shadow-sm p-3">
+      <div className="flex items-center justify-between">
+        <span className="text-[11px] uppercase tracking-wide text-gray-400">
+          {label}
+        </span>
+        <span className={`h-2 w-2 rounded-full ${t.dot}`} />
+      </div>
+      <p className={`text-lg md:text-xl font-bold mt-1 leading-tight ${t.value}`}>
+        {value}
+      </p>
+      {hint && <p className="text-[11px] text-gray-500 mt-0.5">{hint}</p>}
+    </div>
+  )
+}
+
+function Card({ titulo, children, className = "", dense = false }) {
+  return (
+    <div
+      className={`bg-white rounded-2xl shadow-sm border border-gray-100 ${className}`}
+    >
+      <div className="px-5 py-3 border-b border-gray-100">
+        <h2 className="text-sm font-semibold text-[#2D2E47]">{titulo}</h2>
+      </div>
+      <div className={dense ? "" : "p-3"}>{children}</div>
     </div>
   )
 }
 
 function InfoLinha({ label, valor, destaque = false }) {
   return (
-    <div className="flex items-center justify-between py-3 border-b border-gray-100 last:border-b-0">
-      <span className="text-sm text-gray-500">{label}</span>
+    <div className="flex items-center justify-between py-2 border-b border-gray-100 last:border-b-0">
+      <span className="text-xs text-gray-500">{label}</span>
       <span
-        className={`font-semibold ${
+        className={`text-sm font-semibold ${
           destaque ? "text-red-600" : "text-[#2D2E47]"
         }`}
       >
