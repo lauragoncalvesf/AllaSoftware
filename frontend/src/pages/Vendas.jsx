@@ -4,8 +4,10 @@ import AppLayout from "../layouts/AppLayout"
 import api from "../services/api"
 import ClienteSearchSelect from "../components/ClienteSearchSelect"
 import ModalAviso from "../components/ModalAviso"
+import { podeAcessar } from "../utils/permissoes"
 
 export default function Vendas() {
+  const podeCriar = podeAcessar("vendas", "criar")
   const [searchParams] = useSearchParams()
 
   const [clientes, setClientes] = useState([])
@@ -143,6 +145,11 @@ export default function Vendas() {
   const podePagar = itens.length > 0 && totalFinal >= 0
 
   const salvarVenda = async () => {
+    if (!podeCriar) {
+      setAviso({ titulo: "Acesso negado", mensagem: "Voce nao tem permissao para criar vendas." })
+      return
+    }
+
     if (totalFinal < 0) {
       setAviso({ titulo: "Desconto inválido", mensagem: "O desconto não pode ser maior que o total da venda" })
       return
@@ -223,6 +230,7 @@ export default function Vendas() {
     salvando,
     salvarVenda,
     formatarMoeda,
+    podeCriar,
   }
 
   return (
@@ -375,6 +383,7 @@ function Carrinho({
   salvando,
   salvarVenda,
   formatarMoeda,
+  podeCriar,
 }) {
   return (
     <div className="flex flex-col min-h-0 h-full">
@@ -577,11 +586,17 @@ function Carrinho({
         <button
           type="button"
           onClick={salvarVenda}
-          disabled={!podePagar || salvando}
+          disabled={!podePagar || salvando || !podeCriar}
           className="w-full bg-[#2F8AA3] text-white h-12 rounded-xl font-semibold hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition shadow-sm"
         >
           {salvando ? "Finalizando..." : "Finalizar venda"}
         </button>
+
+        {!podeCriar && (
+          <p className="text-xs text-red-600 text-center">
+            Seu usuario nao tem permissao para criar vendas.
+          </p>
+        )}
 
         {!clienteId && valorRestante > 0 && (
           <p className="text-xs text-amber-600 text-center">

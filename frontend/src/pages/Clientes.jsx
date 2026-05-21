@@ -8,6 +8,7 @@ import StatusBadge from "../components/StatusBadge"
 import CampoInput from "../components/CampoInput"
 import CampoTextarea from "../components/CampoTextarea"
 import ModalAviso from "../components/ModalAviso"
+import { podeAcessar } from "../utils/permissoes"
 
 export default function Clientes() {
   const navigate = useNavigate()
@@ -27,6 +28,9 @@ export default function Clientes() {
   const [clienteParaDeletar, setClienteParaDeletar] = useState(null)
   const [mensagemConfirmacao, setMensagemConfirmacao] = useState("")
   const [aviso, setAviso] = useState(null)
+  const podeCriar = podeAcessar("clientes", "criar")
+  const podeEditar = podeAcessar("clientes", "editar")
+  const podeExcluir = podeAcessar("clientes", "excluir")
 
   const [novoCliente, setNovoCliente] = useState({
     nome: "",
@@ -212,12 +216,14 @@ export default function Clientes() {
             </p>
           </div>
 
-          <button
-            onClick={() => setMostrarNovoModal(true)}
-            className="bg-[#2F8AA3] text-white px-4 py-2.5 rounded-xl text-sm font-medium hover:opacity-90 transition shadow-sm"
-          >
-            + Novo Cliente
-          </button>
+          {podeCriar && (
+            <button
+              onClick={() => setMostrarNovoModal(true)}
+              className="bg-[#2F8AA3] text-white px-4 py-2.5 rounded-xl text-sm font-medium hover:opacity-90 transition shadow-sm"
+            >
+              + Novo Cliente
+            </button>
+          )}
         </div>
 
         {/* Busca + filtros */}
@@ -340,19 +346,23 @@ export default function Clientes() {
                     </div>
 
                     <div className="col-span-2 flex items-center justify-end gap-2">
-                      <button
-                        onClick={() => abrirEditar(cliente)}
-                        className="text-sm px-3 py-2 rounded-lg border border-blue-200 text-blue-600 hover:bg-blue-50"
-                      >
-                        Editar
-                      </button>
+                      {podeEditar && (
+                        <button
+                          onClick={() => abrirEditar(cliente)}
+                          className="text-sm px-3 py-2 rounded-lg border border-blue-200 text-blue-600 hover:bg-blue-50"
+                        >
+                          Editar
+                        </button>
+                      )}
 
-                      <button
-                        onClick={() => excluirCliente(cliente.id, cliente.nome)}
-                        className="text-sm px-3 py-2 rounded-lg border border-red-200 text-red-600 hover:bg-red-50"
-                      >
-                        Excluir
-                      </button>
+                      {podeExcluir && (
+                        <button
+                          onClick={() => excluirCliente(cliente.id, cliente.nome)}
+                          className="text-sm px-3 py-2 rounded-lg border border-red-200 text-red-600 hover:bg-red-50"
+                        >
+                          Excluir
+                        </button>
+                      )}
                     </div>
                   </div>
                 ))}
@@ -398,19 +408,23 @@ export default function Clientes() {
                         )}
 
                         <div className="flex gap-2 mt-4">
-                          <button
-                            onClick={() => abrirEditar(cliente)}
-                            className="text-sm px-3 py-2 rounded-lg border border-blue-200 text-blue-600 hover:bg-blue-50"
-                          >
-                            Editar
-                          </button>
+                          {podeEditar && (
+                            <button
+                              onClick={() => abrirEditar(cliente)}
+                              className="text-sm px-3 py-2 rounded-lg border border-blue-200 text-blue-600 hover:bg-blue-50"
+                            >
+                              Editar
+                            </button>
+                          )}
 
-                          <button
-                            onClick={() => excluirCliente(cliente.id, cliente.nome)}
-                            className="text-sm px-3 py-2 rounded-lg border border-red-200 text-red-600 hover:bg-red-50"
-                          >
-                            Excluir
-                          </button>
+                          {podeExcluir && (
+                            <button
+                              onClick={() => excluirCliente(cliente.id, cliente.nome)}
+                              className="text-sm px-3 py-2 rounded-lg border border-red-200 text-red-600 hover:bg-red-50"
+                            >
+                              Excluir
+                            </button>
+                          )}
                         </div>
                       </div>
                     </div>
@@ -439,7 +453,7 @@ export default function Clientes() {
       </div>
 
       {/* Modal Novo Cliente */}
-      {mostrarNovoModal && (
+      {mostrarNovoModal && podeCriar && (
         <Modal onClose={() => setMostrarNovoModal(false)} titulo="Novo Cliente">
           <form onSubmit={salvarNovoCliente} className="space-y-4">
             <CampoInput
@@ -493,7 +507,7 @@ export default function Clientes() {
       )}
 
       {/* Modal Editar Cliente */}
-      {mostrarEditarModal && (
+      {mostrarEditarModal && podeEditar && (
         <Modal
           onClose={() => setMostrarEditarModal(false)}
           titulo="Editar Cliente"

@@ -10,11 +10,12 @@ import StatusBadge from "../components/StatusBadge"
 import CampoInput from "../components/CampoInput"
 import CampoSelect from "../components/CampoSelect"
 import ModalAviso from "../components/ModalAviso" 
+import { podeAcessar } from "../utils/permissoes"
 
 export default function ContasReceber() {
   const navigate = useNavigate()
-  const usuario = JSON.parse(localStorage.getItem("usuario"))
-  const isAdmin = usuario?.role === "admin"
+  const podeCriar = podeAcessar("contasReceber", "criar")
+  const podeReceberPagamento = podeAcessar("contasReceber", "receberPagamento")
 
   const [contas, setContas] = useState([])
   const [clientes, setClientes] = useState([])  
@@ -190,7 +191,7 @@ export default function ContasReceber() {
             </p>
           </div>
 
-          {isAdmin && (
+          {podeCriar && (
             <button
               onClick={() => setMostrarNovaContaModal(true)}
               className="bg-[#2F8AA3] text-white px-4 py-2.5 rounded-xl text-sm font-medium hover:opacity-90 transition shadow-sm"
@@ -361,7 +362,7 @@ export default function ContasReceber() {
                     </div>
 
                     <div className="col-span-2 flex items-center justify-end gap-2">
-                      {conta.status !== "pago" && (
+                      {conta.status !== "pago" && podeReceberPagamento && (
                         <button
                           onClick={() => abrirPagamento(conta)}
                           className="text-sm px-3 py-2 rounded-lg border border-emerald-200 text-emerald-600 hover:bg-emerald-50"
@@ -426,7 +427,7 @@ export default function ContasReceber() {
                       </div>
                     </div>
 
-                    {conta.status !== "pago" && (
+                    {conta.status !== "pago" && podeReceberPagamento && (
                       <div className="mt-4">
                         <button
                           onClick={() => abrirPagamento(conta)}
@@ -444,7 +445,7 @@ export default function ContasReceber() {
         </div>
       </div>
 
-      {mostrarNovaContaModal && isAdmin && (
+      {mostrarNovaContaModal && podeCriar && (
         <Modal onClose={() => setMostrarNovaContaModal(false)} titulo="Nova Conta a Receber">
           <form onSubmit={salvarNovaConta} className="space-y-4">
           <div>
@@ -511,7 +512,7 @@ export default function ContasReceber() {
         </Modal>
       )}
 
-      {mostrarPagamentoModal && contaSelecionada && (
+      {mostrarPagamentoModal && contaSelecionada && podeReceberPagamento && (
         <Modal onClose={() => setMostrarPagamentoModal(false)} titulo="Registrar Pagamento">
           <form onSubmit={registrarPagamento} className="space-y-4">
             <div className="bg-gray-50 rounded-xl p-4">

@@ -6,11 +6,11 @@ import {
   } from "../controllers/servicoController.js"
   
   import { auth } from "../middlewares/auth.js"
-  import { permitirRoles } from "../middlewares/permitirRoles.js"
+  import { permitirPermissao } from "../middlewares/permitirPermissao.js"
   
   export default (app) => {
-    app.post("/servicos", auth, permitirRoles("admin"), criarServico)
-    app.get("/servicos", auth, listarServicos)
-    app.put("/servicos/:id", auth, permitirRoles("admin"), atualizarServico)
-    app.delete("/servicos/:id", auth, permitirRoles("admin"), excluirServico)
+    app.post("/servicos", auth, permitirPermissao("servicos", "criar"), criarServico)
+    app.get("/servicos", auth, permitirPermissao("servicos"), listarServicos)
+    app.put("/servicos/:id", auth, permitirPermissao("servicos", "editar"), atualizarServico)
+    app.delete("/servicos/:id", auth, permitirPermissao("servicos", "excluir"), excluirServico)
   }

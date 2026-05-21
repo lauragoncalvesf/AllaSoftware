@@ -1,13 +1,55 @@
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { useNavigate } from "react-router-dom"
 import Sidebar from "../components/Sidebar"
+import api from "../services/api"
 
 export default function AppLayout({ children }) {
   const navigate = useNavigate()
   const [sidebarAberta, setSidebarAberta] = useState(true)
   const [menuPerfilAberto, setMenuPerfilAberto] = useState(false)
+  const [usuario, setUsuario] = useState(() => {
+    try {
+      return JSON.parse(localStorage.getItem("usuario"))
+    } catch {
+      return null
+    }
+  })
 
-  const usuario = JSON.parse(localStorage.getItem("usuario"))
+  useEffect(() => {
+    const atualizarUsuarioLogado = async () => {
+      try {
+        const res = await api.get("/perfil")
+
+        if (res.data?.tipo === "usuario") {
+          const usuarioAtualizado = {
+            id: res.data.id,
+            nome: res.data.nome,
+            email: res.data.email,
+            role: res.data.role,
+            cargo: res.data.cargo,
+            status: res.data.status,
+            permissoes: res.data.permissoes,
+            tipoEquipe: res.data.tipoEquipe,
+            profissional: res.data.profissional,
+            preSelecionarAgendamento: res.data.preSelecionarAgendamento,
+            empresaId: res.data.empresa?.id
+          }
+
+          localStorage.setItem("usuario", JSON.stringify(usuarioAtualizado))
+          setUsuario(usuarioAtualizado)
+        }
+      } catch (error) {
+        console.error("Erro ao atualizar usuario logado:", error)
+      }
+    }
+
+    atualizarUsuarioLogado()
+    window.addEventListener("focus", atualizarUsuarioLogado)
+
+    return () => {
+      window.removeEventListener("focus", atualizarUsuarioLogado)
+    }
+  }, [])
 
   const nomeUsuario = usuario?.nome || "Usuário"
   const emailUsuario = usuario?.email || "Email não informado"

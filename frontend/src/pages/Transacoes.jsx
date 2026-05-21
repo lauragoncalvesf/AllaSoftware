@@ -8,9 +8,12 @@ import StatusBadge from "../components/StatusBadge"
 import CampoInput from "../components/CampoInput"
 import CampoSelect from "../components/CampoSelect"
 import ModalAviso from "../components/ModalAviso"
+import { podeAcessar } from "../utils/permissoes"
 
 
 export default function Transacoes() {
+  const podeCriar = podeAcessar("financeiro", "criar")
+  const podeEditar = podeAcessar("financeiro", "editar")
   const [transacoes, setTransacoes] = useState([])
   const [loading, setLoading] = useState(true)
 
@@ -160,12 +163,14 @@ export default function Transacoes() {
             </p>
           </div>
 
-          <button
-            onClick={() => setMostrarModal(true)}
-            className="bg-[#2F8AA3] text-white px-4 py-2.5 rounded-xl text-sm font-medium hover:opacity-90 transition shadow-sm"
-          >
-            + Nova Transação
-          </button>
+          {podeCriar && (
+            <button
+              onClick={() => setMostrarModal(true)}
+              className="bg-[#2F8AA3] text-white px-4 py-2.5 rounded-xl text-sm font-medium hover:opacity-90 transition shadow-sm"
+            >
+              + Nova Transação
+            </button>
+          )}
         </div>
 
         {/* Cards */}
@@ -352,7 +357,7 @@ export default function Transacoes() {
                     </div>
 
                     <div className="col-span-1 flex items-center justify-end gap-2">
-                      {transacao.status === "ativa" && (
+                      {transacao.status === "ativa" && podeEditar && (
                         <div className="flex flex-col gap-1">
                           <button
                             onClick={() => cancelarTransacao(transacao.id)}
@@ -430,7 +435,7 @@ export default function Transacoes() {
                       </div>
                     </div>
 
-                    {transacao.status === "ativa" && (
+                    {transacao.status === "ativa" && podeEditar && (
                       <div className="flex gap-3 mt-4">
                         <button
                           onClick={() => cancelarTransacao(transacao.id)}
@@ -460,7 +465,7 @@ export default function Transacoes() {
       </div>
 
       {/* Modal Nova Transação */}
-      {mostrarModal && (
+      {mostrarModal && podeCriar && (
         <Modal onClose={() => setMostrarModal(false)} titulo="Nova Transação">
           <form onSubmit={criarTransacao} className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

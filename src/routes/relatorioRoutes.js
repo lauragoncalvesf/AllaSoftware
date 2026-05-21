@@ -6,7 +6,7 @@
 //   relatorioRoutes(app)
 
 import { auth } from "../middlewares/auth.js"
-import { permitirRoles } from "../middlewares/permitirRoles.js"
+import { permitirPermissao } from "../middlewares/permitirPermissao.js"
 import { gerarRelatorioPDF, relatorioFinanceiro } from "../controllers/relatorioController.js"
 
 export default (app) => {
@@ -14,14 +14,14 @@ export default (app) => {
   app.get(
     "/relatorios/pdf",
     auth,
-    permitirRoles("admin", "gerente"),
+    permitirPermissao("relatorios"),
     gerarRelatorioPDF
   )
 
   app.get(
     "/relatorios/financeiro/dados",
     auth,
-    permitirRoles("admin", "gerente"),
+    permitirPermissao("relatorios"),
     relatorioFinanceiro
   )
 }

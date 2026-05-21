@@ -3,6 +3,7 @@ import AppLayout from "../layouts/AppLayout"
 import api from "../services/api"
 import CampoInput from "../components/CampoInput"
 import ModalAviso from "../components/ModalAviso"
+import { podeAcessar } from "../utils/permissoes"
 
 const permissoesPadraoFuncionario = {
   dashboard: { visualizar: true },
@@ -69,6 +70,9 @@ const labelsAcoes = {
 
 export default function Equipe() {
   const usuarioLogado = JSON.parse(localStorage.getItem("usuario"))
+  const podeCriar = podeAcessar("usuarios", "criar")
+  const podeEditar = podeAcessar("usuarios", "editar")
+  const podeExcluir = podeAcessar("usuarios", "excluir")
 
   const [usuarios, setUsuarios] = useState([])
   const [loading, setLoading] = useState(true)
@@ -307,13 +311,15 @@ export default function Equipe() {
             </p>
           </div>
 
-          <button
-            type="button"
-            onClick={abrirNovo}
-            className="bg-[#2F8AA3] text-white px-5 py-2.5 rounded-xl hover:opacity-90 text-sm font-medium"
-          >
-            + Novo usuário
-          </button>
+          {podeCriar && (
+            <button
+              type="button"
+              onClick={abrirNovo}
+              className="bg-[#2F8AA3] text-white px-5 py-2.5 rounded-xl hover:opacity-90 text-sm font-medium"
+            >
+              + Novo usuário
+            </button>
+          )}
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -383,27 +389,31 @@ export default function Equipe() {
                   </div>
 
                   <div className="flex flex-wrap gap-2 mt-5">
-                    <button
-                      type="button"
-                      onClick={() => abrirEdicao(usuario)}
-                      className="px-4 py-2 rounded-xl border border-gray-200 text-sm text-gray-600 hover:bg-gray-50"
-                    >
-                      Editar
-                    </button>
+                    {podeEditar && (
+                      <button
+                        type="button"
+                        onClick={() => abrirEdicao(usuario)}
+                        className="px-4 py-2 rounded-xl border border-gray-200 text-sm text-gray-600 hover:bg-gray-50"
+                      >
+                        Editar
+                      </button>
+                    )}
 
-                    <button
-                      type="button"
-                      onClick={() => alternarStatus(usuario)}
-                      className={`px-4 py-2 rounded-xl border text-sm ${
-                        usuario.status === "ativo"
-                          ? "border-amber-200 text-amber-700 hover:bg-amber-50"
-                          : "border-emerald-200 text-emerald-700 hover:bg-emerald-50"
-                      }`}
-                    >
-                      {usuario.status === "ativo" ? "Desativar" : "Ativar"}
-                    </button>
+                    {podeEditar && (
+                      <button
+                        type="button"
+                        onClick={() => alternarStatus(usuario)}
+                        className={`px-4 py-2 rounded-xl border text-sm ${
+                          usuario.status === "ativo"
+                            ? "border-amber-200 text-amber-700 hover:bg-amber-50"
+                            : "border-emerald-200 text-emerald-700 hover:bg-emerald-50"
+                        }`}
+                      >
+                        {usuario.status === "ativo" ? "Desativar" : "Ativar"}
+                      </button>
+                    )}
 
-                    {Number(usuario.id) !== Number(usuarioLogado?.id) && (
+                    {podeExcluir && Number(usuario.id) !== Number(usuarioLogado?.id) && (
                       <button
                         type="button"
                         onClick={() => excluirUsuario(usuario)}
@@ -420,7 +430,7 @@ export default function Equipe() {
         </div>
       </div>
 
-      {mostrarModal && (
+      {mostrarModal && (modoEdicao ? podeEditar : podeCriar) && (
         <Modal
           titulo={modoEdicao ? "Editar usuário" : "Novo usuário"}
           onClose={() => setMostrarModal(false)}

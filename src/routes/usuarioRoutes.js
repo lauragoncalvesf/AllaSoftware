@@ -10,7 +10,7 @@ import {
 } from "../controllers/usuarioController.js"
 
 import { auth } from "../middlewares/auth.js"
-import { permitirRoles } from "../middlewares/permitirRoles.js"
+import { permitirPermissao } from "../middlewares/permitirPermissao.js"
 
 export default (app) => {
   // Perfil do usuário logado
@@ -18,13 +18,13 @@ export default (app) => {
   app.put("/perfil", auth, atualizarPerfil)
 
   // Equipe / usuários da empresa
-  app.get("/usuarios", auth, permitirRoles("admin"), listarUsuarios)
-  app.post("/usuarios", auth, permitirRoles("admin"), criarUsuario)
-  app.put("/usuarios/:id", auth, permitirRoles("admin"), atualizarUsuario)
-  app.patch("/usuarios/:id/status", auth, permitirRoles("admin"), alterarStatusUsuario)
+  app.get("/usuarios", auth, permitirPermissao("usuarios"), listarUsuarios)
+  app.post("/usuarios", auth, permitirPermissao("usuarios", "criar"), criarUsuario)
+  app.put("/usuarios/:id", auth, permitirPermissao("usuarios", "editar"), atualizarUsuario)
+  app.patch("/usuarios/:id/status", auth, permitirPermissao("usuarios", "editar"), alterarStatusUsuario)
 
   // Pode manter por enquanto, mas vamos usar mais "inativar" do que excluir
-  app.delete("/usuarios/:id", auth, permitirRoles("admin"), deletarUsuario)
+  app.delete("/usuarios/:id", auth, permitirPermissao("usuarios", "excluir"), deletarUsuario)
 
   app.get("/profissionais", auth, listarProfissionais)
 }

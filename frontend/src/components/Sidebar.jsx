@@ -4,7 +4,6 @@ import { podeAcessar } from "../utils/permissoes"
 export default function Sidebar({ aberta = true, setAberta }) {
   const navigate = useNavigate()
   const location = useLocation()
-  const usuario = JSON.parse(localStorage.getItem("usuario"))
 
   const isActive = (path) => location.pathname === path
 
@@ -113,7 +112,7 @@ export default function Sidebar({ aberta = true, setAberta }) {
         </button>
         )}
 
-        {podeAcessar("contas-receber") && (
+        {podeAcessar("contasReceber") && (
         <button
           type="button"
           onClick={() => navigate("/contas-receber")}
@@ -133,7 +132,7 @@ export default function Sidebar({ aberta = true, setAberta }) {
           </button>
         )}
 
-        {usuario?.role === "admin" && (
+        {(podeAcessar("financeiro") || podeAcessar("relatorios") || podeAcessar("usuarios")) && (
           <div className="pt-3 mt-3 border-t border-white/10">
           <p className="px-4 text-[11px] uppercase tracking-wide text-white/40 mb-2">
              Administração
@@ -161,7 +160,7 @@ export default function Sidebar({ aberta = true, setAberta }) {
               </button>
           )}
 
-          {podeAcessar("equipe") && (
+          {podeAcessar("usuarios") && (
             <button
               type="button"
               onClick={() => navigate("/equipe")}

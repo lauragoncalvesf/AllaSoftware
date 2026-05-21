@@ -13,5 +13,13 @@ export const podeAcessar = (modulo, acao = "visualizar") => {
 
   if (usuario.role === "admin") return true
 
-  return usuario?.permissoes?.[modulo]?.[acao] === true
+  const aliases = {
+    "contas-receber": "contasReceber",
+    equipe: "usuarios",
+    comissoes: "usuarios"
+  }
+
+  const chaveModulo = aliases[modulo] || modulo
+
+  return usuario?.permissoes?.[chaveModulo]?.[acao] === true
 }

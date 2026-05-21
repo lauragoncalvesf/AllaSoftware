@@ -8,10 +8,12 @@ import CampoInput from "../components/CampoInput"
 import CampoSelect from "../components/CampoSelect"
 import CampoTextarea from "../components/CampoTextarea"
 import ModalAviso from "../components/ModalAviso"
+import { podeAcessar } from "../utils/permissoes"
 
 export default function Produtos() {
-  const usuario = JSON.parse(localStorage.getItem("usuario"))
-  const isAdmin = usuario?.role === "admin"
+  const podeCriar = podeAcessar("produtos", "criar")
+  const podeEditar = podeAcessar("produtos", "editar")
+  const podeExcluir = podeAcessar("produtos", "excluir")
 
   const [produtos, setProdutos] = useState([])
   const [loading, setLoading] = useState(true)
@@ -200,7 +202,7 @@ export default function Produtos() {
             </p>
           </div>
 
-          {isAdmin && (
+          {podeCriar && (
             <button
               onClick={() => setMostrarNovoModal(true)}
               className="bg-[#2F8AA3] text-white px-4 py-2.5 rounded-xl text-sm font-medium hover:opacity-90 transition shadow-sm"
@@ -376,21 +378,25 @@ export default function Produtos() {
                     </div>
 
                     <div className="col-span-1 flex items-center justify-end gap-2">
-                      {isAdmin && (
+                      {(podeEditar || podeExcluir) && (
                         <>
-                          <button
-                            onClick={() => abrirEditar(produto)}
-                            className="text-sm px-3 py-2 rounded-lg border border-blue-200 text-blue-600 hover:bg-blue-50"
-                          >
-                            Editar
-                          </button>
+                          {podeEditar && (
+                            <button
+                              onClick={() => abrirEditar(produto)}
+                              className="text-sm px-3 py-2 rounded-lg border border-blue-200 text-blue-600 hover:bg-blue-50"
+                            >
+                              Editar
+                            </button>
+                          )}
 
-                          <button
-                            onClick={() => excluirProduto(produto.id, produto.nome)}
-                            className="text-sm px-3 py-2 rounded-lg border border-red-200 text-red-600 hover:bg-red-50"
-                          >
-                            Excluir
-                          </button>
+                          {podeExcluir && (
+                            <button
+                              onClick={() => excluirProduto(produto.id, produto.nome)}
+                              className="text-sm px-3 py-2 rounded-lg border border-red-200 text-red-600 hover:bg-red-50"
+                            >
+                              Excluir
+                            </button>
+                          )}
                         </>
                       )}
                     </div>
@@ -460,21 +466,25 @@ export default function Produtos() {
                       </div>
                     </div>
 
-                    {isAdmin && (
+                    {(podeEditar || podeExcluir) && (
                       <div className="flex gap-2 mt-4">
-                        <button
-                          onClick={() => abrirEditar(produto)}
-                          className="text-sm px-3 py-2 rounded-lg border border-blue-200 text-blue-600 hover:bg-blue-50"
-                        >
-                          Editar
-                        </button>
+                        {podeEditar && (
+                          <button
+                            onClick={() => abrirEditar(produto)}
+                            className="text-sm px-3 py-2 rounded-lg border border-blue-200 text-blue-600 hover:bg-blue-50"
+                          >
+                            Editar
+                          </button>
+                        )}
 
-                        <button
-                          onClick={() => excluirProduto(produto.id, produto.nome)}
-                          className="text-sm px-3 py-2 rounded-lg border border-red-200 text-red-600 hover:bg-red-50"
-                        >
-                          Excluir
-                        </button>
+                        {podeExcluir && (
+                          <button
+                            onClick={() => excluirProduto(produto.id, produto.nome)}
+                            className="text-sm px-3 py-2 rounded-lg border border-red-200 text-red-600 hover:bg-red-50"
+                          >
+                            Excluir
+                          </button>
+                        )}
                       </div>
                     )}
                   </div>
@@ -502,7 +512,7 @@ export default function Produtos() {
       </div>
 
       {/* Modal Novo Produto */}
-      {mostrarNovoModal && isAdmin && (
+      {mostrarNovoModal && podeCriar && (
         <Modal onClose={() => setMostrarNovoModal(false)} titulo="Novo Produto">
           <form onSubmit={salvarNovoProduto} className="space-y-4">
             <CampoInput
@@ -612,7 +622,7 @@ export default function Produtos() {
       )}
 
       {/* Modal Editar Produto */}
-      {mostrarEditarModal && isAdmin && (
+      {mostrarEditarModal && podeEditar && (
         <Modal onClose={() => setMostrarEditarModal(false)} titulo="Editar Produto">
           <form onSubmit={salvarEdicaoProduto} className="space-y-4">
             <CampoInput

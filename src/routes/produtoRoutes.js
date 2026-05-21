@@ -6,11 +6,11 @@ import {
   } from "../controllers/produtoController.js"
   
   import { auth } from "../middlewares/auth.js"
-  import { permitirRoles } from "../middlewares/permitirRoles.js"
+  import { permitirPermissao } from "../middlewares/permitirPermissao.js"
   
   export default (app) => {
-    app.post("/produtos", auth, permitirRoles("admin"), criarProduto)
-    app.get("/produtos", auth, listarProdutos)
-    app.put("/produtos/:id", auth, permitirRoles("admin"), atualizarProduto)
-    app.delete("/produtos/:id", auth, permitirRoles("admin"), excluirProduto)
+    app.post("/produtos", auth, permitirPermissao("produtos", "criar"), criarProduto)
+    app.get("/produtos", auth, permitirPermissao("produtos"), listarProdutos)
+    app.put("/produtos/:id", auth, permitirPermissao("produtos", "editar"), atualizarProduto)
+    app.delete("/produtos/:id", auth, permitirPermissao("produtos", "excluir"), excluirProduto)
   }
