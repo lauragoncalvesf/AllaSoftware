@@ -32,6 +32,7 @@ export default function Produtos() {
     precoCusto: "",
     estoque: "",
     status: "ativo",
+    comissaoPercentual: "",
   })
 
   const [produtoEditando, setProdutoEditando] = useState({
@@ -43,6 +44,7 @@ export default function Produtos() {
     precoCusto: "",
     estoque: "",
     status: "ativo",
+    comissaoPercentual: "",
   })
 
   useEffect(() => {
@@ -95,6 +97,7 @@ export default function Produtos() {
       precoCusto: produto.precoCusto ?? "",
       estoque: produto.estoque ?? "",
       status: produto.status || "ativo",
+      comissaoPercentual: produto.comissaoPercentual ?? "",
     })
     setMostrarEditarModal(true)
   }
@@ -115,6 +118,10 @@ export default function Produtos() {
           : null,
         estoque: novoProduto.estoque ? Number(novoProduto.estoque) : null,
         status: novoProduto.status,
+        comissaoPercentual:
+          novoProduto.comissaoPercentual === ""
+            ? null
+            : Number(novoProduto.comissaoPercentual),
       })
 
       setNovoProduto({
@@ -125,6 +132,7 @@ export default function Produtos() {
         precoCusto: "",
         estoque: "",
         status: "ativo",
+        comissaoPercentual: "",
       })
 
       setMostrarNovoModal(false)
@@ -151,6 +159,10 @@ export default function Produtos() {
           : null,
         estoque: produtoEditando.estoque ? Number(produtoEditando.estoque) : null,
         status: produtoEditando.status,
+        comissaoPercentual:
+          produtoEditando.comissaoPercentual === ""
+            ? null
+            : Number(produtoEditando.comissaoPercentual),
       })
 
       setMostrarEditarModal(false)
@@ -297,8 +309,9 @@ export default function Produtos() {
                   <div className="col-span-3">Produto</div>
                   <div className="col-span-2">Descrição</div>
                   <div className="col-span-2">Preço Varejo</div>
-                  <div className="col-span-2">Preço Custo</div>
+                  <div className="col-span-1">Custo</div>
                   <div className="col-span-1">Atacado</div>
+                  <div className="col-span-1">Comissao</div>
                   <div className="col-span-1">Status</div>
                   <div className="col-span-1 text-right">Ações</div>
                 </div>
@@ -326,11 +339,11 @@ export default function Produtos() {
                       </p>
                     </div>
 
-                    <div className="col-span-2 flex items-center">
+                    <div className="col-span-1 flex items-center">
                       <p className="text-sm text-gray-600">
                         {produto.precoCusto
                           ? formatarMoeda(produto.precoCusto)
-                          : "—"}
+                          : "-"}
                       </p>
                     </div>
 
@@ -338,7 +351,15 @@ export default function Produtos() {
                       <p className="text-sm text-gray-600">
                         {produto.precoAtacado
                           ? formatarMoeda(produto.precoAtacado)
-                          : "—"}
+                          : "-"}
+                      </p>
+                    </div>
+
+                    <div className="col-span-1 flex items-center">
+                      <p className="text-sm text-gray-600">
+                        {produto.comissaoPercentual !== null && produto.comissaoPercentual !== undefined
+                          ? `${Number(produto.comissaoPercentual)}%`
+                          : "Padrao"}
                       </p>
                     </div>
 
@@ -425,7 +446,16 @@ export default function Produtos() {
                       <div>
                         <p className="text-gray-400">Estoque</p>
                         <p className="font-medium text-[#2D2E47]">
-                          {produto.estoque ?? "—"}
+                          {produto.estoque ?? "-"}
+                        </p>
+                      </div>
+
+                      <div>
+                        <p className="text-gray-400">Comissao</p>
+                        <p className="font-medium text-[#2D2E47]">
+                          {produto.comissaoPercentual !== null && produto.comissaoPercentual !== undefined
+                            ? `${Number(produto.comissaoPercentual)}%`
+                            : "Padrao"}
                         </p>
                       </div>
                     </div>
@@ -527,7 +557,7 @@ export default function Produtos() {
               />
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <CampoInput
                 label="Estoque"
                 type="number"
@@ -536,6 +566,16 @@ export default function Produtos() {
                   setNovoProduto({ ...novoProduto, estoque: e.target.value })
                 }
                 placeholder="Ex: 20"
+              />
+
+              <CampoInput
+                label="Comissao especifica (%)"
+                type="number"
+                value={novoProduto.comissaoPercentual}
+                onChange={(e) =>
+                  setNovoProduto({ ...novoProduto, comissaoPercentual: e.target.value })
+                }
+                placeholder="Padrao"
               />
 
               <CampoSelect
@@ -639,7 +679,7 @@ export default function Produtos() {
               />
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <CampoInput
                 label="Estoque"
                 type="number"
@@ -651,6 +691,19 @@ export default function Produtos() {
                   })
                 }
                 placeholder="Ex: 20"
+              />
+
+              <CampoInput
+                label="Comissao especifica (%)"
+                type="number"
+                value={produtoEditando.comissaoPercentual}
+                onChange={(e) =>
+                  setProdutoEditando({
+                    ...produtoEditando,
+                    comissaoPercentual: e.target.value,
+                  })
+                }
+                placeholder="Padrao"
               />
 
               <CampoSelect

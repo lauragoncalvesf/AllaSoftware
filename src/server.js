@@ -19,6 +19,7 @@ import { limiterGeral, limiterLogin } from "./middlewares/rateLimiter.js"
 import { errorHandler } from "./middlewares/errorHandler.js"
 import relatorioRoutes from "./routes/relatorioRoutes.js"
 import agendamentoRoutes from "./routes/agendamentoRoutes.js"
+import comissaoRoutes from "./routes/comissaoRoutes.js"
 
 const app = express()
 
@@ -55,6 +56,7 @@ produtoRoutes(app)
 vendaRoutes(app)
 relatorioRoutes(app)
 agendamentoRoutes(app)
+comissaoRoutes(app)
 
 
 //  Rota de teste

@@ -44,8 +44,11 @@ model Usuario {
   profissional               Boolean  @default(true)
   preSelecionarAgendamento   Boolean  @default(true)
 
+  comissaoPercentualPadrao   Float    @default(0)
+
   empresa     Empresa  @relation(fields: [empresaId], references: [id])
   agendamentosProfissional Agendamento[] @relation("ProfissionalAgendamentos")
+  vendasComoVendedor       Venda[] @relation("VendasVendedor")
 }
 
 model Cliente {
@@ -60,6 +63,7 @@ model Cliente {
 
   contasReceber ContaReceber[]
   agendamentos Agendamento[]
+  vendas Venda[]
 }
 
 model Transacao {
@@ -112,6 +116,8 @@ model Servico {
   empresaId Int
   createdAt DateTime  @default(now())
 
+  comissaoPercentual Float?
+
   agendamentos Agendamento[]
 }
 
@@ -122,10 +128,12 @@ model Produto {
   precoVarejo   Float
   precoAtacado  Float?
   precoCusto    Float?
-  estoque       Int?     
+  estoque       Int?
   status        String   @default("ativo")
   empresaId     Int
   createdAt     DateTime @default(now())
+
+  comissaoPercentual Float?
 }
 
 model Venda {
@@ -133,6 +141,7 @@ model Venda {
   clienteId      Int?
   empresaId      Int
   contaReceberId Int?
+  vendedorId     Int?
 
   tipoPreco      String      @default("varejo")
   desconto       Float       @default(0)
@@ -143,7 +152,14 @@ model Venda {
 
   itens          ItemVenda[]
   agendamento Agendamento?
+  cliente        Cliente? @relation(fields: [clienteId], references: [id])
   contaReceber   ContaReceber? @relation(fields: [contaReceberId], references: [id])
+  vendedor       Usuario? @relation("VendasVendedor", fields: [vendedorId], references: [id])
+
+  @@index([clienteId])
+  @@index([vendedorId])
+  @@index([empresaId])
+  @@index([createdAt])
 }
 
 model ItemVenda {
@@ -197,6 +213,7 @@ model Agendamento {
 
   createdAt      DateTime @default(now())
   updatedAt      DateTime @default(now()) @updatedAt
+  concluidoEm    DateTime?
 
   cliente        Cliente? @relation(fields: [clienteId], references: [id])
   servico        Servico? @relation(fields: [servicoId], references: [id])

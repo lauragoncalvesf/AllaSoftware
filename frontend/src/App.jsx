@@ -19,6 +19,7 @@ import Agendamentos from "./pages/Agendamentos"
 import Transacoes from "./pages/Transacoes"
 import DashboardFinanceiro from "./pages/DashboardFInanceiro"
 import Relatorio from "./pages/Relatorio"
+import Comissoes from "./pages/Comissoes"
 
 import Usuarios from "./pages/Usuarios"
 import Equipe from "./pages/Equipe"
@@ -206,6 +207,17 @@ function App() {
             <PrivateRoute>
               <PermissaoRoute modulo="usuarios">
                 <Usuarios />
+              </PermissaoRoute>
+            </PrivateRoute>
+          }
+        />
+
+        <Route
+          path="/comissoes"
+          element={
+            <PrivateRoute>
+              <PermissaoRoute modulo="usuarios">
+                <Comissoes />
               </PermissaoRoute>
             </PrivateRoute>
           }

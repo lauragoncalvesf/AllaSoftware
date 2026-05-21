@@ -283,6 +283,7 @@ export const criarVenda = async (req, res) => {
           clienteId: clienteId ? Number(clienteId) : null,
           empresaId: req.empresaId,
           contaReceberId: contaMensal ? contaMensal.id : null,
+          vendedorId: req.usuarioId || null,
           tipoPreco: tipoPreco || "varejo",
           desconto: Number(descontoFinal),
           totalBruto: Number(totalBruto),

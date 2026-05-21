@@ -85,7 +85,7 @@ const obterPermissoesPorRole = (role) => {
 // ─── Criar usuário ───────────────────────────────────────────
 export const criarUsuario = async (req, res) => {
   try {
-    const { nome, email, senha, role, cargo, status, permissoes, tipoEquipe, profissional, preSelecionarAgendamento } = req.body || {}
+    const { nome, email, senha, role, cargo, status, permissoes, tipoEquipe, profissional, preSelecionarAgendamento, comissaoPercentualPadrao } = req.body || {}
 
     if (!nome || !email || !senha) {
       return res.status(400).json({
@@ -107,6 +107,8 @@ export const criarUsuario = async (req, res) => {
 
     const hash = await bcrypt.hash(senha, 10)
 
+    const roleFinal = role || "funcionario"
+
     const usuario = await prisma.usuario.create({
       data: {
         nome,
@@ -122,6 +124,12 @@ export const criarUsuario = async (req, res) => {
           preSelecionarAgendamento !== undefined
             ? Boolean(preSelecionarAgendamento)
             : true,
+        comissaoPercentualPadrao:
+          comissaoPercentualPadrao !== undefined &&
+          comissaoPercentualPadrao !== null &&
+          comissaoPercentualPadrao !== ""
+            ? Number(comissaoPercentualPadrao)
+            : 0,
         empresaId: req.empresaId
       }
     })
@@ -137,6 +145,7 @@ export const criarUsuario = async (req, res) => {
       tipoEquipe: usuario.tipoEquipe,
       profissional: usuario.profissional,
       preSelecionarAgendamento: usuario.preSelecionarAgendamento,
+      comissaoPercentualPadrao: usuario.comissaoPercentualPadrao,
       empresaId: usuario.empresaId
     })
   } catch (error) {
@@ -161,6 +170,7 @@ export const listarUsuarios = async (req, res) => {
         tipoEquipe: true,
         profissional: true,
         preSelecionarAgendamento: true,
+        comissaoPercentualPadrao: true,
         empresaId: true,
         createdAt: true,
         updatedAt: true
@@ -206,7 +216,7 @@ export const deletarUsuario = async (req, res) => {
 export const atualizarUsuario = async (req, res) => {
   try {
     const { id } = req.params
-    const { nome, email, role, cargo, status, permissoes, senha, tipoEquipe, profissional, preSelecionarAgendamento } = req.body || {}
+    const { nome, email, role, cargo, status, permissoes, senha, tipoEquipe, profissional, preSelecionarAgendamento, comissaoPercentualPadrao } = req.body || {}
 
     if (role && !["admin", "funcionario"].includes(role)) {
       return res.status(400).json({
@@ -252,6 +262,12 @@ export const atualizarUsuario = async (req, res) => {
     if (preSelecionarAgendamento !== undefined) {
       dados.preSelecionarAgendamento = Boolean(preSelecionarAgendamento)
     }
+    if (comissaoPercentualPadrao !== undefined) {
+      dados.comissaoPercentualPadrao =
+        comissaoPercentualPadrao === null || comissaoPercentualPadrao === ""
+          ? 0
+          : Number(comissaoPercentualPadrao)
+    }
 
     if (senha) {
       dados.senha = await bcrypt.hash(senha, 10)
@@ -273,6 +289,7 @@ export const atualizarUsuario = async (req, res) => {
         tipoEquipe: true,
         profissional: true,
         preSelecionarAgendamento: true,
+        comissaoPercentualPadrao: true,
         empresaId: true,
         createdAt: true,
         updatedAt: true
@@ -343,6 +360,7 @@ export const alterarStatusUsuario = async (req, res) => {
         tipoEquipe: true,
         profissional: true,
         preSelecionarAgendamento: true,
+        comissaoPercentualPadrao: true,
         empresaId: true,
         createdAt: true,
         updatedAt: true
@@ -413,7 +431,7 @@ export const verPerfil = async (req, res) => {
         tipoEquipe: true,
         profissional: true,
         preSelecionarAgendamento: true,
-        permissoes: true,
+        comissaoPercentualPadrao: true,
         createdAt: true
       }
     })

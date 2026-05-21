@@ -30,6 +30,7 @@ export default function Servicos() {
     preco: "",
     duracao: "",
     status: "ativo",
+    comissaoPercentual: "",
   })
 
   const [servicoEditando, setServicoEditando] = useState({
@@ -39,6 +40,7 @@ export default function Servicos() {
     preco: "",
     duracao: "",
     status: "ativo",
+    comissaoPercentual: "",
   })
 
   useEffect(() => {
@@ -76,6 +78,7 @@ export default function Servicos() {
       preco: servico.preco ?? "",
       duracao: servico.duracao ?? "",
       status: servico.status || "ativo",
+      comissaoPercentual: servico.comissaoPercentual ?? "",
     })
     setMostrarEditarModal(true)
   }
@@ -90,6 +93,10 @@ export default function Servicos() {
         preco: Number(novoServico.preco),
         duracao: novoServico.duracao ? Number(novoServico.duracao) : null,
         status: novoServico.status,
+        comissaoPercentual:
+          novoServico.comissaoPercentual === ""
+            ? null
+            : Number(novoServico.comissaoPercentual),
       })
 
       setNovoServico({
@@ -98,6 +105,7 @@ export default function Servicos() {
         preco: "",
         duracao: "",
         status: "ativo",
+        comissaoPercentual: "",
       })
 
       setMostrarNovoModal(false)
@@ -120,6 +128,10 @@ export default function Servicos() {
           ? Number(servicoEditando.duracao)
           : null,
         status: servicoEditando.status,
+        comissaoPercentual:
+          servicoEditando.comissaoPercentual === ""
+            ? null
+            : Number(servicoEditando.comissaoPercentual),
       })
 
       setMostrarEditarModal(false)
@@ -279,7 +291,8 @@ export default function Servicos() {
                   <div className="col-span-3">Serviço</div>
                   <div className="col-span-3">Descrição</div>
                   <div className="col-span-2">Preço</div>
-                  <div className="col-span-2">Duração</div>
+                  <div className="col-span-1">Duracao</div>
+                  <div className="col-span-1">Comissao</div>
                   <div className="col-span-1">Status</div>
                   <div className="col-span-1 text-right">Ações</div>
                 </div>
@@ -307,9 +320,17 @@ export default function Servicos() {
                       </p>
                     </div>
 
-                    <div className="col-span-2 flex items-center">
+                    <div className="col-span-1 flex items-center">
                       <p className="text-sm text-gray-600">
-                        {servico.duracao ? `${servico.duracao} min` : "—"}
+                        {servico.duracao ? `${servico.duracao} min` : "-"}
+                      </p>
+                    </div>
+
+                    <div className="col-span-1 flex items-center">
+                      <p className="text-sm text-gray-600">
+                        {servico.comissaoPercentual !== null && servico.comissaoPercentual !== undefined
+                          ? `${Number(servico.comissaoPercentual)}%`
+                          : "Padrao"}
                       </p>
                     </div>
 
@@ -387,7 +408,16 @@ export default function Servicos() {
                       <div>
                         <p className="text-gray-400">Duração</p>
                         <p className="font-medium text-[#2D2E47]">
-                          {servico.duracao ? `${servico.duracao} min` : "—"}
+                          {servico.duracao ? `${servico.duracao} min` : "-"}
+                        </p>
+                      </div>
+
+                      <div>
+                        <p className="text-gray-400">Comissao</p>
+                        <p className="font-medium text-[#2D2E47]">
+                          {servico.comissaoPercentual !== null && servico.comissaoPercentual !== undefined
+                            ? `${Number(servico.comissaoPercentual)}%`
+                            : "Padrao"}
                         </p>
                       </div>
                     </div>
@@ -456,7 +486,7 @@ export default function Servicos() {
               placeholder="Descreva o serviço"
             />
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
               <CampoInput
                 label="Preço *"
                 type="number"
@@ -476,6 +506,16 @@ export default function Servicos() {
                   setNovoServico({ ...novoServico, duracao: e.target.value })
                 }
                 placeholder="Ex: 60"
+              />
+
+              <CampoInput
+                label="Comissao especifica (%)"
+                type="number"
+                value={novoServico.comissaoPercentual}
+                onChange={(e) =>
+                  setNovoServico({ ...novoServico, comissaoPercentual: e.target.value })
+                }
+                placeholder="Padrao"
               />
 
               <CampoSelect
@@ -537,7 +577,7 @@ export default function Servicos() {
               placeholder="Descreva o serviço"
             />
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
               <CampoInput
                 label="Preço *"
                 type="number"
@@ -563,6 +603,19 @@ export default function Servicos() {
                   })
                 }
                 placeholder="Ex: 60"
+              />
+
+              <CampoInput
+                label="Comissao especifica (%)"
+                type="number"
+                value={servicoEditando.comissaoPercentual}
+                onChange={(e) =>
+                  setServicoEditando({
+                    ...servicoEditando,
+                    comissaoPercentual: e.target.value,
+                  })
+                }
+                placeholder="Padrao"
               />
 
               <CampoSelect

@@ -171,6 +171,16 @@ export default function Sidebar({ aberta = true, setAberta }) {
               </button>
           )}
 
+          {podeAcessar("usuarios") && (
+            <button
+              type="button"
+              onClick={() => navigate("/comissoes")}
+              className={getNavButtonClass("/comissoes")}
+            >
+                Comissoes
+              </button>
+          )}
+
           {podeAcessar("relatorios") && (
               <button
                 type="button"

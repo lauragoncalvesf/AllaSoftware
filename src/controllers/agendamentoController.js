@@ -359,6 +359,14 @@ export const atualizarAgendamento = async (req, res) => {
       dados.valorServico = servico ? Number(servico.preco || 0) : null
     }
 
+    if (status === "concluido" && agendamentoExistente.status !== "concluido") {
+      dados.concluidoEm = new Date()
+    }
+
+    if (status && status !== "concluido" && agendamentoExistente.status === "concluido") {
+      dados.concluidoEm = null
+    }
+
     const agendamentoAtualizado = await prisma.agendamento.update({
       where: {
         id: Number(id)
@@ -567,6 +575,7 @@ export const concluirAgendamento = async (req, res) => {
           clienteId: agendamento.clienteId,
           empresaId: req.empresaId,
           contaReceberId: contaReceber ? contaReceber.id : null,
+          vendedorId: req.usuarioId || null,
           tipoPreco: "varejo",
           desconto: 0,
           totalBruto: valorServico,
@@ -615,7 +624,8 @@ export const concluirAgendamento = async (req, res) => {
         data: {
           status: "concluido",
           vendaId: venda.id,
-          valorServico
+          valorServico,
+          concluidoEm: new Date()
         },
         include: {
           cliente: true,

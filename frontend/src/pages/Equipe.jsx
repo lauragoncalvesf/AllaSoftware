@@ -89,6 +89,7 @@ export default function Equipe() {
     tipoEquipe: "profissional",
     profissional: true,
     preSelecionarAgendamento: true,
+    comissaoPercentualPadrao: "",
     permissoes: permissoesPadraoFuncionario
   })
 
@@ -126,6 +127,7 @@ export default function Equipe() {
       tipoEquipe: "profissional",
       profissional: true,
       preSelecionarAgendamento: true,
+      comissaoPercentualPadrao: "",
       permissoes: permissoesPadraoFuncionario
     })
 
@@ -149,6 +151,7 @@ export default function Equipe() {
         usuario.preSelecionarAgendamento !== undefined
         ? Boolean(usuario.preSelecionarAgendamento)
         : true,
+      comissaoPercentualPadrao: usuario.comissaoPercentualPadrao ?? "",
       permissoes:
         usuario.permissoes ||
         (usuario.role === "admin" ? permissoesAdmin : permissoesPadraoFuncionario)
@@ -188,6 +191,8 @@ export default function Equipe() {
         tipoEquipe: form.tipoEquipe,
         profissional: form.profissional,
         preSelecionarAgendamento: form.preSelecionarAgendamento,
+        comissaoPercentualPadrao:
+          form.comissaoPercentualPadrao === "" ? 0 : Number(form.comissaoPercentualPadrao),
         permissoes: form.role === "admin" ? permissoesAdmin : form.permissoes
       }
 
@@ -364,6 +369,9 @@ export default function Equipe() {
                                 Não aparece na agenda
                             </p>
                             )}
+                        <p className="text-xs text-gray-500 mt-1">
+                          Comissao padrao: {Number(usuario.comissaoPercentualPadrao || 0)}%
+                        </p>
                         
                       </div>
                     </div>
@@ -557,6 +565,29 @@ export default function Equipe() {
                     </div>
                 </div>
                 </div>
+
+            <div>
+              <h3 className="text-sm font-semibold text-[#2D2E47] mb-3">
+                Comissao
+              </h3>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <CampoInput
+                  label="Percentual padrao (%)"
+                  type="number"
+                  value={form.comissaoPercentualPadrao}
+                  onChange={(e) =>
+                    setForm({ ...form, comissaoPercentualPadrao: e.target.value })
+                  }
+                  placeholder="Ex: 10"
+                />
+
+                <div className="bg-gray-50 rounded-xl p-4 text-sm text-gray-600">
+                  Esse percentual sera usado quando o produto ou servico nao
+                  tiver uma comissao especifica configurada.
+                </div>
+              </div>
+            </div>
 
             {form.role !== "admin" && (
               <div>

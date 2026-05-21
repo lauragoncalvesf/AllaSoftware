@@ -3,7 +3,7 @@ import prisma from "../config/prisma.js"
 // Criar serviço
 export const criarServico = async (req, res) => {
   try {
-    const { nome, descricao, preco, duracao, status } = req.body || {}
+    const { nome, descricao, preco, duracao, status, comissaoPercentual } = req.body || {}
 
     if (!nome || preco === undefined) {
       return res.status(400).json({
@@ -18,6 +18,12 @@ export const criarServico = async (req, res) => {
         preco: Number(preco),
         duracao: duracao ? Number(duracao) : null,
         status: status || "ativo",
+        comissaoPercentual:
+          comissaoPercentual !== undefined &&
+          comissaoPercentual !== null &&
+          comissaoPercentual !== ""
+            ? Number(comissaoPercentual)
+            : null,
         empresaId: req.empresaId
       }
     })
@@ -71,7 +77,7 @@ export const listarServicos = async (req, res) => {
 export const atualizarServico = async (req, res) => {
   try {
     const { id } = req.params
-    const { nome, descricao, preco, duracao, status } = req.body || {}
+    const { nome, descricao, preco, duracao, status, comissaoPercentual } = req.body || {}
 
     const servicoExistente = await prisma.servico.findFirst({
       where: {
@@ -95,7 +101,13 @@ export const atualizarServico = async (req, res) => {
         descricao,
         preco: preco !== undefined ? Number(preco) : undefined,
         duracao: duracao !== undefined ? Number(duracao) : undefined,
-        status
+        status,
+        comissaoPercentual:
+          comissaoPercentual === undefined
+            ? undefined
+            : comissaoPercentual === null || comissaoPercentual === ""
+            ? null
+            : Number(comissaoPercentual)
       }
     })
 
