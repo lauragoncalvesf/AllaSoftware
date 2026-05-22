@@ -75,6 +75,12 @@ export const criarAgendamento = async (req, res) => {
       })
     }
 
+    if (status === "concluido") {
+      return res.status(400).json({
+        error: "Use a rota de conclusão para concluir o agendamento"
+      })
+    }
+
     const cliente = await buscarClienteDaEmpresa({
       clienteId,
       empresaId: req.empresaId
@@ -241,6 +247,12 @@ export const atualizarAgendamento = async (req, res) => {
     if (status && !statusPermitidos.includes(status)) {
       return res.status(400).json({
         error: "Status inválido"
+      })
+    }
+
+    if (status === "concluido") {
+      return res.status(400).json({
+        error: "Use a rota de conclusão para concluir o agendamento"
       })
     }
 

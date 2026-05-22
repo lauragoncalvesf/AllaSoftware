@@ -227,8 +227,10 @@ export default function Agendamentos() {
         titulo: form.titulo,
         descricao: form.descricao || null,
         dataHora: form.dataHora,
-        status: form.status,
         observacoes: form.observacoes || null
+      }
+      if (form.status !== "concluido") {
+        payload.status = form.status
       }
       if (modoEdicao) {
         await api.put(`/agendamentos/${agendamentoEditandoId}`, payload)
@@ -739,9 +741,12 @@ export default function Agendamentos() {
               label="Status"
               value={form.status}
               onChange={(e) => setForm({ ...form, status: e.target.value })}
+              disabled={form.status === "concluido"}
               options={[
                 { value: "agendado", label: "Agendado" },
-                { value: "concluido", label: "Concluído" },
+                ...(form.status === "concluido"
+                  ? [{ value: "concluido", label: "Concluído" }]
+                  : []),
                 { value: "cancelado", label: "Cancelado" }
               ]}
             />
