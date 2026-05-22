@@ -21,7 +21,10 @@ const buscarClienteDaEmpresa = async ({ clienteId, empresaId }) => {
   return await prisma.cliente.findFirst({
     where: {
       id: Number(clienteId),
-      empresaId
+      empresaId,
+      status: {
+        not: "inativo"
+      }
     }
   })
 }

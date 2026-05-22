@@ -34,8 +34,8 @@ const atualizarStatusCliente = async (clienteId, empresaId, db = prisma) => {
     }
   })
 
-  const temPendencia = contas.some(
-    (conta) => conta.status === "pendente" || conta.status === "parcial"
+  const temPendencia = contas.some((conta) =>
+    ["pendente", "parcial", "vencido"].includes(conta.status)
   )
 
   const novoStatus = temPendencia ? "pendente" : "em_dia"
@@ -117,13 +117,16 @@ export const criarContaReceber = async (req, res) => {
     const cliente = await prisma.cliente.findFirst({
       where: {
         id: Number(clienteId),
-        empresaId: req.empresaId
+        empresaId: req.empresaId,
+        status: {
+          not: "inativo"
+        }
       }
     })
 
     if (!cliente) {
       return res.status(404).json({
-        error: "Cliente não encontrado para esta empresa"
+        error: "Cliente não encontrado ou inativo para esta empresa"
       })
     }
 
