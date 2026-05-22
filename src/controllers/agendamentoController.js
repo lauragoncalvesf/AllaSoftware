@@ -454,8 +454,6 @@ export const concluirAgendamento = async (req, res) => {
       observacoesPagamento = null
     } = req.body || {}
 
-    const valorPagoNumero = Number(valorPago || 0)
-
     const agendamento = await prisma.agendamento.findFirst({
       where: {
         id: Number(id),
@@ -515,6 +513,11 @@ export const concluirAgendamento = async (req, res) => {
       })
     }
 
+    const pagarDepois = fiado === true || fiado === "true"
+    const valorPagoInformado = Number(valorPago || 0)
+    const valorPagoNumero =
+      pagarDepois && valorPagoInformado >= valorServico ? 0 : valorPagoInformado
+
     if (valorPagoNumero < 0) {
       return res.status(400).json({
         error: "O valor pago não pode ser negativo"
@@ -534,7 +537,7 @@ export const concluirAgendamento = async (req, res) => {
     }
 
     const saldoEmAberto = valorServico - valorPagoNumero
-    const deveCriarContaReceber = fiado || saldoEmAberto > 0
+    const deveCriarContaReceber = pagarDepois || saldoEmAberto > 0
 
     const resultado = await prisma.$transaction(async (tx) => {
       let contaReceber = null

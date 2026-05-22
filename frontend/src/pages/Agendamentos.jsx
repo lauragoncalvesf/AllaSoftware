@@ -850,12 +850,21 @@ export default function Agendamentos() {
               <input
                 type="checkbox"
                 checked={formConclusao.fiado}
-                onChange={(e) =>
+                onChange={(e) => {
+                  const fiado = e.target.checked
+                  const valor = Number(
+                    agendamentoConcluir.valorServico ||
+                      agendamentoConcluir.servico?.preco ||
+                      0
+                  )
+
                   setFormConclusao({
                     ...formConclusao,
-                    fiado: e.target.checked
+                    fiado,
+                    valorPago: fiado ? "" : valor ? String(valor) : "",
+                    formaPagamento: fiado ? "" : formConclusao.formaPagamento
                   })
-                }
+                }}
               />
 
               Deixar saldo em aberto / cliente vai pagar depois
