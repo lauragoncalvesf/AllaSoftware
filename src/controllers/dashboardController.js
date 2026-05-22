@@ -374,3 +374,56 @@ export const dashboardCobrancas = async (req, res) => {
     })
   }
 }
+
+export const dashboardVendasSerie = async (req, res) => {
+  try {
+    const agora = new Date()
+    const inicioSeteDias = new Date()
+    inicioSeteDias.setDate(agora.getDate() - 6)
+    inicioSeteDias.setHours(0, 0, 0, 0)
+
+    const vendas = await prisma.venda.findMany({
+      where: {
+        empresaId: req.empresaId,
+        createdAt: {
+          gte: inicioSeteDias
+        }
+      },
+      select: {
+        totalFinal: true,
+        createdAt: true
+      }
+    })
+
+    const serie = []
+
+    for (let i = 0; i < 7; i++) {
+      const inicioDia = new Date(inicioSeteDias)
+      inicioDia.setDate(inicioSeteDias.getDate() + i)
+      inicioDia.setHours(0, 0, 0, 0)
+
+      const fimDia = new Date(inicioDia)
+      fimDia.setHours(23, 59, 59, 999)
+
+      const total = vendas
+        .filter((venda) => {
+          const data = new Date(venda.createdAt)
+          return data >= inicioDia && data <= fimDia
+        })
+        .reduce((acc, venda) => acc + Number(venda.totalFinal || 0), 0)
+
+      serie.push({
+        dia: formatarDia(inicioDia),
+        total
+      })
+    }
+
+    res.json(serie)
+  } catch (error) {
+    console.error("Erro ao carregar série de vendas:", error)
+
+    res.status(500).json({
+      error: "Erro ao carregar série de vendas"
+    })
+  }
+}
