@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react"
 import { useNavigate } from "react-router-dom"
-import { LogOut, Settings } from "lucide-react"
+import { LogOut, Moon, Settings, Sun } from "lucide-react"
 import Sidebar from "../components/Sidebar"
 import BrandLogo from "../components/BrandLogo"
 import api from "../services/api"
@@ -11,6 +11,13 @@ export default function AppLayout({ children }) {
   const [sidebarAberta, setSidebarAberta] = useState(true)
   const [menuPerfilAberto, setMenuPerfilAberto] = useState(false)
   const [menuAjustesAberto, setMenuAjustesAberto] = useState(false)
+  const [temaSidebar, setTemaSidebar] = useState(() => {
+    try {
+      return localStorage.getItem("temaSidebar") || "escuro"
+    } catch {
+      return "escuro"
+    }
+  })
   const [usuario, setUsuario] = useState(() => {
     try {
       return JSON.parse(localStorage.getItem("usuario"))
@@ -73,6 +80,14 @@ export default function AppLayout({ children }) {
     navigate("/")
   }
 
+  const alternarTemaSidebar = () => {
+    setTemaSidebar((temaAtual) => {
+      const proximoTema = temaAtual === "escuro" ? "claro" : "escuro"
+      localStorage.setItem("temaSidebar", proximoTema)
+      return proximoTema
+    })
+  }
+
   const irPara = (rota) => {
     setMenuPerfilAberto(false)
     setMenuAjustesAberto(false)
@@ -84,6 +99,7 @@ export default function AppLayout({ children }) {
       <Sidebar
         aberta={sidebarAberta}
         setAberta={setSidebarAberta}
+        tema={temaSidebar}
       />
 
       <div
@@ -98,6 +114,20 @@ export default function AppLayout({ children }) {
           </div>
 
           <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={alternarTemaSidebar}
+              className="h-10 w-10 rounded-xl border border-gray-100 bg-white text-gray-500 hover:bg-gray-50 hover:text-[#2D2E47] flex items-center justify-center transition"
+              title={temaSidebar === "escuro" ? "Modo claro" : "Modo escuro"}
+              aria-label={temaSidebar === "escuro" ? "Ativar modo claro" : "Ativar modo escuro"}
+            >
+              {temaSidebar === "escuro" ? (
+                <Sun className="h-5 w-5" />
+              ) : (
+                <Moon className="h-5 w-5" />
+              )}
+            </button>
+
             <div className="relative">
               <button
                 type="button"

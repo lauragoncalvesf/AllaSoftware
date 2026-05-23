@@ -14,9 +14,10 @@ import {
 import { podeAcessar } from "../utils/permissoes"
 import BrandLogo from "./BrandLogo"
 
-export default function Sidebar({ aberta = true, setAberta }) {
+export default function Sidebar({ aberta = true, setAberta, tema = "escuro" }) {
   const navigate = useNavigate()
   const location = useLocation()
+  const modoEscuro = tema === "escuro"
 
   const isActive = (path) => location.pathname === path
 
@@ -26,16 +27,30 @@ export default function Sidebar({ aberta = true, setAberta }) {
 
     return isActive(path)
       ? `${baseClass} bg-[#3E7996] text-white font-semibold shadow-sm`
-      : `${baseClass} text-white/85 hover:bg-white/10 hover:text-white`
+      : modoEscuro
+      ? `${baseClass} text-white/85 hover:bg-white/10 hover:text-white`
+      : `${baseClass} text-[#2D2E47]/80 hover:bg-white hover:text-[#2D2E47]`
   }
+
+  const asideClass = modoEscuro
+    ? "bg-[#0F1115] text-white"
+    : "bg-[#F4F6F9] text-[#2D2E47] border-r border-[#E8ECF1]"
+
+  const headerBorderClass = modoEscuro ? "border-white/10" : "border-[#E8ECF1]"
+  const dividerClass = modoEscuro ? "border-white/10" : "border-[#E8ECF1]"
+  const legendaClass = modoEscuro ? "text-white/45" : "text-[#2D2E47]/50"
+  const secaoClass = modoEscuro ? "text-white/40" : "text-[#2D2E47]/45"
+  const botaoClass = modoEscuro
+    ? "bg-white/5 hover:bg-white/10 text-white/70 hover:text-white"
+    : "bg-white hover:bg-white text-[#2D2E47]/60 hover:text-[#2D2E47] border border-[#E8ECF1] shadow-sm"
 
   if (!aberta) {
     return (
-      <aside className="fixed left-0 top-0 w-14 h-screen bg-[#2D2E47] text-white flex flex-col items-center py-4 z-40">
+      <aside className={`fixed left-0 top-0 w-14 h-screen ${asideClass} flex flex-col items-center py-4 z-40`}>
         <button
           type="button"
           onClick={() => setAberta(true)}
-          className="w-10 h-10 rounded-xl bg-white/10 hover:bg-white/20 flex items-center justify-center transition"
+          className={`w-10 h-10 rounded-xl flex items-center justify-center transition ${botaoClass}`}
           title="Abrir menu"
         >
           ☰
@@ -49,13 +64,13 @@ export default function Sidebar({ aberta = true, setAberta }) {
   }
 
   return (
-    <aside className="fixed left-0 top-0 w-64 h-screen bg-[#2D2E47] text-white flex flex-col overflow-y-auto z-40 transition-all duration-300">
-      <div className="p-5 border-b border-white/10">
+    <aside className={`fixed left-0 top-0 w-64 h-screen ${asideClass} flex flex-col overflow-y-auto z-40 transition-all duration-300`}>
+      <div className={`p-5 border-b ${headerBorderClass}`}>
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
-            <BrandLogo tone="light" className="h-10 w-40 object-left" />
+            <BrandLogo tone={modoEscuro ? "light" : "dark"} className="h-10 w-40 object-left" />
 
-            <p className="text-xs text-white/45 mt-1">
+            <p className={`text-xs mt-1 ${legendaClass}`}>
               Gestão inteligente
             </p>
           </div>
@@ -63,7 +78,7 @@ export default function Sidebar({ aberta = true, setAberta }) {
           <button
             type="button"
             onClick={() => setAberta(false)}
-            className="w-9 h-9 rounded-xl bg-white/5 hover:bg-white/10 flex items-center justify-center text-white/70 hover:text-white transition"
+            className={`w-9 h-9 rounded-xl flex items-center justify-center transition ${botaoClass}`}
             title="Recolher menu"
           >
             ‹
@@ -151,8 +166,8 @@ export default function Sidebar({ aberta = true, setAberta }) {
         )}
 
         {(podeAcessar("financeiro") || podeAcessar("relatorios")) && (
-          <div className="pt-3 mt-3 border-t border-white/10">
-          <p className="px-4 text-[11px] uppercase tracking-wide text-white/40 mb-2">
+          <div className={`pt-3 mt-3 border-t ${dividerClass}`}>
+          <p className={`px-4 text-[11px] uppercase tracking-wide mb-2 ${secaoClass}`}>
              Administração
           </p>
 
