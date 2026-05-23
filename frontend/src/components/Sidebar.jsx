@@ -131,7 +131,7 @@ export default function Sidebar({ aberta = true, setAberta }) {
           </button>
         )}
 
-        {(podeAcessar("financeiro") || podeAcessar("relatorios") || podeAcessar("usuarios")) && (
+        {(podeAcessar("financeiro") || podeAcessar("relatorios")) && (
           <div className="pt-3 mt-3 border-t border-white/10">
           <p className="px-4 text-[11px] uppercase tracking-wide text-white/40 mb-2">
              Administração
@@ -156,26 +156,6 @@ export default function Sidebar({ aberta = true, setAberta }) {
                 className={getNavButtonClass("/financeiro/dashboard")}
               >
                 Dashboard Financeiro
-              </button>
-          )}
-
-          {podeAcessar("usuarios") && (
-            <button
-              type="button"
-              onClick={() => navigate("/equipe")}
-              className={getNavButtonClass("/equipe")}
-            >
-                Equipe
-              </button>
-          )}
-
-          {podeAcessar("usuarios") && (
-            <button
-              type="button"
-              onClick={() => navigate("/comissoes")}
-              className={getNavButtonClass("/comissoes")}
-            >
-                Comissoes
               </button>
           )}
 
