@@ -567,6 +567,7 @@ export default function Agendamentos() {
               <Legenda cor="bg-[#2F8AA3]" texto="Agendado" />
               <Legenda cor="bg-emerald-500" texto="Concluído" />
               <Legenda cor="bg-rose-400" texto="Cancelado" />
+              <Legenda cor="bg-amber-400" texto="Feriado" />
             </div>
           </div>
         </div>
@@ -952,12 +953,17 @@ function VisaoMes({ dataReferencia, agendamentos, onClickEvento, onClickDia, onI
             .sort((a, b) => new Date(a.dataHora) - new Date(b.dataHora))
           const ehHoje = dia.toDateString() === hojeStr
           const foraDoMes = dia.getMonth() !== mesAtual
+          const feriado = obterFeriado(dia)
 
           return (
             <div
               key={idx}
               className={`group relative border-b border-r border-gray-100 p-1.5 cursor-pointer transition ${
-                foraDoMes ? "bg-gray-50/40" : "bg-white hover:bg-[#F4FAFC]"
+                foraDoMes
+                  ? "bg-gray-50/40"
+                  : feriado
+                    ? "bg-amber-50/70 hover:bg-amber-50"
+                    : "bg-white hover:bg-[#F4FAFC]"
               }`}
               onClick={() => onClickDia(dia)}
             >
@@ -968,6 +974,8 @@ function VisaoMes({ dataReferencia, agendamentos, onClickEvento, onClickDia, onI
                   className={`text-xs font-semibold w-6 h-6 flex items-center justify-center rounded-full transition ${
                     ehHoje
                       ? "bg-[#2F8AA3] text-white"
+                      : feriado && !foraDoMes
+                        ? "bg-amber-400 text-white"
                       : foraDoMes
                         ? "text-gray-300"
                         : "text-gray-700 hover:bg-gray-100"
@@ -977,6 +985,14 @@ function VisaoMes({ dataReferencia, agendamentos, onClickEvento, onClickDia, onI
                   <span className="text-[10px] text-gray-400">{eventosDoDia.length}</span>
                 )}
               </div>
+              {feriado && !foraDoMes && (
+                <div
+                  className="mb-1 truncate rounded-md bg-amber-100 px-1.5 py-0.5 text-[10px] font-semibold text-amber-700"
+                  title={feriado.nome}
+                >
+                  {feriado.nome}
+                </div>
+              )}
               <div className="space-y-1">
                 {eventosDoDia.slice(0, 3).map((a) => {
                   const cor = STATUS_CORES[a.status] || STATUS_CORES.agendado
@@ -1024,14 +1040,27 @@ function VisaoSemana({ dataReferencia, agendamentos, onClickEvento, onClickSlot 
         <div></div>
         {dias.map((d) => {
           const ehHoje = d.toDateString() === hojeStr
+          const feriado = obterFeriado(d)
           return (
             <div key={d.toISOString()} className="px-2 py-1.5 text-center border-l border-gray-100">
               <div className="text-[10px] uppercase text-gray-500 font-medium">
                 {d.toLocaleDateString("pt-BR", { weekday: "short" }).replace(".", "")}
               </div>
               <div className={`mt-0.5 inline-flex items-center justify-center w-7 h-7 rounded-full text-sm font-semibold ${
-                ehHoje ? "bg-[#2F8AA3] text-white" : "text-[#2D2E47]"
+                ehHoje
+                  ? "bg-[#2F8AA3] text-white"
+                  : feriado
+                    ? "bg-amber-400 text-white"
+                    : "text-[#2D2E47]"
               }`}>{d.getDate()}</div>
+              {feriado && (
+                <div
+                  className="mx-auto mt-1 max-w-full truncate text-[10px] font-semibold text-amber-700"
+                  title={feriado.nome}
+                >
+                  {feriado.nome}
+                </div>
+              )}
             </div>
           )
         })}
@@ -1064,6 +1093,7 @@ function FragmentoHora({ hora, dias, agendamentos, onClickEvento, onClickSlot })
       </div>
       {dias.map((d) => {
         const slot = new Date(d); slot.setHours(hora, 0, 0, 0)
+        const feriado = obterFeriado(d)
         const eventos = agendamentos.filter((a) => {
           if (!a.dataHora) return false
           const dt = new Date(a.dataHora)
@@ -1073,7 +1103,9 @@ function FragmentoHora({ hora, dias, agendamentos, onClickEvento, onClickSlot })
           <div
             key={d.toISOString() + hora}
             onClick={() => onClickSlot(slot)}
-            className="relative min-h-2 border-t border-l border-gray-100 hover:bg-[#F4FAFC] cursor-pointer transition"
+            className={`relative min-h-2 border-t border-l border-gray-100 cursor-pointer transition ${
+              feriado ? "bg-amber-50/40 hover:bg-amber-50" : "hover:bg-[#F4FAFC]"
+            }`}
           >
             <div className="inset-1 flex flex-col">
               {eventos.map((a) => {
@@ -1103,6 +1135,7 @@ function VisaoDia({ dataReferencia, agendamentos, onClickEvento, onClickSlot }) 
   const eventosDoDia = agendamentos
     .filter((a) => a.dataHora && mesmoDia(new Date(a.dataHora), dataReferencia))
     .sort((a, b) => new Date(a.dataHora) - new Date(b.dataHora))
+  const feriado = obterFeriado(dataReferencia)
 
   return (
     <div className="h-full bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden flex flex-col">
@@ -1115,7 +1148,14 @@ function VisaoDia({ dataReferencia, agendamentos, onClickEvento, onClickSlot }) 
             {dataReferencia.toLocaleDateString("pt-BR", { weekday: "long" })}
           </p>
         </div>
-        <span className="text-xs text-gray-500">{eventosDoDia.length} agendamento(s)</span>
+        <div className="flex items-center gap-2">
+          {feriado && (
+            <span className="rounded-full bg-amber-100 px-2.5 py-1 text-xs font-semibold text-amber-700">
+              {feriado.nome}
+            </span>
+          )}
+          <span className="text-xs text-gray-500">{eventosDoDia.length} agendamento(s)</span>
+        </div>
       </div>
 
       <div className="flex-1 min-h-0 overflow-auto">
@@ -1141,17 +1181,23 @@ function VisaoDia({ dataReferencia, agendamentos, onClickEvento, onClickSlot }) 
 }
 
 function FragmentoHoraDia({ hora, slot, eventos, onClickEvento, onClickSlot }) {
+  const feriado = obterFeriado(slot)
+
   return (
     <>
       <div 
         onClick={() => onClickSlot(slot)}
-        className="border-t min-h-20 border-gray-100 text-xs text-gray-400 px-3 pt-1 text-right hover:bg-[#F4FAFC] cursor-pointer">
+        className={`border-t min-h-20 border-gray-100 text-xs text-gray-400 px-3 pt-1 text-right cursor-pointer ${
+          feriado ? "bg-amber-50/40 hover:bg-amber-50" : "hover:bg-[#F4FAFC]"
+        }`}>
         
         {String(hora).padStart(2, "0")}:00
       </div>
       <div
         onClick={() => onClickSlot(slot)}
-        className="relative min-h-20 border-t border-l border-gray-100 hover:bg-[#F4FAFC] cursor-pointer transition px-2 py-1"
+        className={`relative min-h-20 border-t border-l border-gray-100 cursor-pointer transition px-2 py-1 ${
+          feriado ? "bg-amber-50/40 hover:bg-amber-50" : "hover:bg-[#F4FAFC]"
+        }`}
       >
         <div className="flex flex-col gap-1.5 h-full">
           {eventos.map((a) => {
@@ -1207,10 +1253,13 @@ function VisaoLista({ agendamentos, onEditar, onAtualizarStatus, onExcluir }) {
     <div className="h-full overflow-auto pr-1 space-y-4">
       {grupos.map(([dataStr, lista]) => {
         const data = dataStr === "sem-data" ? null : new Date(dataStr)
+        const feriado = data ? obterFeriado(data) : null
         return (
           <div key={dataStr} className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
             <div className="px-5 py-3 bg-gray-50 border-b border-gray-100 flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-[#E6F2F6] text-[#2F8AA3] flex flex-col items-center justify-center">
+              <div className={`w-10 h-10 rounded-xl flex flex-col items-center justify-center ${
+                feriado ? "bg-amber-100 text-amber-700" : "bg-[#E6F2F6] text-[#2F8AA3]"
+              }`}>
                 <span className="text-[10px] font-semibold uppercase">
                   {data ? data.toLocaleDateString("pt-BR", { month: "short" }).replace(".", "") : "—"}
                 </span>
@@ -1222,7 +1271,14 @@ function VisaoLista({ agendamentos, onEditar, onAtualizarStatus, onExcluir }) {
                 <p className="font-semibold text-[#2D2E47]">
                   {data ? capitalizar(data.toLocaleDateString("pt-BR", { weekday: "long" })) : "Sem data"}
                 </p>
-                <p className="text-xs text-gray-500">{lista.length} agendamento(s)</p>
+                <div className="flex flex-wrap items-center gap-2">
+                  <p className="text-xs text-gray-500">{lista.length} agendamento(s)</p>
+                  {feriado && (
+                    <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-semibold text-amber-700">
+                      {feriado.nome}
+                    </span>
+                  )}
+                </div>
               </div>
             </div>
             <div className="divide-y divide-gray-100">
@@ -1415,6 +1471,82 @@ function horaCurta(iso) {
   if (!iso) return ""
   const d = new Date(iso)
   return `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`
+}
+
+const feriadosPorAno = new Map()
+
+function obterFeriado(data) {
+  if (!data) return null
+
+  const feriados = listarFeriadosBrasil(data.getFullYear())
+  return feriados.get(chaveData(data)) || null
+}
+
+function listarFeriadosBrasil(ano) {
+  if (feriadosPorAno.has(ano)) {
+    return feriadosPorAno.get(ano)
+  }
+
+  const pascoa = calcularPascoa(ano)
+  const feriados = [
+    { data: new Date(ano, 0, 1), nome: "Confraternização Universal" },
+    { data: adicionarDias(pascoa, -48), nome: "Carnaval" },
+    { data: adicionarDias(pascoa, -47), nome: "Carnaval" },
+    { data: adicionarDias(pascoa, -2), nome: "Sexta-feira Santa" },
+    { data: pascoa, nome: "Páscoa" },
+    { data: new Date(ano, 3, 21), nome: "Tiradentes" },
+    { data: new Date(ano, 4, 1), nome: "Dia do Trabalho" },
+    { data: adicionarDias(pascoa, 60), nome: "Corpus Christi" },
+    { data: new Date(ano, 8, 7), nome: "Independência do Brasil" },
+    { data: new Date(ano, 9, 12), nome: "Nossa Senhora Aparecida" },
+    { data: new Date(ano, 10, 2), nome: "Finados" },
+    { data: new Date(ano, 10, 15), nome: "Proclamação da República" },
+    { data: new Date(ano, 10, 20), nome: "Consciência Negra" },
+    { data: new Date(ano, 11, 25), nome: "Natal" }
+  ]
+
+  const mapa = new Map(
+    feriados.map((feriado) => [
+      chaveData(feriado.data),
+      { ...feriado, data: chaveData(feriado.data) }
+    ])
+  )
+
+  feriadosPorAno.set(ano, mapa)
+  return mapa
+}
+
+function chaveData(data) {
+  return [
+    data.getFullYear(),
+    String(data.getMonth() + 1).padStart(2, "0"),
+    String(data.getDate()).padStart(2, "0")
+  ].join("-")
+}
+
+function adicionarDias(data, dias) {
+  const novaData = new Date(data)
+  novaData.setDate(novaData.getDate() + dias)
+  return novaData
+}
+
+function calcularPascoa(ano) {
+  const a = ano % 19
+  const b = Math.floor(ano / 100)
+  const c = ano % 100
+  const d = Math.floor(b / 4)
+  const e = b % 4
+  const f = Math.floor((b + 8) / 25)
+  const g = Math.floor((b - f + 1) / 3)
+  const h = (19 * a + b - d - g + 15) % 30
+  const i = Math.floor(c / 4)
+  const k = c % 4
+  const l = (32 + 2 * e + 2 * i - h - k) % 7
+  const m = Math.floor((a + 11 * h + 22 * l) / 451)
+  const mes = Math.floor((h + l - 7 * m + 114) / 31)
+  const dia = ((h + l - 7 * m + 114) % 31) + 1
+
+  return new Date(ano, mes - 1, dia)
 }
 
 function capitalizar(s) {
