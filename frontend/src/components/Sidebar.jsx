@@ -1,4 +1,16 @@
 import { useNavigate, useLocation } from "react-router-dom"
+import {
+  CalendarDays,
+  ChartColumn,
+  DollarSign,
+  FileText,
+  HandHeart,
+  LayoutDashboard,
+  Package,
+  BadgeDollarSign,
+  ShoppingCart,
+  Users
+} from "lucide-react"
 import { podeAcessar } from "../utils/permissoes"
 import BrandLogo from "./BrandLogo"
 
@@ -10,7 +22,7 @@ export default function Sidebar({ aberta = true, setAberta }) {
 
   const getNavButtonClass = (path) => {
     const baseClass =
-      "w-full text-left px-4 py-2.5 rounded-xl transition-colors text-sm"
+      "w-full text-left px-3 py-2.5 rounded-lg transition-colors text-sm flex items-center gap-3"
 
     return isActive(path)
       ? `${baseClass} bg-[#3E7996] text-white font-semibold shadow-sm`
@@ -67,6 +79,7 @@ export default function Sidebar({ aberta = true, setAberta }) {
           onClick={() => navigate("/dashboard")}
           className={getNavButtonClass("/dashboard")}
         >
+          <LayoutDashboard className="h-4 w-4" />
           Dashboard
         </button>
         )}
@@ -77,6 +90,7 @@ export default function Sidebar({ aberta = true, setAberta }) {
           onClick={() => navigate("/clientes")}
           className={getNavButtonClass("/clientes")}
         >
+            <Users className="h-4 w-4" />
           Clientes
         </button>
         )}
@@ -87,7 +101,8 @@ export default function Sidebar({ aberta = true, setAberta }) {
           onClick={() => navigate("/servicos")}
           className={getNavButtonClass("/servicos")}
         >
-          Serviços
+          <HandHeart className="h-4 w-4" />
+          <span>Serviços</span>
         </button>
         )}
 
@@ -97,7 +112,8 @@ export default function Sidebar({ aberta = true, setAberta }) {
           onClick={() => navigate("/produtos")}
           className={getNavButtonClass("/produtos")}
         >
-          Produtos
+          <Package className="h-4 w-4" />
+          <span>Produtos</span>
         </button>
         )}
 
@@ -107,7 +123,8 @@ export default function Sidebar({ aberta = true, setAberta }) {
           onClick={() => navigate("/vendas")}
           className={getNavButtonClass("/vendas")}
         >
-          Vendas
+          <ShoppingCart className="h-4 w-4" />
+          <span>Vendas</span>
         </button>
         )}
 
@@ -117,7 +134,8 @@ export default function Sidebar({ aberta = true, setAberta }) {
           onClick={() => navigate("/contas-receber")}
           className={getNavButtonClass("/contas-receber")}
         >
-          Contas a Receber
+          <BadgeDollarSign className="h-4 w-4" />
+          <span>Contas a Receber</span>
         </button>
         )}
 
@@ -127,7 +145,8 @@ export default function Sidebar({ aberta = true, setAberta }) {
             onClick={() => navigate("/agendamentos")}
             className={getNavButtonClass("/agendamentos")}
           >
-            Agendamentos
+            <CalendarDays className="h-4 w-4" />
+            <span>Agendamentos</span>
           </button>
         )}
 
@@ -145,7 +164,8 @@ export default function Sidebar({ aberta = true, setAberta }) {
               onClick={() => navigate("/transacoes")}
               className={getNavButtonClass("/transacoes")}
             >
-                Financeiro
+                <DollarSign className="h-4 w-4" />
+                <span>Financeiro</span>
               </button>
           )}
 
@@ -155,7 +175,8 @@ export default function Sidebar({ aberta = true, setAberta }) {
                 onClick={() => navigate("/financeiro/dashboard")}
                 className={getNavButtonClass("/financeiro/dashboard")}
               >
-                Dashboard Financeiro
+                <ChartColumn className="h-4 w-4" />
+                <span>Dashboard Financeiro</span>
               </button>
           )}
 
@@ -165,7 +186,8 @@ export default function Sidebar({ aberta = true, setAberta }) {
                 onClick={() => navigate("/relatorios/financeiro")}
                 className={getNavButtonClass("/relatorios/financeiro")}
               >
-                Relatórios
+                <FileText className="h-4 w-4" />
+                <span>Relatórios</span>
               </button>
           )}
             </div>

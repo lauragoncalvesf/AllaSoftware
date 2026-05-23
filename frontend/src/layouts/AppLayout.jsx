@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react"
 import { useNavigate } from "react-router-dom"
+import { LogOut, Settings } from "lucide-react"
 import Sidebar from "../components/Sidebar"
 import BrandLogo from "../components/BrandLogo"
 import api from "../services/api"
@@ -151,7 +152,7 @@ export default function AppLayout({ children }) {
                         title="Ajustes"
                         aria-label="Ajustes"
                       >
-                        <SettingsIcon />
+                        <Settings className="h-5 w-5" />
                       </button>
                     )}
                   </div>
@@ -201,9 +202,10 @@ export default function AppLayout({ children }) {
                   <button
                     type="button"
                     onClick={logout}
-                    className="w-full text-left px-4 py-3 rounded-xl text-sm text-red-600 hover:bg-red-50 transition"
+                    className="w-full px-4 py-3 rounded-xl text-sm text-red-600 hover:bg-red-50 transition flex items-center gap-3"
                   >
-                    Sair
+                    <LogOut className="h-4 w-4" />
+                    <span>Sair</span>
                   </button>
                 </div>
               </div>
@@ -217,23 +219,5 @@ export default function AppLayout({ children }) {
         </main>
       </div>
     </div>
-  )
-}
-
-function SettingsIcon() {
-  return (
-    <svg
-      aria-hidden="true"
-      viewBox="0 0 24 24"
-      className="h-5 w-5"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7Z" />
-      <path d="M19.4 15a1.7 1.7 0 0 0 .34 1.88l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06A1.7 1.7 0 0 0 15 19.37a1.7 1.7 0 0 0-1 .16 1.7 1.7 0 0 0-1 1.56V21a2 2 0 1 1-4 0v-.09a1.7 1.7 0 0 0-1-1.56 1.7 1.7 0 0 0-1-.16 1.7 1.7 0 0 0-1.88.34l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.7 1.7 0 0 0 4.63 15a1.7 1.7 0 0 0-.16-1 1.7 1.7 0 0 0-1.56-1H3a2 2 0 1 1 0-4h.09a1.7 1.7 0 0 0 1.56-1 1.7 1.7 0 0 0 .16-1 1.7 1.7 0 0 0-.34-1.88l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.7 1.7 0 0 0 9 4.63a1.7 1.7 0 0 0 1-.16 1.7 1.7 0 0 0 1-1.56V3a2 2 0 1 1 4 0v.09a1.7 1.7 0 0 0 1 1.56 1.7 1.7 0 0 0 1 .16 1.7 1.7 0 0 0 1.88-.34l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.7 1.7 0 0 0 19.37 9c.07.35.07.68 0 1a1.7 1.7 0 0 0 .16 1 1.7 1.7 0 0 0 1.56 1H21a2 2 0 1 1 0 4h-.09a1.7 1.7 0 0 0-1.51 1Z" />
-    </svg>
   )
 }

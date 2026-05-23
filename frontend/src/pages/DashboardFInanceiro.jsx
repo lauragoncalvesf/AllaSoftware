@@ -1,4 +1,14 @@
-import { useCallback, useEffect, useMemo, useState } from "react"
+import { createElement, useCallback, useEffect, useMemo, useState } from "react"
+import {
+  ArrowDownLeft,
+  ArrowUpRight,
+  Package,
+  ReceiptText,
+  ShoppingCart,
+  TrendingUp,
+  TriangleAlert,
+  Wallet
+} from "lucide-react"
 import AppLayout from "../layouts/AppLayout"
 import api from "../services/api"
 import {
@@ -164,22 +174,26 @@ export default function DashboardFinanceiro() {
           label="Lucro"
           value={formatarMoeda(resultado?.saldoCaixa)}
           tone="primary"
+          Icon={Wallet}
         />
         <Kpi
           label="Entradas"
           value={formatarMoeda(resultado?.entradas)}
           tone="success"
+          Icon={ArrowDownLeft}
         />
         <Kpi
           label="Saídas"
           value={formatarMoeda(resultado?.saidas)}
           tone="danger"
+          Icon={ArrowUpRight}
         />
         <Kpi
           label="Em aberto"
           value={formatarMoeda(dados?.totalEmAberto)}
           tone="warning"
           hint={`${dados?.contasPendentes || 0} contas`}
+          Icon={ReceiptText}
         />
       </div>
 
@@ -190,16 +204,19 @@ export default function DashboardFinanceiro() {
           label="Faturamento"
           value={formatarMoeda(dados?.mes?.faturamentoVendas)}
           tone="info"
+          Icon={ShoppingCart}
         />
         <Kpi
           label="Custo dos produtos"
           value={formatarMoeda(dados?.mes?.custoProdutosVendidos)}
           tone="muted"
+          Icon={Package}
         />
         <Kpi
           label="Lucro bruto"
           value={formatarMoeda(dados?.mes?.lucroBrutoVendas)}
           tone="success"
+          Icon={TrendingUp}
         />
       </div>
 
@@ -372,28 +389,31 @@ function PeriodoSwitch({ value, onChange }) {
 }
 
 const TONES = {
-  primary: { dot: "bg-[#2F8AA3]", value: "text-[#2D2E47]" },
-  success: { dot: "bg-emerald-500", value: "text-emerald-600" },
-  danger: { dot: "bg-red-500", value: "text-red-600" },
-  warning: { dot: "bg-amber-500", value: "text-amber-600" },
-  info: { dot: "bg-cyan-500", value: "text-cyan-700" },
-  muted: { dot: "bg-gray-400", value: "text-gray-700" },
+  primary: { icon: "bg-cyan-50 text-[#0891B2] border-cyan-100", value: "text-[#0B1437]" },
+  success: { icon: "bg-emerald-50 text-emerald-600 border-emerald-100", value: "text-emerald-600" },
+  danger: { icon: "bg-red-50 text-red-600 border-red-100", value: "text-red-600" },
+  warning: { icon: "bg-amber-50 text-amber-600 border-amber-100", value: "text-amber-600" },
+  info: { icon: "bg-sky-50 text-sky-600 border-sky-100", value: "text-cyan-700" },
+  muted: { icon: "bg-gray-50 text-gray-600 border-gray-100", value: "text-gray-700" },
 }
 
-function Kpi({ label, value, hint, tone = "primary" }) {
+function Kpi({ label, value, hint, tone = "primary", Icon = TriangleAlert }) {
   const t = TONES[tone] || TONES.primary
   return (
-    <div className="bg-white border border-gray-100 rounded-xl shadow-sm p-3">
-      <div className="flex items-center justify-between">
-        <span className="text-[11px] uppercase tracking-wide text-gray-400">
+    <div className="bg-white border border-gray-200/80 rounded-xl shadow-sm p-4 min-h-24 flex items-start justify-between gap-4">
+      <div className="min-w-0">
+        <span className="text-xs font-medium text-[#4F5D75] leading-tight">
           {label}
         </span>
-        <span className={`h-2 w-2 rounded-full ${t.dot}`} />
+        <p className={`text-2xl font-bold mt-1 leading-tight ${t.value}`}>
+          {value}
+        </p>
+        {hint && <p className="text-xs font-medium text-[#00AFA8] mt-2">{hint}</p>}
       </div>
-      <p className={`text-lg md:text-xl font-bold mt-1 leading-tight ${t.value}`}>
-        {value}
-      </p>
-      {hint && <p className="text-[11px] text-gray-500 mt-0.5">{hint}</p>}
+
+      <div className={`h-10 w-10 shrink-0 rounded-full border flex items-center justify-center ${t.icon}`}>
+        {createElement(Icon, { className: "h-5 w-5" })}
+      </div>
     </div>
   )
 }

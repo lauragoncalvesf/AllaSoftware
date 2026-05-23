@@ -1,7 +1,25 @@
 import { useEffect, useState } from "react"
+import {
+  CalendarDays,
+  ChartColumn,
+  DollarSign,
+  FileText,
+  HandHeart,
+  LayoutDashboard,
+  Package,
+  ReceiptText,
+  ShieldCheck,
+  Settings,
+  ShoppingCart,
+  Users,
+  UsersRound,
+  UserRoundCheck,
+  UserRoundX
+} from "lucide-react"
 import AppLayout from "../layouts/AppLayout"
 import api from "../services/api"
 import CampoInput from "../components/CampoInput"
+import ResumoCard from "../components/ResumoCard"
 import ModalAviso from "../components/ModalAviso"
 import { podeAcessar } from "../utils/permissoes"
 
@@ -66,6 +84,19 @@ const labelsAcoes = {
   editar: "Editar",
   excluir: "Excluir",
   receberPagamento: "Receber pagamento"
+}
+
+const iconesModulos = {
+  dashboard: LayoutDashboard,
+  clientes: Users,
+  servicos: HandHeart,
+  produtos: Package,
+  vendas: ShoppingCart,
+  contasReceber: ReceiptText,
+  agendamentos: CalendarDays,
+  financeiro: DollarSign,
+  relatorios: FileText,
+  usuarios: Settings
 }
 
 export default function Equipe() {
@@ -323,10 +354,30 @@ export default function Equipe() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <ResumoCard titulo="Total" valor={usuarios.length} />
-          <ResumoCard titulo="Ativos" valor={usuariosAtivos} />
-          <ResumoCard titulo="Inativos" valor={usuariosInativos} />
-          <ResumoCard titulo="Admins" valor={admins} />
+          <ResumoCard
+            titulo="Total da equipe"
+            valor={usuarios.length}
+            corIcone="bg-blue-100 text-blue-600"
+            icon="usersRound"
+          />
+          <ResumoCard
+            titulo="Usuários ativos"
+            valor={usuariosAtivos}
+            corIcone="bg-emerald-100 text-emerald-600"
+            icon="userRoundCheck"
+          />
+          <ResumoCard
+            titulo="Usuários inativos"
+            valor={usuariosInativos}
+            corIcone="bg-rose-100 text-rose-600"
+            icon="userRoundX"
+          />
+          <ResumoCard
+            titulo="Admins"
+            valor={admins}
+            corIcone="bg-purple-100 text-purple-600"
+            icon="shieldCheck"
+          />
         </div>
 
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5">
@@ -609,11 +660,21 @@ export default function Equipe() {
                   {modulosPermissao.map((modulo) => (
                     <div
                       key={modulo.key}
-                      className="border border-gray-100 rounded-2xl p-4"
+                      className="border border-[#00BAB4]/35 rounded-xl p-4 bg-[#F0FFFE]"
                     >
-                      <p className="font-semibold text-[#2D2E47] mb-3">
-                        {modulo.label}
-                      </p>
+                      <div className="flex items-center gap-3 mb-3">
+                        <div className="h-10 w-10 rounded-full bg-cyan-50 text-[#0891B2] flex items-center justify-center">
+                          <IconeModulo moduloKey={modulo.key} />
+                        </div>
+                        <div>
+                          <p className="font-semibold text-[#2D2E47] leading-tight">
+                            {modulo.label}
+                          </p>
+                          <p className="text-xs text-gray-500">
+                            Permissões do módulo
+                          </p>
+                        </div>
+                      </div>
 
                       <div className="flex flex-wrap gap-2">
                         {modulo.acoes.map((acao) => (
@@ -664,13 +725,10 @@ export default function Equipe() {
   )
 }
 
-function ResumoCard({ titulo, valor }) {
-  return (
-    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5">
-      <p className="text-sm text-gray-500">{titulo}</p>
-      <p className="text-2xl font-bold text-[#2D2E47] mt-2">{valor}</p>
-    </div>
-  )
+function IconeModulo({ moduloKey }) {
+  const Icon = iconesModulos[moduloKey] || ChartColumn
+
+  return <Icon className="h-5 w-5" />
 }
 
 function StatusBadge({ status }) {

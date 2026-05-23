@@ -279,21 +279,25 @@ export default function Produtos() {
             titulo="Total de Produtos"
             valor={resumo.total}
             corIcone="bg-blue-100 text-blue-600"
+            icon="box"
           />
           <ResumoCard
             titulo="Produtos Ativos"
             valor={resumo.ativos}
             corIcone="bg-emerald-100 text-emerald-600"
+            icon="packageCheck"
           />
           <ResumoCard
             titulo="Produtos Inativos"
             valor={resumo.inativos}
             corIcone="bg-amber-100 text-amber-600"
+            icon="packageX"
           />
           <ResumoCard
             titulo="Preço Médio"
             valor={formatarMoeda(resumo.precoMedio)}
             corIcone="bg-violet-100 text-violet-600"
+            icon="tags"
           />
         </div>
 

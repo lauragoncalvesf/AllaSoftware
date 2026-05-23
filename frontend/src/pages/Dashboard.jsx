@@ -1,4 +1,10 @@
-import { useEffect, useMemo, useState } from "react"
+import { createElement, useEffect, useMemo, useState } from "react"
+import {
+  ClockAlert,
+  ReceiptText,
+  DollarSign,
+  Users
+} from "lucide-react"
 import AppLayout from "../layouts/AppLayout"
 import api from "../services/api"
 import { formatarMoeda } from "../utils/formatters"
@@ -114,18 +120,21 @@ export default function Dashboard() {
           value={dados?.totalClientes || 0}
           hint={`${dados?.clientesPendentes || 0} pendentes`}
           accent="indigo"
+          Icon={Users}
         />
         <KpiMini
           label="Contas pendentes"
           value={dados?.contasPendentes || 0}
           hint="Aguardando pagamento"
           accent="sky"
+          Icon={ReceiptText}
         />
         <KpiMini
           label="Contas vencidas"
           value={dados?.contasVencidas || 0}
           hint="Atenção"
           accent="red"
+          Icon={ClockAlert}
         />
         {comissao && (
           <KpiMini
@@ -133,6 +142,7 @@ export default function Dashboard() {
             value={comissao?.itens?.length || 0}
             hint={`Vendido: ${formatarMoeda(comissao?.totais?.totalVendido)}`}
             accent="emerald"
+            Icon={DollarSign}
           />
         )}
       </div>
@@ -144,11 +154,13 @@ export default function Dashboard() {
           label="Total em aberto"
           value={formatarMoeda(dados?.totalEmAberto)}
           tone="neutral"
+          Icon={ReceiptText}
         />
         <KpiInline
           label="Total vencido"
           value={formatarMoeda(dados?.totalVencido)}
           tone="danger"
+          Icon={ClockAlert}
         />
       </div>
 
@@ -208,36 +220,51 @@ function SectionTitle({ children, className = "" }) {
 }
 
 const ACCENTS = {
-  indigo: "bg-indigo-50 text-indigo-600",
-  sky: "bg-sky-50 text-sky-600",
-  red: "bg-red-50 text-red-600",
-  emerald: "bg-emerald-50 text-emerald-600",
+  indigo: "bg-indigo-50 text-indigo-600 border-indigo-100",
+  sky: "bg-sky-50 text-sky-600 border-sky-100",
+  red: "bg-red-50 text-red-600 border-red-100",
+  emerald: "bg-emerald-50 text-emerald-600 border-emerald-100",
 }
 
-function KpiMini({ label, value, hint, accent = "indigo" }) {
+function KpiMini({ label, value, hint, accent = "indigo", Icon = ReceiptText }) {
+  const accentClass = ACCENTS[accent] || ACCENTS.indigo
+
   return (
-    <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-3 flex flex-col">
-      <div className="flex items-center justify-between">
-        <span className="text-[11px] uppercase tracking-wide text-gray-400">
+    <div className="bg-white rounded-xl border border-gray-200/80 shadow-sm p-4 min-h-24 flex items-start justify-between gap-4">
+      <div className="min-w-0">
+        <span className="text-xs font-medium text-[#4F5D75] leading-tight">
           {label}
         </span>
-        <span className={`h-2 w-2 rounded-full ${ACCENTS[accent].split(" ")[0]}`} />
+        <span className="block text-2xl font-bold text-[#0B1437] mt-1 leading-tight">
+          {value}
+        </span>
+        {hint && <span className="block text-xs font-medium text-[#00AFA8] mt-2">{hint}</span>}
       </div>
-      <span className="text-xl font-bold text-[#2D2E47] mt-1 leading-tight">
-        {value}
-      </span>
-      {hint && <span className="text-[11px] text-gray-500 mt-0.5">{hint}</span>}
+
+      <div className={`h-10 w-10 shrink-0 rounded-full border flex items-center justify-center ${accentClass}`}>
+        {createElement(Icon, { className: "h-5 w-5" })}
+      </div>
     </div>
   )
 }
 
-function KpiInline({ label, value, tone = "neutral" }) {
+function KpiInline({ label, value, tone = "neutral", Icon = DollarSign }) {
   const toneClass =
     tone === "danger" ? "text-red-600" : "text-[#2D2E47]"
+  const iconClass =
+    tone === "danger"
+      ? "bg-red-50 text-red-600 border-red-100"
+      : "bg-cyan-50 text-[#0891B2] border-cyan-100"
+
   return (
-    <div className="bg-white border border-gray-100 rounded-xl shadow-sm px-4 py-3 flex items-center justify-between">
-      <span className="text-sm text-gray-500">{label}</span>
-      <span className={`text-base font-semibold ${toneClass}`}>{value}</span>
+    <div className="bg-white border border-gray-200/80 rounded-xl shadow-sm p-4 flex items-center justify-between gap-4">
+      <div>
+        <span className="text-xs font-medium text-[#4F5D75]">{label}</span>
+        <span className={`block text-lg font-bold mt-1 ${toneClass}`}>{value}</span>
+      </div>
+      <div className={`h-10 w-10 shrink-0 rounded-full border flex items-center justify-center ${iconClass}`}>
+        {createElement(Icon, { className: "h-5 w-5" })}
+      </div>
     </div>
   )
 }

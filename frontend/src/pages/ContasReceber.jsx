@@ -280,21 +280,25 @@ export default function ContasReceber() {
             titulo="Total de Contas"
             valor={resumo.total}
             corIcone="bg-blue-100 text-blue-600"
+            icon="receiptSimple"
           />
           <ResumoCard
             titulo="Pendentes + Parciais"
             valor={resumo.pendentes + resumo.parciais}
             corIcone="bg-amber-100 text-amber-600"
+            icon="clockAlert"
           />
           <ResumoCard
             titulo="Vencidas"
             valor={resumo.vencidas}
             corIcone="bg-red-100 text-red-600"
+            icon="alarm"
           />
           <ResumoCard
             titulo="Total em Aberto"
             valor={formatarMoeda(resumo.totalEmAberto)}
             corIcone="bg-violet-100 text-violet-600"
+            icon="badgeDollar"
           />
         </div>
 
