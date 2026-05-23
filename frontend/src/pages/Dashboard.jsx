@@ -86,7 +86,7 @@ export default function Dashboard() {
       <div className="flex flex-wrap items-end justify-between gap-3 mb-5">
         <div>
           <h1 className="text-xl md:text-2xl font-semibold text-[#2D2E47]">
-            Olá, {primeiroNome || "bem-vinda"} 👋
+            Olá, {primeiroNome || "bem-vinda"} 
           </h1>
           <p className="text-xs text-gray-500 mt-0.5">
             Visão rápida do seu dia • Perfil:{" "}

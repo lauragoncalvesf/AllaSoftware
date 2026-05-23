@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react"
 import { useNavigate } from "react-router-dom"
 import Sidebar from "../components/Sidebar"
+import BrandLogo from "../components/BrandLogo"
 import api from "../services/api"
 
 export default function AppLayout({ children }) {
@@ -83,10 +84,8 @@ export default function AppLayout({ children }) {
       >
         {/* Topbar */}
         <header className="h-16 bg-white border-b border-gray-100 flex items-center justify-between px-6 sticky top-0 z-30">
-          <div>
-            <p className="text-sm text-gray-400">
-              Sistema ALLA
-            </p>
+          <div className="flex items-center">
+            <BrandLogo tone="dark" className="h-9 w-40 object-left" />
           </div>
 
           <div className="relative">

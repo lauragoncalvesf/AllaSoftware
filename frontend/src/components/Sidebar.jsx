@@ -1,5 +1,6 @@
 import { useNavigate, useLocation } from "react-router-dom"
 import { podeAcessar } from "../utils/permissoes"
+import BrandLogo from "./BrandLogo"
 
 export default function Sidebar({ aberta = true, setAberta }) {
   const navigate = useNavigate()
@@ -28,8 +29,8 @@ export default function Sidebar({ aberta = true, setAberta }) {
           ☰
         </button>
 
-        <div className="mt-6 text-[10px] font-bold text-white/40 rotate-90 whitespace-nowrap">
-          ALLA
+        <div className="mt-6">
+          <BrandLogo variant="icon" className="h-9 w-9" />
         </div>
       </aside>
     )
@@ -39,10 +40,8 @@ export default function Sidebar({ aberta = true, setAberta }) {
     <aside className="fixed left-0 top-0 w-64 h-screen bg-[#2D2E47] text-white flex flex-col overflow-y-auto z-40 transition-all duration-300">
       <div className="p-5 border-b border-white/10">
         <div className="flex items-start justify-between gap-3">
-          <div>
-            <h1 className="text-xl font-bold text-white leading-tight">
-              Sistema ALLA
-            </h1>
+          <div className="min-w-0">
+            <BrandLogo tone="light" className="h-10 w-40 object-left" />
 
             <p className="text-xs text-white/45 mt-1">
               Gestão inteligente

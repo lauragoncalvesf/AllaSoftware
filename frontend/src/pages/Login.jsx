@@ -1,6 +1,7 @@
 import { useState } from "react"
 import { Link } from "react-router-dom"
 import api from "../services/api"
+import BrandLogo from "../components/BrandLogo"
 import ModalAviso from "../components/ModalAviso"
 
 export default function Login() {
@@ -33,14 +34,12 @@ export default function Login() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100">
+    <div className="min-h-screen flex items-center justify-center bg-[#07172D] px-4">
       <form
         onSubmit={handleLogin}
-        className="bg-white p-8 rounded-2xl shadow-md w-full max-w-sm"
+        className="bg-white p-8 rounded-2xl shadow-2xl w-full max-w-sm border border-white/70"
       >
-        <h1 className="text-2xl font-bold text-center text-[#2D2E47] mb-6">
-          Sistema ALLA
-        </h1>
+        <BrandLogo variant="stacked" tone="dark" className="mx-auto mb-7 h-36 w-52" />
 
         <div className="mb-4">
           <label className="block text-sm text-gray-600 mb-1">Email</label>
