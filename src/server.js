@@ -58,6 +58,9 @@ relatorioRoutes(app)
 agendamentoRoutes(app)
 comissaoRoutes(app)
 
+app.get("/health", (req, res) => {
+  res.json({ status: "ok" })
+})
 
 //  Rota de teste
 app.get("/teste", auth, (req, res) => {
