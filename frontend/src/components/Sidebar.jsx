@@ -48,7 +48,6 @@ export default function Sidebar({ aberta = true, setAberta, tema = "escuro", mob
 
   const headerBorderClass = modoEscuro ? "border-white/10" : "border-[#E8ECF1]"
   const dividerClass = modoEscuro ? "border-white/10" : "border-[#E8ECF1]"
-  const legendaClass = modoEscuro ? "text-white/45" : "text-[#2D2E47]/50"
   const secaoClass = modoEscuro ? "text-white/40" : "text-[#2D2E47]/45"
   const botaoClass = modoEscuro
     ? "bg-white/5 hover:bg-white/10 text-white/70 hover:text-white"
@@ -81,9 +80,7 @@ export default function Sidebar({ aberta = true, setAberta, tema = "escuro", mob
           <div className="min-w-0">
             <BrandLogo tone={modoEscuro ? "light" : "dark"} className="h-10 w-40 object-left" />
 
-            <p className={`text-xs mt-1 ${legendaClass}`}>
-              Gestão inteligente
-            </p>
+
           </div>
 
           <button

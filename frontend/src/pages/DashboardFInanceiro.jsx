@@ -192,7 +192,6 @@ export default function DashboardFinanceiro() {
           label="Em aberto"
           value={formatarMoeda(dados?.totalEmAberto)}
           tone="warning"
-          hint={`${dados?.contasPendentes || 0} contas`}
           Icon={ReceiptText}
         />
       </div>

@@ -199,28 +199,24 @@ export default function Transacoes() {
           <ResumoCard
             titulo="Entradas"
             valor={formatarMoeda(resumo.entradas)}
-            subtitulo="Receitas ativas"
             corIcone="bg-emerald-100 text-emerald-600"
           />
 
           <ResumoCard
             titulo="Saídas"
             valor={formatarMoeda(resumo.saidas)}
-            subtitulo="Despesas ativas"
             corIcone="bg-red-100 text-red-600"
           />
 
           <ResumoCard
             titulo="Saldo"
             valor={formatarMoeda(resumo.saldo)}
-            subtitulo="Entradas - saídas"
             corIcone="bg-blue-100 text-blue-600"
           />
 
           <ResumoCard
             titulo="Movimentações"
             valor={resumo.total}
-            subtitulo="Registros filtrados"
             corIcone="bg-violet-100 text-violet-600"
           />
         </div>

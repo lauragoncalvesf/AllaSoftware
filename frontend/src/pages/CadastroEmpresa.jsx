@@ -1,4 +1,5 @@
 import { useState } from "react"
+import ModalAviso from "../components/ModalAviso"
 import api from "../services/api"
 
 export default function CadastroEmpresa() {
@@ -6,6 +7,7 @@ export default function CadastroEmpresa() {
   const [nomeUsuario, setNomeUsuario] = useState("")
   const [email, setEmail] = useState("")
   const [senha, setSenha] = useState("")
+  const [aviso, setAviso] = useState(null)
   const [cadastrando, setCadastrando] = useState(false)
 
   const handleCadastro = async (e) => {
@@ -22,31 +24,44 @@ export default function CadastroEmpresa() {
       })
 
       console.log("Cadastro realizado:", response.data)
-      alert("Empresa cadastrada com sucesso! Faça o login do admin.")
-
-      window.location.href = "/"
+      setAviso({
+        titulo: "Empresa cadastrada",
+        mensagem: "Empresa cadastrada com sucesso! Faça o login do admin.",
+        redirecionarParaLogin: true
+      })
     } catch (error) {
       console.error("Erro no cadastro:", error)
 
       const mensagem = error.response?.data?.error || "Erro ao cadastrar empresa"
-      alert(mensagem)
-
-      if (
+      const redirecionarParaLogin =
         mensagem.includes("Já existe uma empresa cadastrada com esse email") ||
         mensagem.includes("Já existe um usuário cadastrado com esse email")
-      ) {
-        window.location.href = "/"
-      }
+
+      setAviso({
+        titulo: "Atenção",
+        mensagem,
+        redirecionarParaLogin
+      })
     } finally {
       setCadastrando(false)
     }
   }
 
+  const fecharAviso = () => {
+    const deveRedirecionar = aviso?.redirecionarParaLogin
+
+    setAviso(null)
+
+    if (deveRedirecionar) {
+      window.location.href = "/"
+    }
+  }
+
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100">
+    <div className="min-h-screen flex items-center justify-center bg-gray-100 px-4 py-6">
       <form
         onSubmit={handleCadastro}
-        className="bg-white p-8 rounded-2xl shadow-md w-full max-w-md"
+        className="bg-white p-5 sm:p-8 rounded-2xl shadow-md w-full max-w-md"
       >
         <h1 className="text-2xl font-bold text-center text-[#2D2E47] mb-6">
           Cadastrar Empresa
@@ -119,6 +134,14 @@ export default function CadastroEmpresa() {
           </button>
         </p>
       </form>
+
+      {aviso && (
+        <ModalAviso
+          titulo={aviso.titulo}
+          mensagem={aviso.mensagem}
+          onClose={fecharAviso}
+        />
+      )}
     </div>
   )
 }

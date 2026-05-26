@@ -144,13 +144,13 @@ export default function Agendamentos() {
   }
 
   const resumo = useMemo(() => {
-    const hoje = new Date().toISOString().slice(0, 10)
+    const hoje = chaveData(new Date())
     return {
       total: agendamentos.length,
       agendados: agendamentos.filter((a) => a.status === "agendado").length,
       concluidos: agendamentos.filter((a) => a.status === "concluido").length,
       hoje: agendamentos.filter(
-        (a) => a.dataHora && new Date(a.dataHora).toISOString().slice(0, 10) === hoje
+        (a) => a.dataHora && chaveData(new Date(a.dataHora)) === hoje
       ).length
     }
   }, [agendamentos])
@@ -228,7 +228,7 @@ export default function Agendamentos() {
         profissionalId: form.profissionalId ? Number(form.profissionalId) : null,
         titulo: form.titulo,
         descricao: form.descricao || null,
-        dataHora: form.dataHora,
+        dataHora: dataHoraInputParaISO(form.dataHora),
         observacoes: form.observacoes || null
       }
       if (form.status !== "concluido") {
@@ -449,71 +449,71 @@ export default function Agendamentos() {
         </div>
 
         {/* ===== Linha 2: Toolbar única (navegação + visão + filtros + legenda) ===== */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 px-3 py-2 flex items-center gap-3 flex-wrap shrink-0">
-          {/* Navegação */}
-          <div className="flex items-center gap-1.5">
-            <button
-              onClick={irParaHoje}
-              className="px-2.5 py-1 rounded-md border border-gray-200 text-xs text-gray-700 hover:bg-gray-50"
-            >Hoje</button>
-            <button
-              onClick={() => navegar(-1)}
-              className="w-7 h-7 rounded-md border border-gray-200 text-gray-600 hover:bg-gray-50"
-              aria-label="Anterior"
-            >‹</button>
-            <button
-              onClick={() => navegar(1)}
-              className="w-7 h-7 rounded-md border border-gray-200 text-gray-600 hover:bg-gray-50"
-              aria-label="Próximo"
-            >›</button>
-            <h2 className="ml-1 text-sm font-semibold text-[#2D2E47] min-w-[140px]">{tituloPeriodo}</h2>
-          </div>
-
-          {/* Visões */}
-          <div className="flex items-center gap-0.5 bg-gray-100 rounded-lg p-0.5">
-            {[
-              { v: "mes", l: "Mês" },
-              { v: "semana", l: "Semana" },
-              { v: "dia", l: "Dia" },
-              { v: "lista", l: "Lista" }
-            ].map((o) => (
-              <button
-                key={o.v}
-                onClick={() => setVisao(o.v)}
-                className={`px-2.5 py-1 rounded-md text-xs font-medium transition ${
-                  visao === o.v ? "bg-white text-[#2F8AA3] shadow-sm" : "text-gray-600 hover:text-gray-800"
-                }`}
-              >{o.l}</button>
-            ))}
-          </div>
-
-          {/* Filtros status */}
-          <div className="flex items-center gap-1.5">
-            {[
-              { label: "Todos", value: "" },
-              { label: "Agendados", value: "agendado" },
-              { label: "Concluídos", value: "concluido" },
-              { label: "Cancelados", value: "cancelado" }
-            ].map((f) => (
-              <button
-                key={f.value}
-                onClick={() => setStatusFiltro(f.value)}
-                className={`px-2.5 py-1 rounded-full text-xs font-medium transition ${
-                  statusFiltro === f.value
-                    ? "bg-[#2F8AA3] text-white"
-                    : "bg-white border border-gray-200 text-gray-600 hover:bg-gray-50"
-                }`}
-              >{f.label}</button>
-            ))}
-          </div>
-
-          {/* Filtros */}
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100 px-3 py-2 shrink-0">
           <div className="flex flex-wrap items-center gap-2">
-            {/* Profissional */}
+            {/* Navegação */}
+            <div className="flex items-center gap-1.5">
+              <button
+                onClick={irParaHoje}
+                className="h-8 px-2.5 rounded-md border border-gray-200 text-xs text-gray-700 hover:bg-gray-50"
+              >Hoje</button>
+              <button
+                onClick={() => navegar(-1)}
+                className="h-8 w-8 rounded-md border border-gray-200 text-gray-600 hover:bg-gray-50"
+                aria-label="Anterior"
+              >‹</button>
+              <button
+                onClick={() => navegar(1)}
+                className="h-8 w-8 rounded-md border border-gray-200 text-gray-600 hover:bg-gray-50"
+                aria-label="Próximo"
+              >›</button>
+              <h2 className="ml-1 text-sm font-semibold text-[#2D2E47] min-w-[150px]">{tituloPeriodo}</h2>
+            </div>
+
+            {/* Visões */}
+            <div className="flex h-8 items-center gap-0.5 bg-gray-100 rounded-lg p-0.5">
+              {[
+                { v: "mes", l: "Mês" },
+                { v: "semana", l: "Semana" },
+                { v: "dia", l: "Dia" },
+                { v: "lista", l: "Lista" }
+              ].map((o) => (
+                <button
+                  key={o.v}
+                  onClick={() => setVisao(o.v)}
+                  className={`h-7 px-2.5 rounded-md text-xs font-medium transition ${
+                    visao === o.v ? "bg-white text-[#2F8AA3] shadow-sm" : "text-gray-600 hover:text-gray-800"
+                  }`}
+                >{o.l}</button>
+              ))}
+            </div>
+
+            {/* Filtros status */}
+            <div className="flex h-8 items-center gap-1.5">
+              {[
+                { label: "Todos", value: "" },
+                { label: "Agendados", value: "agendado" },
+                { label: "Concluídos", value: "concluido" },
+                { label: "Cancelados", value: "cancelado" }
+              ].map((f) => (
+                <button
+                  key={f.value}
+                  onClick={() => setStatusFiltro(f.value)}
+                  className={`h-8 px-2.5 rounded-full text-xs font-medium transition ${
+                    statusFiltro === f.value
+                      ? "bg-[#2F8AA3] text-white"
+                      : "bg-white border border-gray-200 text-gray-600 hover:bg-gray-50"
+                  }`}
+                >{f.label}</button>
+              ))}
+            </div>
+          </div>
+
+          <div className="mt-2 flex flex-wrap items-center gap-2">
             <select
               value={profissionalFiltro}
               onChange={(e) => setProfissionalFiltro(e.target.value)}
-              className="bg-white border border-gray-200 rounded-md px-2 py-1 text-xs outline-none focus:ring-2 focus:ring-[#3E7996]"
+              className="h-9 w-48 bg-white border border-gray-200 rounded-lg px-3 text-xs text-[#2D2E47] outline-none focus:ring-2 focus:ring-[#3E7996]"
             >
               <option value="">Todos os profissionais</option>
 
@@ -524,7 +524,7 @@ export default function Agendamentos() {
               ))}
             </select>
 
-            <div className="w-56">
+            <div className="w-48">
               <ClienteSearchSelect
                 clientes={clientes}
                 clienteId={clienteFiltro}
@@ -539,6 +539,7 @@ export default function Agendamentos() {
                 buscaInicial={clienteFiltroNome}
                 placeholder="Buscar cliente"
                 permitirSemCliente={true}
+                inputClassName="h-9 w-full border border-gray-200 rounded-lg px-3 text-xs text-[#2D2E47] outline-none focus:ring-2 focus:ring-[#3E7996]"
                 onSelect={(cliente) => {
                   setClienteFiltro(String(cliente.id))
                   setClienteFiltroNome(cliente.nome)
@@ -546,39 +547,39 @@ export default function Agendamentos() {
                 }}
               />
             </div>
-          
-          {/* Datas */}
-          <div className="flex items-center gap-1.5">
-            <input
-              type="date"
-              value={dataInicio}
-              onChange={(e) => setDataInicio(e.target.value)}
-              className="bg-white border border-gray-200 rounded-md px-2 py-1 text-xs outline-none focus:ring-2 focus:ring-[#3E7996]"
-            />
 
-            <span className="text-xs text-gray-400">→</span>
-            
-            <input
-              type="date"
-              value={dataFim}
-              onChange={(e) => setDataFim(e.target.value)}
-              className="bg-white border border-gray-200 rounded-md px-2 py-1 text-xs outline-none focus:ring-2 focus:ring-[#3E7996]"
-            />
+            <div className="flex items-center gap-1.5">
+              <input
+                type="date"
+                value={dataInicio}
+                onChange={(e) => setDataInicio(e.target.value)}
+                className="h-9 w-36 bg-white border border-gray-200 rounded-lg px-3 text-xs text-[#2D2E47] outline-none focus:ring-2 focus:ring-[#3E7996]"
+              />
+
+              <span className="text-xs text-gray-400">→</span>
+              
+              <input
+                type="date"
+                value={dataFim}
+                onChange={(e) => setDataFim(e.target.value)}
+                className="h-9 w-36 bg-white border border-gray-200 rounded-lg px-3 text-xs text-[#2D2E47] outline-none focus:ring-2 focus:ring-[#3E7996]"
+              />
+            </div>
+
             <button
               type="button"
               onClick={limparFiltros}
-              className="px-2 py-1 rounded-md border border-gray-200 text-gray-600 hover:bg-gray-50 text-xs"
+              className="h-9 px-3 rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50 text-xs"
             >Limpar</button>
 
             {/* Legenda inline */}
-            <div className="hidden lg:flex items-center gap-3 pl-3 ml-1 border-l border-gray-200 text-[11px] text-gray-500">
+            <div className="hidden xl:flex h-9 items-center gap-3 pl-3 ml-auto border-l border-gray-200 text-[11px] text-gray-500">
               <Legenda cor="bg-[#2F8AA3]" texto="Agendado" />
               <Legenda cor="bg-emerald-500" texto="Concluído" />
               <Legenda cor="bg-rose-400" texto="Cancelado" />
               <Legenda cor="bg-amber-400" texto="Feriado" />
             </div>
           </div>
-        </div>
         </div>
 
 
@@ -1450,6 +1451,11 @@ function formatarDataHoraInput(data) {
   const offset = dataObj.getTimezoneOffset()
   const local = new Date(dataObj.getTime() - offset * 60000)
   return local.toISOString().slice(0, 16)
+}
+
+function dataHoraInputParaISO(valor) {
+  if (!valor) return null
+  return new Date(valor).toISOString()
 }
 
 function inicioSemana(data) {
