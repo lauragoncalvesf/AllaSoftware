@@ -8,18 +8,28 @@ import {
   LayoutDashboard,
   Package,
   BadgeDollarSign,
+  Menu,
+  PanelLeftClose,
   ShoppingCart,
   Users
 } from "lucide-react"
 import { podeAcessar } from "../utils/permissoes"
 import BrandLogo from "./BrandLogo"
 
-export default function Sidebar({ aberta = true, setAberta, tema = "escuro" }) {
+export default function Sidebar({ aberta = true, setAberta, tema = "escuro", mobile = false }) {
   const navigate = useNavigate()
   const location = useLocation()
   const modoEscuro = tema === "escuro"
 
   const isActive = (path) => location.pathname === path
+
+  const irPara = (path) => {
+    navigate(path)
+
+    if (mobile) {
+      setAberta(false)
+    }
+  }
 
   const getNavButtonClass = (path) => {
     const baseClass =
@@ -46,14 +56,15 @@ export default function Sidebar({ aberta = true, setAberta, tema = "escuro" }) {
 
   if (!aberta) {
     return (
-      <aside className={`fixed left-0 top-0 w-14 h-screen ${asideClass} flex flex-col items-center py-4 z-40`}>
+      <aside className={`hidden md:flex fixed left-0 top-0 w-14 h-screen ${asideClass} flex-col items-center py-4 z-40`}>
         <button
           type="button"
           onClick={() => setAberta(true)}
           className={`w-10 h-10 rounded-xl flex items-center justify-center transition ${botaoClass}`}
           title="Abrir menu"
+          aria-label="Abrir menu"
         >
-          ☰
+          <Menu className="h-5 w-5" />
         </button>
 
         <div className="mt-6">
@@ -64,7 +75,7 @@ export default function Sidebar({ aberta = true, setAberta, tema = "escuro" }) {
   }
 
   return (
-    <aside className={`fixed left-0 top-0 w-64 h-screen ${asideClass} flex flex-col overflow-y-auto z-40 transition-all duration-300`}>
+    <aside className={`fixed left-0 top-0 h-dvh w-[min(18rem,calc(100vw-2rem))] md:w-64 ${asideClass} flex flex-col overflow-y-auto z-50 md:z-40 transition-all duration-300`}>
       <div className={`p-5 border-b ${headerBorderClass}`}>
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
@@ -80,8 +91,9 @@ export default function Sidebar({ aberta = true, setAberta, tema = "escuro" }) {
             onClick={() => setAberta(false)}
             className={`w-9 h-9 rounded-xl flex items-center justify-center transition ${botaoClass}`}
             title="Recolher menu"
+            aria-label={mobile ? "Fechar menu" : "Recolher menu"}
           >
-            ‹
+            <PanelLeftClose className="h-5 w-5" />
           </button>
         </div>
       </div>
@@ -91,7 +103,7 @@ export default function Sidebar({ aberta = true, setAberta, tema = "escuro" }) {
         {podeAcessar("dashboard") && (
         <button
           type="button"
-          onClick={() => navigate("/dashboard")}
+          onClick={() => irPara("/dashboard")}
           className={getNavButtonClass("/dashboard")}
         >
           <LayoutDashboard className="h-4 w-4" />
@@ -102,7 +114,7 @@ export default function Sidebar({ aberta = true, setAberta, tema = "escuro" }) {
         {podeAcessar("clientes") && (
         <button
           type="button"
-          onClick={() => navigate("/clientes")}
+          onClick={() => irPara("/clientes")}
           className={getNavButtonClass("/clientes")}
         >
             <Users className="h-4 w-4" />
@@ -113,7 +125,7 @@ export default function Sidebar({ aberta = true, setAberta, tema = "escuro" }) {
         {podeAcessar("servicos") && (
         <button
           type="button"
-          onClick={() => navigate("/servicos")}
+          onClick={() => irPara("/servicos")}
           className={getNavButtonClass("/servicos")}
         >
           <HandHeart className="h-4 w-4" />
@@ -124,7 +136,7 @@ export default function Sidebar({ aberta = true, setAberta, tema = "escuro" }) {
         {podeAcessar("produtos") && (
         <button
           type="button"
-          onClick={() => navigate("/produtos")}
+          onClick={() => irPara("/produtos")}
           className={getNavButtonClass("/produtos")}
         >
           <Package className="h-4 w-4" />
@@ -135,7 +147,7 @@ export default function Sidebar({ aberta = true, setAberta, tema = "escuro" }) {
         {podeAcessar("vendas") && (
         <button
           type="button"
-          onClick={() => navigate("/vendas")}
+          onClick={() => irPara("/vendas")}
           className={getNavButtonClass("/vendas")}
         >
           <ShoppingCart className="h-4 w-4" />
@@ -146,7 +158,7 @@ export default function Sidebar({ aberta = true, setAberta, tema = "escuro" }) {
         {podeAcessar("contasReceber") && (
         <button
           type="button"
-          onClick={() => navigate("/contas-receber")}
+          onClick={() => irPara("/contas-receber")}
           className={getNavButtonClass("/contas-receber")}
         >
           <BadgeDollarSign className="h-4 w-4" />
@@ -157,7 +169,7 @@ export default function Sidebar({ aberta = true, setAberta, tema = "escuro" }) {
         {podeAcessar("agendamentos") && (
           <button
             type="button"
-            onClick={() => navigate("/agendamentos")}
+            onClick={() => irPara("/agendamentos")}
             className={getNavButtonClass("/agendamentos")}
           >
             <CalendarDays className="h-4 w-4" />
@@ -176,7 +188,7 @@ export default function Sidebar({ aberta = true, setAberta, tema = "escuro" }) {
           {podeAcessar("financeiro") && (
             <button
               type="button"
-              onClick={() => navigate("/transacoes")}
+              onClick={() => irPara("/transacoes")}
               className={getNavButtonClass("/transacoes")}
             >
                 <DollarSign className="h-4 w-4" />
@@ -187,7 +199,7 @@ export default function Sidebar({ aberta = true, setAberta, tema = "escuro" }) {
           {podeAcessar("relatorios") && (
               <button
                 type="button"
-                onClick={() => navigate("/financeiro/dashboard")}
+                onClick={() => irPara("/financeiro/dashboard")}
                 className={getNavButtonClass("/financeiro/dashboard")}
               >
                 <ChartColumn className="h-4 w-4" />
@@ -198,7 +210,7 @@ export default function Sidebar({ aberta = true, setAberta, tema = "escuro" }) {
           {podeAcessar("relatorios") && (
               <button
                 type="button"
-                onClick={() => navigate("/relatorios/financeiro")}
+                onClick={() => irPara("/relatorios/financeiro")}
                 className={getNavButtonClass("/relatorios/financeiro")}
               >
                 <FileText className="h-4 w-4" />

@@ -144,12 +144,12 @@ export default function DashboardFinanceiro() {
           </p>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:flex-wrap sm:items-center">
           {usuario?.role === "admin" && (
             <select
               value={profissionalId}
               onChange={(e) => setProfissionalId(e.target.value)}
-              className="h-9 rounded-lg border border-gray-200 bg-white px-3 text-xs font-medium text-[#2D2E47] shadow-sm outline-none focus:ring-2 focus:ring-[#2F8AA3]/30"
+              className="h-9 w-full rounded-lg border border-gray-200 bg-white px-3 text-xs font-medium text-[#2D2E47] shadow-sm outline-none focus:ring-2 focus:ring-[#2F8AA3]/30 sm:w-auto"
             >
               <option value="empresa">Empresa geral</option>
               {profissionais.map((profissional) => (
@@ -169,7 +169,7 @@ export default function DashboardFinanceiro() {
         Resultado •{" "}
         {periodo === "hoje" ? "Hoje" : periodo === "7d" ? "7 dias" : "Mês"}
       </SectionTitle>
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3">
         <Kpi
           label="Lucro"
           value={formatarMoeda(resultado?.saldoCaixa)}
@@ -199,7 +199,7 @@ export default function DashboardFinanceiro() {
 
       {/* Vendas */}
       <SectionTitle className="mt-6">Vendas do mês</SectionTitle>
-      <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3">
         <Kpi
           label="Faturamento"
           value={formatarMoeda(dados?.mes?.faturamentoVendas)}
@@ -309,7 +309,7 @@ export default function DashboardFinanceiro() {
               {dados.ultimasTransacoes.map((t) => (
                 <li
                   key={t.id}
-                  className="px-5 py-2.5 flex items-center justify-between gap-3"
+                    className="px-4 py-3 sm:px-5 sm:py-2.5 flex flex-col items-start gap-1.5 sm:flex-row sm:items-center sm:justify-between sm:gap-3"
                 >
                   <div className="min-w-0">
                     <p className="text-sm font-medium text-[#2D2E47] truncate">
@@ -334,7 +334,7 @@ export default function DashboardFinanceiro() {
         </Card>
 
         <Card titulo="Cobranças" dense>
-          <div className="px-5 py-2">
+          <div className="px-4 py-2 sm:px-5">
             <InfoLinha label="Pendentes" valor={dados?.contasPendentes || 0} />
             <InfoLinha label="Parciais" valor={dados?.contasParciais || 0} />
             <InfoLinha label="Pagas" valor={dados?.contasPagas || 0} />
@@ -370,7 +370,7 @@ function PeriodoSwitch({ value, onChange }) {
     { id: "mes", label: "Mês" },
   ]
   return (
-    <div className="inline-flex bg-white border border-gray-200 rounded-lg p-0.5 shadow-sm">
+    <div className="grid grid-cols-3 bg-white border border-gray-200 rounded-lg p-0.5 shadow-sm sm:inline-flex">
       {opts.map((o) => (
         <button
           key={o.id}
@@ -400,12 +400,12 @@ const TONES = {
 function Kpi({ label, value, hint, tone = "primary", Icon = TriangleAlert }) {
   const t = TONES[tone] || TONES.primary
   return (
-    <div className="bg-white border border-gray-200/80 rounded-xl shadow-sm p-4 min-h-24 flex items-start justify-between gap-4">
+    <div className="bg-white border border-gray-200/80 rounded-xl shadow-sm p-4 min-h-24 flex items-start justify-between gap-3 sm:gap-4">
       <div className="min-w-0">
         <span className="text-xs font-medium text-[#4F5D75] leading-tight">
           {label}
         </span>
-        <p className={`text-2xl font-bold mt-1 leading-tight ${t.value}`}>
+        <p className={`text-xl sm:text-2xl font-bold mt-1 leading-tight break-words ${t.value}`}>
           {value}
         </p>
         {hint && <p className="text-xs font-medium text-[#00AFA8] mt-2">{hint}</p>}
@@ -423,7 +423,7 @@ function Card({ titulo, children, className = "", dense = false }) {
     <div
       className={`bg-white rounded-2xl shadow-sm border border-gray-100 ${className}`}
     >
-      <div className="px-5 py-3 border-b border-gray-100">
+      <div className="px-4 py-3 border-b border-gray-100 sm:px-5">
         <h2 className="text-sm font-semibold text-[#2D2E47]">{titulo}</h2>
       </div>
       <div className={dense ? "" : "p-3"}>{children}</div>

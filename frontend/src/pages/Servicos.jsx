@@ -8,6 +8,7 @@ import CampoInput from "../components/CampoInput"
 import CampoSelect from "../components/CampoSelect" 
 import CampoTextarea from "../components/CampoTextarea"
 import ModalAviso from "../components/ModalAviso" 
+import PaginacaoLista from "../components/PaginacaoLista"
 import { podeAcessar } from "../utils/permissoes"
 
 export default function Servicos() {
@@ -21,6 +22,8 @@ export default function Servicos() {
   const [busca, setBusca] = useState("")
   const [status, setStatus] = useState("")
   const [ordem, setOrdem] = useState("asc")
+  const [paginaAtual, setPaginaAtual] = useState(1)
+  const [itensPorPagina, setItensPorPagina] = useState(10)
 
   const [mostrarNovoModal, setMostrarNovoModal] = useState(false)
   const [mostrarEditarModal, setMostrarEditarModal] = useState(false)
@@ -47,6 +50,7 @@ export default function Servicos() {
 
   useEffect(() => {
     const timer = setTimeout(() => {
+      setPaginaAtual(1)
       carregarServicos()
     }, 300)
 
@@ -169,6 +173,23 @@ export default function Servicos() {
 
     return { total, ativos, inativos, ticketMedio }
   }, [servicos])
+
+  const servicosPaginados = useMemo(() => {
+    const inicio = (paginaAtual - 1) * itensPorPagina
+    return servicos.slice(inicio, inicio + itensPorPagina)
+  }, [servicos, paginaAtual, itensPorPagina])
+
+  useEffect(() => {
+    const totalPaginas = Math.max(1, Math.ceil(servicos.length / itensPorPagina))
+    if (paginaAtual > totalPaginas) {
+      setPaginaAtual(totalPaginas)
+    }
+  }, [servicos.length, itensPorPagina, paginaAtual])
+
+  const alterarItensPorPagina = (valor) => {
+    setItensPorPagina(valor)
+    setPaginaAtual(1)
+  }
 
   return (
     <AppLayout>
@@ -299,7 +320,7 @@ export default function Servicos() {
                   <div className="col-span-1 text-right">Ações</div>
                 </div>
 
-                {servicos.map((servico) => (
+                {servicosPaginados.map((servico) => (
                   <div
                     key={servico.id}
                     className="grid grid-cols-12 gap-4 px-6 py-5 border-b border-gray-100 last:border-b-0"
@@ -377,7 +398,7 @@ export default function Servicos() {
 
               {/* Cards mobile/tablet */}
               <div className="xl:hidden p-4 space-y-4">
-                {servicos.map((servico) => (
+                {servicosPaginados.map((servico) => (
                   <div
                     key={servico.id}
                     className="border border-gray-100 rounded-2xl p-4 shadow-sm"
@@ -453,21 +474,14 @@ export default function Servicos() {
                 ))}
               </div>
 
-              <div className="px-6 py-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-sm text-gray-500 border-t border-gray-100">
-                <p>Mostrando {servicos.length} serviço(s)</p>
-
-                <div className="flex items-center gap-2">
-                  <button className="px-4 py-2 rounded-lg border border-gray-200 text-gray-300 cursor-not-allowed">
-                    Anterior
-                  </button>
-                  <button className="px-4 py-2 rounded-lg bg-[#2F8AA3] text-white">
-                    1
-                  </button>
-                  <button className="px-4 py-2 rounded-lg border border-gray-200 text-gray-300 cursor-not-allowed">
-                    Próxima
-                  </button>
-                </div>
-              </div>
+              <PaginacaoLista
+                total={servicos.length}
+                pagina={paginaAtual}
+                porPagina={itensPorPagina}
+                onPaginaChange={setPaginaAtual}
+                onPorPaginaChange={alterarItensPorPagina}
+                rotulo="serviço(s)"
+              />
             </>
           )}
         </div>
