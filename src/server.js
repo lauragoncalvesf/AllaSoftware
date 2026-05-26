@@ -23,6 +23,8 @@ import comissaoRoutes from "./routes/comissaoRoutes.js"
 
 const app = express()
 
+app.set("trust proxy", 1)
+
 // Segurança
 app.use(securityHeaders)
 app.use(helmet())
