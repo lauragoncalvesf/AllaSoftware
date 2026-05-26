@@ -1,4 +1,5 @@
 import { useState } from "react"
+import ModalAviso from "../components/ModalAviso"
 import api from "../services/api"
 
 export default function CadastroEmpresa() {
@@ -6,6 +7,7 @@ export default function CadastroEmpresa() {
   const [nomeUsuario, setNomeUsuario] = useState("")
   const [email, setEmail] = useState("")
   const [senha, setSenha] = useState("")
+  const [aviso, setAviso] = useState(null)
 
   const handleCadastro = async (e) => {
     e.preventDefault()
@@ -19,21 +21,34 @@ export default function CadastroEmpresa() {
       })
 
       console.log("Cadastro realizado:", response.data)
-      alert("Empresa cadastrada com sucesso! Faça o login do admin.")
-
-      window.location.href = "/"
+      setAviso({
+        titulo: "Empresa cadastrada",
+        mensagem: "Empresa cadastrada com sucesso! Faça o login do admin.",
+        redirecionarParaLogin: true
+      })
     } catch (error) {
       console.error("Erro no cadastro:", error)
 
       const mensagem = error.response?.data?.error || "Erro ao cadastrar empresa"
-      alert(mensagem)
-
-      if (
+      const redirecionarParaLogin =
         mensagem.includes("Já existe uma empresa cadastrada com esse email") ||
         mensagem.includes("Já existe um usuário cadastrado com esse email")
-      ) {
-        window.location.href = "/"
-      }
+
+      setAviso({
+        titulo: "Atenção",
+        mensagem,
+        redirecionarParaLogin
+      })
+    }
+  }
+
+  const fecharAviso = () => {
+    const deveRedirecionar = aviso?.redirecionarParaLogin
+
+    setAviso(null)
+
+    if (deveRedirecionar) {
+      window.location.href = "/"
     }
   }
 
@@ -113,6 +128,14 @@ export default function CadastroEmpresa() {
           </button>
         </p>
       </form>
+
+      {aviso && (
+        <ModalAviso
+          titulo={aviso.titulo}
+          mensagem={aviso.mensagem}
+          onClose={fecharAviso}
+        />
+      )}
     </div>
   )
 }

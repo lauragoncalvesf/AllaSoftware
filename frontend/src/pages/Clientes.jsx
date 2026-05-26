@@ -294,21 +294,18 @@ export default function Clientes() {
           <ResumoCard
             titulo="Total de Clientes"
             valor={resumo.total}
-            subtitulo="Base cadastrada"
             corIcone="bg-blue-100 text-blue-600"
             icon="users"
           />
           <ResumoCard
             titulo="Clientes em dia"
             valor={resumo.emDia}
-            subtitulo="Sem pendências"
             corIcone="bg-emerald-100 text-emerald-600"
             icon="userRoundCheck"
           />
           <ResumoCard
             titulo="Clientes pendentes"
             valor={resumo.pendentes}
-            subtitulo="Precisam de atenção"
             corIcone="bg-amber-100 text-amber-600"
             icon="userRoundX"
           />

@@ -118,21 +118,18 @@ export default function Dashboard() {
         <KpiMini
           label="Clientes"
           value={dados?.totalClientes || 0}
-          hint={`${dados?.clientesPendentes || 0} pendentes`}
           accent="indigo"
           Icon={Users}
         />
         <KpiMini
           label="Contas pendentes"
           value={dados?.contasPendentes || 0}
-          hint="Aguardando pagamento"
           accent="sky"
           Icon={ReceiptText}
         />
         <KpiMini
           label="Contas vencidas"
           value={dados?.contasVencidas || 0}
-          hint="Atenção"
           accent="red"
           Icon={ClockAlert}
         />
@@ -140,7 +137,6 @@ export default function Dashboard() {
           <KpiMini
             label="Itens comissionados"
             value={comissao?.itens?.length || 0}
-            hint={`Vendido: ${formatarMoeda(comissao?.totais?.totalVendido)}`}
             accent="emerald"
             Icon={DollarSign}
           />
