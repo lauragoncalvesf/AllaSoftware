@@ -144,13 +144,13 @@ export default function Agendamentos() {
   }
 
   const resumo = useMemo(() => {
-    const hoje = new Date().toISOString().slice(0, 10)
+    const hoje = chaveData(new Date())
     return {
       total: agendamentos.length,
       agendados: agendamentos.filter((a) => a.status === "agendado").length,
       concluidos: agendamentos.filter((a) => a.status === "concluido").length,
       hoje: agendamentos.filter(
-        (a) => a.dataHora && new Date(a.dataHora).toISOString().slice(0, 10) === hoje
+        (a) => a.dataHora && chaveData(new Date(a.dataHora)) === hoje
       ).length
     }
   }, [agendamentos])
@@ -226,7 +226,7 @@ export default function Agendamentos() {
         profissionalId: form.profissionalId ? Number(form.profissionalId) : null,
         titulo: form.titulo,
         descricao: form.descricao || null,
-        dataHora: form.dataHora,
+        dataHora: dataHoraInputParaISO(form.dataHora),
         observacoes: form.observacoes || null
       }
       if (form.status !== "concluido") {
@@ -1443,6 +1443,11 @@ function formatarDataHoraInput(data) {
   const offset = dataObj.getTimezoneOffset()
   const local = new Date(dataObj.getTime() - offset * 60000)
   return local.toISOString().slice(0, 16)
+}
+
+function dataHoraInputParaISO(valor) {
+  if (!valor) return null
+  return new Date(valor).toISOString()
 }
 
 function inicioSemana(data) {
