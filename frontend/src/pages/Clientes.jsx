@@ -8,6 +8,7 @@ import StatusBadge from "../components/StatusBadge"
 import CampoInput from "../components/CampoInput"
 import CampoTextarea from "../components/CampoTextarea"
 import ModalAviso from "../components/ModalAviso"
+import PaginacaoLista from "../components/PaginacaoLista"
 import { podeAcessar } from "../utils/permissoes"
 
 export default function Clientes() {
@@ -19,6 +20,8 @@ export default function Clientes() {
   const [busca, setBusca] = useState("")
   const [status, setStatus] = useState("")
   const [ordem, setOrdem] = useState("asc")
+  const [paginaAtual, setPaginaAtual] = useState(1)
+  const [itensPorPagina, setItensPorPagina] = useState(10)
 
   const [mostrarNovoModal, setMostrarNovoModal] = useState(false)
   const [mostrarEditarModal, setMostrarEditarModal] = useState(false)
@@ -49,6 +52,7 @@ export default function Clientes() {
 
   useEffect(() => {
     const timer = setTimeout(() => {
+      setPaginaAtual(1)
       carregarClientes()
     }, 300)
 
@@ -202,6 +206,23 @@ export default function Clientes() {
     return { total, emDia, pendentes }
   }, [clientes])
 
+  const clientesPaginados = useMemo(() => {
+    const inicio = (paginaAtual - 1) * itensPorPagina
+    return clientes.slice(inicio, inicio + itensPorPagina)
+  }, [clientes, paginaAtual, itensPorPagina])
+
+  useEffect(() => {
+    const totalPaginas = Math.max(1, Math.ceil(clientes.length / itensPorPagina))
+    if (paginaAtual > totalPaginas) {
+      setPaginaAtual(totalPaginas)
+    }
+  }, [clientes.length, itensPorPagina, paginaAtual])
+
+  const alterarItensPorPagina = (valor) => {
+    setItensPorPagina(valor)
+    setPaginaAtual(1)
+  }
+
   return (
     <AppLayout>
       <div className="space-y-6">
@@ -310,14 +331,14 @@ export default function Clientes() {
                   <div className="col-span-2 text-right">Ações</div>
                 </div>
 
-                {clientes.map((cliente, index) => (
+                {clientesPaginados.map((cliente, index) => (
                   <div
                     key={cliente.id}
                     className="grid grid-cols-12 gap-4 px-6 py-5 border-b border-gray-100 last:border-b-0"
                   >
                     <div className="col-span-4 flex items-center gap-4 min-w-0">
                       <div
-                        className={`w-12 h-12 rounded-full flex items-center justify-center font-semibold shrink-0 ${getCorAvatar(index)}`}
+                        className={`w-12 h-12 rounded-full flex items-center justify-center font-semibold shrink-0 ${getCorAvatar((paginaAtual - 1) * itensPorPagina + index)}`}
                       >
                         {getIniciais(cliente.nome)}
                       </div>
@@ -373,14 +394,14 @@ export default function Clientes() {
 
               {/* Cards mobile/tablet */}
               <div className="xl:hidden p-4 space-y-4">
-                {clientes.map((cliente, index) => (
+                {clientesPaginados.map((cliente, index) => (
                   <div
                     key={cliente.id}
                     className="border border-gray-100 rounded-2xl p-4 shadow-sm"
                   >
                     <div className="flex items-start gap-4">
                       <div
-                        className={`w-12 h-12 rounded-full flex items-center justify-center font-semibold shrink-0 ${getCorAvatar(index)}`}
+                        className={`w-12 h-12 rounded-full flex items-center justify-center font-semibold shrink-0 ${getCorAvatar((paginaAtual - 1) * itensPorPagina + index)}`}
                       >
                         {getIniciais(cliente.nome)}
                       </div>
@@ -435,21 +456,14 @@ export default function Clientes() {
                 ))}
               </div>
 
-              <div className="px-6 py-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-sm text-gray-500 border-t border-gray-100">
-                <p>Mostrando {clientes.length} cliente(s)</p>
-
-                <div className="flex items-center gap-2">
-                  <button className="px-4 py-2 rounded-lg border border-gray-200 text-gray-300 cursor-not-allowed">
-                    Anterior
-                  </button>
-                  <button className="px-4 py-2 rounded-lg bg-[#2F8AA3] text-white">
-                    1
-                  </button>
-                  <button className="px-4 py-2 rounded-lg border border-gray-200 text-gray-300 cursor-not-allowed">
-                    Próxima
-                  </button>
-                </div>
-              </div>
+              <PaginacaoLista
+                total={clientes.length}
+                pagina={paginaAtual}
+                porPagina={itensPorPagina}
+                onPaginaChange={setPaginaAtual}
+                onPorPaginaChange={alterarItensPorPagina}
+                rotulo="cliente(s)"
+              />
             </>
           )}
         </div>

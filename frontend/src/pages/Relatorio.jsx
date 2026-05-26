@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import AppLayout from "../layouts/AppLayout"
 import api from "../services/api"
 import {
@@ -9,6 +9,7 @@ import {
 import ResumoCard from "../components/ResumoCard"
 import CampoInput from "../components/CampoInput"
 import CampoSelect from "../components/CampoSelect"
+import PaginacaoLista from "../components/PaginacaoLista"
 
 export default function Relatorio() {
   const [dados, setDados] = useState(null)
@@ -18,6 +19,10 @@ export default function Relatorio() {
   const [categoria, setCategoria] = useState("")
   const [dataInicio, setDataInicio] = useState("")
   const [dataFim, setDataFim] = useState("")
+  const [paginaTransacoes, setPaginaTransacoes] = useState(1)
+  const [transacoesPorPagina, setTransacoesPorPagina] = useState(10)
+  const [paginaVendas, setPaginaVendas] = useState(1)
+  const [vendasPorPagina, setVendasPorPagina] = useState(10)
 
   useEffect(() => {
     carregarRelatorio()
@@ -49,6 +54,8 @@ export default function Relatorio() {
     setCategoria("")
     setDataInicio("")
     setDataFim("")
+    setPaginaTransacoes(1)
+    setPaginaVendas(1)
 
     try {
       setLoading(true)
@@ -63,8 +70,42 @@ export default function Relatorio() {
   }
 
   const resumo = dados?.resumo || {}
-  const transacoes = dados?.transacoes || []
-  const vendas = dados?.vendas || []
+  const transacoes = useMemo(() => dados?.transacoes || [], [dados?.transacoes])
+  const vendas = useMemo(() => dados?.vendas || [], [dados?.vendas])
+
+  const transacoesPaginadas = useMemo(() => {
+    const inicio = (paginaTransacoes - 1) * transacoesPorPagina
+    return transacoes.slice(inicio, inicio + transacoesPorPagina)
+  }, [transacoes, paginaTransacoes, transacoesPorPagina])
+
+  const vendasPaginadas = useMemo(() => {
+    const inicio = (paginaVendas - 1) * vendasPorPagina
+    return vendas.slice(inicio, inicio + vendasPorPagina)
+  }, [vendas, paginaVendas, vendasPorPagina])
+
+  useEffect(() => {
+    const totalPaginas = Math.max(1, Math.ceil(transacoes.length / transacoesPorPagina))
+    if (paginaTransacoes > totalPaginas) {
+      setPaginaTransacoes(totalPaginas)
+    }
+  }, [transacoes.length, transacoesPorPagina, paginaTransacoes])
+
+  useEffect(() => {
+    const totalPaginas = Math.max(1, Math.ceil(vendas.length / vendasPorPagina))
+    if (paginaVendas > totalPaginas) {
+      setPaginaVendas(totalPaginas)
+    }
+  }, [vendas.length, vendasPorPagina, paginaVendas])
+
+  const alterarTransacoesPorPagina = (valor) => {
+    setTransacoesPorPagina(valor)
+    setPaginaTransacoes(1)
+  }
+
+  const alterarVendasPorPagina = (valor) => {
+    setVendasPorPagina(valor)
+    setPaginaVendas(1)
+  }
 
   return (
     <AppLayout>
@@ -164,7 +205,11 @@ export default function Relatorio() {
             <div className="flex items-end">
               <button
                 type="button"
-                onClick={carregarRelatorio}
+                onClick={() => {
+                  setPaginaTransacoes(1)
+                  setPaginaVendas(1)
+                  carregarRelatorio()
+                }}
                 className="w-full px-4 py-3 rounded-xl bg-[#2F8AA3] text-white hover:opacity-90"
               >
                 Aplicar
@@ -214,7 +259,7 @@ export default function Relatorio() {
                   <div className="col-span-1 text-right">Valor</div>
                 </div>
 
-                {transacoes.map((transacao) => (
+                {transacoesPaginadas.map((transacao) => (
                   <div
                     key={transacao.id}
                     className="grid grid-cols-12 gap-4 px-6 py-5 border-b border-gray-100 last:border-b-0"
@@ -268,7 +313,7 @@ export default function Relatorio() {
               </div>
 
               <div className="xl:hidden p-4 space-y-4">
-                {transacoes.map((transacao) => (
+                {transacoesPaginadas.map((transacao) => (
                   <div
                     key={transacao.id}
                     className="border border-gray-100 rounded-2xl p-4 shadow-sm"
@@ -303,6 +348,15 @@ export default function Relatorio() {
                   </div>
                 ))}
               </div>
+
+              <PaginacaoLista
+                total={transacoes.length}
+                pagina={paginaTransacoes}
+                porPagina={transacoesPorPagina}
+                onPaginaChange={setPaginaTransacoes}
+                onPorPaginaChange={alterarTransacoesPorPagina}
+                rotulo="transação(ões)"
+              />
             </>
           )}
         </div>
@@ -328,7 +382,7 @@ export default function Relatorio() {
             </div>
           ) : (
             <div className="divide-y divide-gray-100">
-              {vendas.map((venda) => (
+              {vendasPaginadas.map((venda) => (
                 <div
                   key={venda.id}
                   className="px-5 py-4 flex flex-col md:flex-row md:items-center md:justify-between gap-3"
@@ -356,6 +410,16 @@ export default function Relatorio() {
                 </div>
               ))}
             </div>
+          )}
+          {!loading && vendas.length > 0 && (
+            <PaginacaoLista
+              total={vendas.length}
+              pagina={paginaVendas}
+              porPagina={vendasPorPagina}
+              onPaginaChange={setPaginaVendas}
+              onPorPaginaChange={alterarVendasPorPagina}
+              rotulo="venda(s)"
+            />
           )}
         </div>
       </div>

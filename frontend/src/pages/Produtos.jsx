@@ -8,6 +8,7 @@ import CampoInput from "../components/CampoInput"
 import CampoSelect from "../components/CampoSelect"
 import CampoTextarea from "../components/CampoTextarea"
 import ModalAviso from "../components/ModalAviso"
+import PaginacaoLista from "../components/PaginacaoLista"
 import { podeAcessar } from "../utils/permissoes"
 
 export default function Produtos() {
@@ -21,6 +22,8 @@ export default function Produtos() {
   const [busca, setBusca] = useState("")
   const [status, setStatus] = useState("")
   const [ordem, setOrdem] = useState("asc")
+  const [paginaAtual, setPaginaAtual] = useState(1)
+  const [itensPorPagina, setItensPorPagina] = useState(10)
 
   const [mostrarNovoModal, setMostrarNovoModal] = useState(false)
   const [mostrarEditarModal, setMostrarEditarModal] = useState(false)
@@ -51,6 +54,7 @@ export default function Produtos() {
 
   useEffect(() => {
     const timer = setTimeout(() => {
+      setPaginaAtual(1)
       carregarProdutos()
     }, 300)
 
@@ -88,6 +92,23 @@ export default function Produtos() {
 
     return { total, ativos, inativos, precoMedio }
   }, [produtos])
+
+  const produtosPaginados = useMemo(() => {
+    const inicio = (paginaAtual - 1) * itensPorPagina
+    return produtos.slice(inicio, inicio + itensPorPagina)
+  }, [produtos, paginaAtual, itensPorPagina])
+
+  useEffect(() => {
+    const totalPaginas = Math.max(1, Math.ceil(produtos.length / itensPorPagina))
+    if (paginaAtual > totalPaginas) {
+      setPaginaAtual(totalPaginas)
+    }
+  }, [produtos.length, itensPorPagina, paginaAtual])
+
+  const alterarItensPorPagina = (valor) => {
+    setItensPorPagina(valor)
+    setPaginaAtual(1)
+  }
 
   const abrirEditar = (produto) => {
     setProdutoEditando({
@@ -322,7 +343,7 @@ export default function Produtos() {
                   <div className="col-span-1 text-right">Ações</div>
                 </div>
 
-                {produtos.map((produto) => (
+                {produtosPaginados.map((produto) => (
                   <div
                     key={produto.id}
                     className="grid grid-cols-12 gap-4 px-6 py-5 border-b border-gray-100 last:border-b-0"
@@ -410,7 +431,7 @@ export default function Produtos() {
 
               {/* Cards mobile/tablet */}
               <div className="xl:hidden p-4 space-y-4">
-                {produtos.map((produto) => (
+                {produtosPaginados.map((produto) => (
                   <div
                     key={produto.id}
                     className="border border-gray-100 rounded-2xl p-4 shadow-sm"
@@ -495,21 +516,14 @@ export default function Produtos() {
                 ))}
               </div>
 
-              <div className="px-6 py-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-sm text-gray-500 border-t border-gray-100">
-                <p>Mostrando {produtos.length} produto(s)</p>
-
-                <div className="flex items-center gap-2">
-                  <button className="px-4 py-2 rounded-lg border border-gray-200 text-gray-300 cursor-not-allowed">
-                    Anterior
-                  </button>
-                  <button className="px-4 py-2 rounded-lg bg-[#2F8AA3] text-white">
-                    1
-                  </button>
-                  <button className="px-4 py-2 rounded-lg border border-gray-200 text-gray-300 cursor-not-allowed">
-                    Próxima
-                  </button>
-                </div>
-              </div>
+              <PaginacaoLista
+                total={produtos.length}
+                pagina={paginaAtual}
+                porPagina={itensPorPagina}
+                onPaginaChange={setPaginaAtual}
+                onPorPaginaChange={alterarItensPorPagina}
+                rotulo="produto(s)"
+              />
             </>
           )}
         </div>

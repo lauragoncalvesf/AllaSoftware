@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react"
 import { useNavigate } from "react-router-dom"
-import { LogOut, Moon, Settings, Sun } from "lucide-react"
+import { LogOut, Menu, Moon, Settings, Sun } from "lucide-react"
 import Sidebar from "../components/Sidebar"
 import BrandLogo from "../components/BrandLogo"
 import api from "../services/api"
@@ -9,6 +9,7 @@ import { podeAcessar } from "../utils/permissoes"
 export default function AppLayout({ children }) {
   const navigate = useNavigate()
   const [sidebarAberta, setSidebarAberta] = useState(true)
+  const [menuMobileAberto, setMenuMobileAberto] = useState(false)
   const [menuPerfilAberto, setMenuPerfilAberto] = useState(false)
   const [menuAjustesAberto, setMenuAjustesAberto] = useState(false)
   const [temaSidebar, setTemaSidebar] = useState(() => {
@@ -62,6 +63,14 @@ export default function AppLayout({ children }) {
     }
   }, [])
 
+  useEffect(() => {
+    document.body.style.overflow = menuMobileAberto ? "hidden" : ""
+
+    return () => {
+      document.body.style.overflow = ""
+    }
+  }, [menuMobileAberto])
+
   const nomeUsuario = usuario?.nome || "Usuário"
   const emailUsuario = usuario?.email || "Email não informado"
 
@@ -96,28 +105,58 @@ export default function AppLayout({ children }) {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Sidebar
-        aberta={sidebarAberta}
-        setAberta={setSidebarAberta}
-        tema={temaSidebar}
-      />
+      <div className="hidden md:block">
+        <Sidebar
+          aberta={sidebarAberta}
+          setAberta={setSidebarAberta}
+          tema={temaSidebar}
+        />
+      </div>
+
+      {menuMobileAberto && (
+        <div className="md:hidden fixed inset-0 z-40">
+          <button
+            type="button"
+            className="absolute inset-0 bg-black/45"
+            onClick={() => setMenuMobileAberto(false)}
+            aria-label="Fechar menu"
+          />
+
+          <Sidebar
+            aberta={menuMobileAberto}
+            setAberta={setMenuMobileAberto}
+            tema={temaSidebar}
+            mobile
+          />
+        </div>
+      )}
 
       <div
         className={`min-h-screen transition-all duration-300 ${
-          sidebarAberta ? "ml-64" : "ml-14"
+          sidebarAberta ? "md:ml-64" : "md:ml-14"
         }`}
       >
         {/* Topbar */}
-        <header className="h-16 bg-white border-b border-gray-100 flex items-center justify-between px-6 sticky top-0 z-30">
-          <div className="flex items-center">
-            <BrandLogo tone="dark" className="h-9 w-40 object-left" />
+        <header className="h-16 bg-white border-b border-gray-100 flex items-center justify-between gap-3 px-4 sm:px-6 sticky top-0 z-30">
+          <div className="flex min-w-0 items-center gap-3">
+            <button
+              type="button"
+              onClick={() => setMenuMobileAberto(true)}
+              className="md:hidden h-10 w-10 shrink-0 rounded-xl border border-gray-100 bg-white text-gray-500 hover:bg-gray-50 hover:text-[#2D2E47] flex items-center justify-center transition"
+              title="Abrir menu"
+              aria-label="Abrir menu"
+            >
+              <Menu className="h-5 w-5" />
+            </button>
+
+            <BrandLogo tone="dark" className="h-9 w-32 object-left sm:w-40" />
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex shrink-0 items-center gap-1 sm:gap-2">
             <button
               type="button"
               onClick={alternarTemaSidebar}
-              className="h-10 w-10 rounded-xl border border-gray-100 bg-white text-gray-500 hover:bg-gray-50 hover:text-[#2D2E47] flex items-center justify-center transition"
+              className="h-10 w-10 shrink-0 rounded-xl border border-gray-100 bg-white text-gray-500 hover:bg-gray-50 hover:text-[#2D2E47] flex items-center justify-center transition"
               title={temaSidebar === "escuro" ? "Modo claro" : "Modo escuro"}
               aria-label={temaSidebar === "escuro" ? "Ativar modo claro" : "Ativar modo escuro"}
             >
@@ -135,7 +174,7 @@ export default function AppLayout({ children }) {
                   setMenuPerfilAberto(!menuPerfilAberto)
                   setMenuAjustesAberto(false)
                 }}
-                className="flex items-center gap-3 px-3 py-2 rounded-xl hover:bg-gray-50 transition"
+                className="flex items-center gap-2 sm:gap-3 px-1.5 sm:px-3 py-2 rounded-xl hover:bg-gray-50 transition"
               >
                 <div className="text-right hidden sm:block">
                   <p className="text-sm font-semibold text-[#2D2E47] leading-tight">
@@ -150,13 +189,13 @@ export default function AppLayout({ children }) {
                   {inicialUsuario || "U"}
                 </div>
 
-                <span className="text-gray-400 text-sm">
+                <span className="text-gray-400 text-xs sm:text-sm">
                   {menuPerfilAberto ? "▲" : "▼"}
                 </span>
               </button>
 
               {menuPerfilAberto && (
-                <div className="absolute right-0 mt-3 w-72 bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden z-50">
+                <div className="absolute right-0 mt-3 w-[calc(100vw-2rem)] max-w-72 bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden z-50">
                 <div className="bg-[#2F8AA3] p-5 text-white">
                   <div className="flex items-start justify-between gap-3">
                     <div className="flex min-w-0 items-center gap-3">
@@ -244,7 +283,7 @@ export default function AppLayout({ children }) {
           </div>
         </header>
 
-        <main className="p-6">
+        <main className="p-4 sm:p-6">
           {children}
         </main>
       </div>

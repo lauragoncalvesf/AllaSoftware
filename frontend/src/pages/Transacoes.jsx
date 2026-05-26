@@ -8,6 +8,7 @@ import StatusBadge from "../components/StatusBadge"
 import CampoInput from "../components/CampoInput"
 import CampoSelect from "../components/CampoSelect"
 import ModalAviso from "../components/ModalAviso"
+import PaginacaoLista from "../components/PaginacaoLista"
 import { podeAcessar } from "../utils/permissoes"
 
 
@@ -25,6 +26,8 @@ export default function Transacoes() {
   const [aviso, setAviso] = useState(null)
 
   const [tipoFiltro, setTipoFiltro] = useState("")
+  const [paginaAtual, setPaginaAtual] = useState(1)
+  const [itensPorPagina, setItensPorPagina] = useState(10)
 
   const [novaTransacao, setNovaTransacao] = useState({
     tipo: "entrada",
@@ -53,6 +56,7 @@ export default function Transacoes() {
   }, [])
 
   useEffect(() => {
+    setPaginaAtual(1)
     carregarTransacoes()
   }, [periodo, categoria, status, tipoFiltro])
 
@@ -91,6 +95,23 @@ export default function Transacoes() {
       total: transacoes.length
     }
   }, [transacoes])
+
+  const transacoesPaginadas = useMemo(() => {
+    const inicio = (paginaAtual - 1) * itensPorPagina
+    return transacoes.slice(inicio, inicio + itensPorPagina)
+  }, [transacoes, paginaAtual, itensPorPagina])
+
+  useEffect(() => {
+    const totalPaginas = Math.max(1, Math.ceil(transacoes.length / itensPorPagina))
+    if (paginaAtual > totalPaginas) {
+      setPaginaAtual(totalPaginas)
+    }
+  }, [transacoes.length, itensPorPagina, paginaAtual])
+
+  const alterarItensPorPagina = (valor) => {
+    setItensPorPagina(valor)
+    setPaginaAtual(1)
+  }
 
   const criarTransacao = async (e) => {
     e.preventDefault()
@@ -308,7 +329,7 @@ export default function Transacoes() {
                   <div className="col-span-1 text-right">Ações</div>
                 </div>
 
-                {transacoes.map((transacao) => (
+                {transacoesPaginadas.map((transacao) => (
                   <div
                     key={transacao.id}
                     className="grid grid-cols-12 gap-4 px-6 py-5 border-b border-gray-100 last:border-b-0"
@@ -381,7 +402,7 @@ export default function Transacoes() {
 
               {/* Mobile */}
               <div className="xl:hidden p-4 space-y-4">
-                {transacoes.map((transacao) => (
+                {transacoesPaginadas.map((transacao) => (
                   <div
                     key={transacao.id}
                     className="border border-gray-100 rounded-2xl p-4 shadow-sm"
@@ -456,9 +477,14 @@ export default function Transacoes() {
                 ))}
               </div>
 
-              <div className="px-6 py-4 text-sm text-gray-500 border-t border-gray-100">
-                Mostrando {transacoes.length} transação(ões)
-              </div>
+              <PaginacaoLista
+                total={transacoes.length}
+                pagina={paginaAtual}
+                porPagina={itensPorPagina}
+                onPaginaChange={setPaginaAtual}
+                onPorPaginaChange={alterarItensPorPagina}
+                rotulo="transação(ões)"
+              />
             </>
           )}
         </div>

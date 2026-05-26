@@ -10,6 +10,7 @@ import StatusBadge from "../components/StatusBadge"
 import CampoInput from "../components/CampoInput"
 import CampoSelect from "../components/CampoSelect"
 import ModalAviso from "../components/ModalAviso" 
+import PaginacaoLista from "../components/PaginacaoLista"
 import { podeAcessar } from "../utils/permissoes"
 
 export default function ContasReceber() {
@@ -24,6 +25,8 @@ export default function ContasReceber() {
   const [aviso, setAviso] = useState(null)
   const [status, setStatus] = useState("")
   const [clienteIdFiltro, setClienteIdFiltro] = useState("")
+  const [paginaAtual, setPaginaAtual] = useState(1)
+  const [itensPorPagina, setItensPorPagina] = useState(10)
 
   const [mostrarNovaContaModal, setMostrarNovaContaModal] = useState(false)
   const [mostrarPagamentoModal, setMostrarPagamentoModal] = useState(false)
@@ -43,6 +46,7 @@ export default function ContasReceber() {
   })
 
   useEffect(() => {
+    setPaginaAtual(1)
     carregarDados()
   }, [status, clienteIdFiltro])
 
@@ -94,6 +98,23 @@ export default function ContasReceber() {
       totalEmAberto
     }
   }, [contas])
+
+  const contasPaginadas = useMemo(() => {
+    const inicio = (paginaAtual - 1) * itensPorPagina
+    return contas.slice(inicio, inicio + itensPorPagina)
+  }, [contas, paginaAtual, itensPorPagina])
+
+  useEffect(() => {
+    const totalPaginas = Math.max(1, Math.ceil(contas.length / itensPorPagina))
+    if (paginaAtual > totalPaginas) {
+      setPaginaAtual(totalPaginas)
+    }
+  }, [contas.length, itensPorPagina, paginaAtual])
+
+  const alterarItensPorPagina = (valor) => {
+    setItensPorPagina(valor)
+    setPaginaAtual(1)
+  }
 
   const abrirPagamento = (conta) => {
     setContaSelecionada(conta)
@@ -319,7 +340,7 @@ export default function ContasReceber() {
                   <div className="col-span-2 text-right">Ações</div>
                 </div>
 
-                {contas.map((conta) => (
+                {contasPaginadas.map((conta) => (
                   <div
                     key={conta.id}
                     className="grid grid-cols-12 gap-4 px-6 py-5 border-b border-gray-100 last:border-b-0"
@@ -380,7 +401,7 @@ export default function ContasReceber() {
               </div>
 
               <div className="xl:hidden p-4 space-y-4">
-                {contas.map((conta) => (
+                {contasPaginadas.map((conta) => (
                   <div
                     key={conta.id}
                     className="border border-gray-100 rounded-2xl p-4 shadow-sm"
@@ -444,6 +465,15 @@ export default function ContasReceber() {
                   </div>
                 ))}
               </div>
+
+              <PaginacaoLista
+                total={contas.length}
+                pagina={paginaAtual}
+                porPagina={itensPorPagina}
+                onPaginaChange={setPaginaAtual}
+                onPorPaginaChange={alterarItensPorPagina}
+                rotulo="conta(s)"
+              />
             </>
           )}
         </div>

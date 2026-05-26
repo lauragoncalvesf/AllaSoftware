@@ -235,12 +235,12 @@ export default function Vendas() {
 
   return (
     <AppLayout>
-      <div className="flex flex-col h-[calc(100vh-4rem)]">
+      <div className="flex flex-col min-h-[calc(100vh-6rem)] lg:h-[calc(100vh-7rem)]">
         
         {/* HEADER FIXO */}
         <div className="flex-none flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-4">
           <div>
-            <h1 className="text-2xl md:text-3xl font-bold text-[#2D2E47]">
+            <h1 className="text-2xl md:text-3xl font-bold text-[#2D2E47] leading-tight">
               Nova Venda
             </h1>
             <p className="text-sm text-gray-500 mt-1">
@@ -248,11 +248,11 @@ export default function Vendas() {
             </p>
           </div>
 
-          <div className="flex items-center gap-3">
-            <div className="inline-flex bg-gray-100 rounded-xl p-1">
+          <div className="flex w-full items-center gap-3 md:w-auto">
+            <div className="grid w-full grid-cols-2 bg-gray-100 rounded-xl p-1 md:inline-flex md:w-auto">
               <button
                 onClick={() => setTipoPreco("varejo")}
-                className={`px-4 py-2 rounded-lg text-sm ${
+                className={`px-4 py-2 rounded-lg text-sm font-medium ${
                   tipoPreco === "varejo"
                     ? "bg-white shadow-sm"
                     : "text-gray-500"
@@ -262,7 +262,7 @@ export default function Vendas() {
               </button>
               <button
                 onClick={() => setTipoPreco("atacado")}
-                className={`px-4 py-2 rounded-lg text-sm ${
+                className={`px-4 py-2 rounded-lg text-sm font-medium ${
                   tipoPreco === "atacado"
                     ? "bg-white shadow-sm"
                     : "text-gray-500"
@@ -275,22 +275,22 @@ export default function Vendas() {
         </div>
 
         {/* CONTEÚDO */}
-        <div className="flex-1 min-h-0 overflow-hidden">
-          <div className="grid lg:grid-cols-[1fr_400px] xl:grid-cols-[1fr_440px] gap-6 h-full">
+        <div className="flex-1 min-h-0 lg:overflow-hidden">
+          <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_380px] xl:grid-cols-[minmax(0,1fr)_440px] lg:gap-6 lg:h-full">
 
             {/* ESQUERDA (CATÁLOGO) */}
             <section className="flex flex-col bg-white rounded-2xl border border-gray-200 overflow-hidden min-h-0">
               
               {/* topo */}
-              <div className="p-5 border border-gray-200 space-y-4">
+              <div className="p-4 sm:p-5 border-b border-gray-200 space-y-4">
                 <input
                   value={busca}
                   onChange={(e) => setBusca(e.target.value)}
                   placeholder="Buscar produtos ou serviços..."
-                  className="w-full border border-gray-200 rounded-xl px-4 py-3"
+                  className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-[#3E7996]"
                 />
 
-                <div className="inline-flex bg-gray-100 rounded-xl p-1">
+                <div className="grid grid-cols-2 bg-gray-100 rounded-xl p-1 sm:inline-flex">
                   <button
                     type="button"
                     onClick={() => setAba("produto")}
@@ -318,7 +318,7 @@ export default function Vendas() {
               </div>
 
               {/* LISTA COM SCROLL */}
-              <div className="flex-1 overflow-y-auto p-5">
+              <div className="flex-1 lg:min-h-0 lg:overflow-y-auto p-4 sm:p-5">
                 <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3">
                   {listaFiltrada.map((item) => {
                     const preco = precoDe(item, aba)
@@ -327,10 +327,10 @@ export default function Vendas() {
                       <button
                         key={item.id}
                         onClick={() => adicionarItem(item)}
-                        className="border border-gray-200 rounded-xl p-4 text-left hover:shadow"
+                        className="border border-gray-200 rounded-xl p-4 text-left hover:shadow transition"
                       >
-                        <p className="font-medium">{item.nome}</p>
-                        <p>{formatarMoeda(preco)}</p>
+                        <p className="font-medium text-[#2D2E47] break-words">{item.nome}</p>
+                        <p className="text-sm text-gray-500 mt-1">{formatarMoeda(preco)}</p>
                       </button>
                     )
                   })}
@@ -386,9 +386,9 @@ function Carrinho({
   podeCriar,
 }) {
   return (
-    <div className="flex flex-col min-h-0 h-full">
+    <div className="flex flex-col min-h-0 lg:h-full">
       {/* Cliente */}
-      <div className="flex-none px-5 pt-5 pb-4 border-b border-gray-100">
+      <div className="flex-none px-4 pt-4 pb-4 border-b border-gray-100 sm:px-5 sm:pt-5">
         <label className="block text-[11px] uppercase tracking-wide text-gray-500 mb-2 font-medium">
           Cliente
         </label>
@@ -403,9 +403,9 @@ function Carrinho({
       </div>
 
       {/* Itens do carrinho */}
-      <div className="flex-1 min-h-0 overflow-y-auto px-5">
+      <div className="lg:flex-1 lg:min-h-0 lg:overflow-y-auto px-4 sm:px-5">
         {itens.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-16 text-center">
+          <div className="flex flex-col items-center justify-center py-12 text-center lg:py-16">
             <div className="w-14 h-14 rounded-2xl bg-gray-100 flex items-center justify-center mb-3">
               <CartIcon className="w-6 h-6 text-gray-400" />
             </div>
@@ -421,7 +421,7 @@ function Carrinho({
             {itens.map((item, index) => (
               <div
                 key={`${item.tipoItem}-${item.referenciaId}-${index}`}
-                className="group flex items-center gap-3 rounded-xl bg-gray-50 border border-gray-100 p-3"
+                className="group grid grid-cols-[auto_minmax(0,1fr)_auto] gap-3 rounded-xl bg-gray-50 border border-gray-100 p-3 sm:flex sm:items-center"
               >
                 <div className="w-9 h-9 shrink-0 rounded-lg bg-[#2F8AA3]/10 text-[#2F8AA3] flex items-center justify-center">
                   {item.tipoItem === "produto" ? (
@@ -438,7 +438,7 @@ function Carrinho({
                     {formatarMoeda(item.precoUnitario)} · un
                   </p>
                 </div>
-                <div className="flex items-center gap-1 rounded-lg border border-gray-200 bg-white">
+                <div className="col-start-2 flex w-fit items-center gap-1 rounded-lg border border-gray-200 bg-white sm:col-start-auto">
                   <button
                     type="button"
                     onClick={() => alterarQuantidade(index, -1)}
@@ -457,7 +457,7 @@ function Carrinho({
                     +
                   </button>
                 </div>
-                <div className="text-right w-20 shrink-0">
+                <div className="col-start-3 row-start-1 text-right w-20 shrink-0 sm:row-start-auto">
                   <p className="text-sm font-semibold text-[#2D2E47] tabular-nums">
                     {formatarMoeda(item.subtotal)}
                   </p>
@@ -465,7 +465,7 @@ function Carrinho({
                 <button
                   type="button"
                   onClick={() => removerItem(index)}
-                  className="w-7 h-7 flex items-center justify-center text-gray-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition"
+                  className="col-start-3 row-start-2 w-7 h-7 justify-self-end flex items-center justify-center text-gray-400 hover:text-red-500 sm:row-start-auto sm:opacity-0 sm:group-hover:opacity-100 transition"
                   title="Remover"
                 >
                   ×
@@ -477,8 +477,8 @@ function Carrinho({
       </div>
 
       {/* Resumo + ação */}
-      <div className="flex-none border-t border-gray-100 bg-white px-5 py-4 space-y-3">
-        <div className="grid grid-cols-2 gap-2">
+      <div className="flex-none border-t border-gray-100 bg-white px-4 py-4 space-y-3 sm:px-5">
+        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
           <div>
             <label className="block text-[11px] uppercase tracking-wide text-gray-500 mb-1 font-medium">
               Desconto
@@ -523,7 +523,7 @@ function Carrinho({
         </select>
 
         {valorRestante > 0 && clienteId && (
-          <div className="grid grid-cols-2 gap-2">
+          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
             <div>
               <label className="block text-[11px] uppercase tracking-wide text-gray-500 mb-1 font-medium">
                 Vencimento
@@ -567,9 +567,9 @@ function Carrinho({
               </span>
             </div>
           )}
-          <div className="flex items-center justify-between pt-1">
+          <div className="flex items-end justify-between gap-3 pt-1">
             <span className="text-sm text-gray-500">Total</span>
-            <span className="text-2xl font-bold text-[#2D2E47] tabular-nums">
+            <span className="text-xl sm:text-2xl font-bold text-[#2D2E47] tabular-nums text-right">
               {formatarMoeda(totalFinal)}
             </span>
           </div>
