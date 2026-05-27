@@ -26,6 +26,7 @@ model Empresa {
 
   usuarios Usuario[]
   comissoes Comissao[]
+  contasPagar ContaPagar[]
 }
 
 model Usuario {
@@ -80,6 +81,7 @@ model Transacao {
   createdAt DateTime @default(now())
 
   comissoes Comissao[]
+  pagamentosContaPagar PagamentoContaPagar[]
 }
 
 model ContaReceber {
@@ -108,6 +110,45 @@ model PagamentoContaReceber {
   createdAt      DateTime @default(now())
 
   contaReceber   ContaReceber @relation(fields: [contaReceberId], references: [id])
+}
+
+model ContaPagar {
+  id          Int      @id @default(autoincrement())
+  empresaId   Int
+  descricao   String
+  categoria   String?
+  valorTotal  Float
+  valorPago   Float    @default(0)
+  status      String   @default("pendente")
+  vencimento  DateTime?
+  observacoes String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @default(now()) @updatedAt
+
+  empresa     Empresa  @relation(fields: [empresaId], references: [id])
+  pagamentos  PagamentoContaPagar[]
+
+  @@index([empresaId])
+  @@index([status])
+  @@index([vencimento])
+}
+
+model PagamentoContaPagar {
+  id             Int      @id @default(autoincrement())
+  contaPagarId   Int
+  empresaId      Int
+  transacaoId    Int?
+  valor          Float
+  formaPagamento String?
+  descricao      String?
+  createdAt      DateTime @default(now())
+
+  contaPagar     ContaPagar @relation(fields: [contaPagarId], references: [id])
+  transacao      Transacao? @relation(fields: [transacaoId], references: [id])
+
+  @@index([empresaId])
+  @@index([contaPagarId])
+  @@index([transacaoId])
 }
 
 model Servico {

@@ -10,6 +10,7 @@ import {
   BadgeDollarSign,
   Menu,
   PanelLeftClose,
+  ReceiptText,
   ShoppingCart,
   Users
 } from "lucide-react"
@@ -160,6 +161,17 @@ export default function Sidebar({ aberta = true, setAberta, tema = "escuro", mob
         >
           <BadgeDollarSign className="h-4 w-4" />
           <span>Contas a Receber</span>
+        </button>
+        )}
+
+        {podeAcessar("contasPagar") && (
+        <button
+          type="button"
+          onClick={() => irPara("/contas-pagar")}
+          className={getNavButtonClass("/contas-pagar")}
+        >
+          <ReceiptText className="h-4 w-4" />
+          <span>Contas a Pagar</span>
         </button>
         )}
 

@@ -36,6 +36,13 @@ const permissoesPadraoFuncionario = {
     editar: false,
     excluir: false
   },
+  contasPagar: {
+    visualizar: false,
+    criar: false,
+    pagar: false,
+    editar: false,
+    excluir: false
+  },
   agendamentos: { visualizar: true, criar: true, editar: true, excluir: false },
   financeiro: { visualizar: false, criar: false, editar: false, excluir: false },
   relatorios: { visualizar: false },
@@ -52,6 +59,13 @@ const permissoesAdmin = {
     visualizar: true,
     criar: true,
     receberPagamento: true,
+    editar: true,
+    excluir: true
+  },
+  contasPagar: {
+    visualizar: true,
+    criar: true,
+    pagar: true,
     editar: true,
     excluir: true
   },
@@ -72,6 +86,11 @@ const modulosPermissao = [
     label: "Contas a Receber",
     acoes: ["visualizar", "criar", "receberPagamento", "editar", "excluir"]
   },
+  {
+    key: "contasPagar",
+    label: "Contas a Pagar",
+    acoes: ["visualizar", "criar", "pagar", "editar", "excluir"]
+  },
   { key: "agendamentos", label: "Agendamentos", acoes: ["visualizar", "criar", "editar", "excluir"] },
   { key: "financeiro", label: "Financeiro", acoes: ["visualizar", "criar", "editar", "excluir"] },
   { key: "relatorios", label: "Relatórios", acoes: ["visualizar"] },
@@ -83,7 +102,8 @@ const labelsAcoes = {
   criar: "Criar",
   editar: "Editar",
   excluir: "Excluir",
-  receberPagamento: "Receber pagamento"
+  receberPagamento: "Receber pagamento",
+  pagar: "Pagar"
 }
 
 const iconesModulos = {
@@ -93,6 +113,7 @@ const iconesModulos = {
   produtos: Package,
   vendas: ShoppingCart,
   contasReceber: ReceiptText,
+  contasPagar: ReceiptText,
   agendamentos: CalendarDays,
   financeiro: DollarSign,
   relatorios: FileText,

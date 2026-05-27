@@ -14,6 +14,7 @@ import Servicos from "./pages/Servicos"
 import Produtos from "./pages/Produtos"
 import Vendas from "./pages/Vendas"
 import ContasReceber from "./pages/ContasReceber"
+import ContasPagar from "./pages/ContasPagar"
 import Agendamentos from "./pages/Agendamentos"
 
 import Transacoes from "./pages/Transacoes"
@@ -158,6 +159,18 @@ function App() {
             <PrivateRoute>
               <PermissaoRoute modulo="contasReceber">
                 <ContasReceber />
+              </PermissaoRoute>
+            </PrivateRoute>
+          }
+        />
+
+        {/* Contas a pagar */}
+        <Route
+          path="/contas-pagar"
+          element={
+            <PrivateRoute>
+              <PermissaoRoute modulo="contasPagar">
+                <ContasPagar />
               </PermissaoRoute>
             </PrivateRoute>
           }
