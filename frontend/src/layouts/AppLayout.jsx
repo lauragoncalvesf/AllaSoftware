@@ -100,6 +100,7 @@ export default function AppLayout({ children }) {
       ? "Funcionário(a)"
       : "Empresa"
 
+  const podeVerEmpresa = usuario?.role === "admin" || usuario?.tipo === "empresa"
   const inicialUsuario = nomeUsuario.charAt(0).toUpperCase()
 
   const logout = () => {
@@ -232,7 +233,7 @@ export default function AppLayout({ children }) {
                       </div>
                     </div>
 
-                    {(podeAcessar("usuarios") || podeAcessar("comissoes")) && (
+                    {(podeAcessar("usuarios") || podeAcessar("comissoes") || podeVerEmpresa) && (
                       <button
                         type="button"
                         onClick={() => setMenuAjustesAberto(!menuAjustesAberto)}
@@ -274,6 +275,16 @@ export default function AppLayout({ children }) {
                           className="w-full text-left px-4 py-3 rounded-xl text-sm text-[#2D2E47] hover:bg-gray-50 transition"
                         >
                           Comissões
+                        </button>
+                      )}
+
+                      {podeVerEmpresa && (
+                        <button
+                          type="button"
+                          onClick={() => irPara("/empresa")}
+                          className="w-full text-left px-4 py-3 rounded-xl text-sm text-[#2D2E47] hover:bg-gray-50 transition"
+                        >
+                          Empresa
                         </button>
                       )}
                     </div>

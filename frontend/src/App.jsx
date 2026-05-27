@@ -24,6 +24,7 @@ import Comissoes from "./pages/Comissoes"
 import Usuarios from "./pages/Usuarios"
 import Equipe from "./pages/Equipe"
 import Perfil from "./pages/Perfil"
+import Empresa from "./pages/Empresa"
 import AcessoNegado from "./pages/AcessoNegado"
 
 import PrivateRoute from "./routes/PrivateRoute"
@@ -55,6 +56,15 @@ function App() {
           element={
             <PrivateRoute>
               <Perfil />
+            </PrivateRoute>
+          }
+        />
+
+        <Route
+          path="/empresa"
+          element={
+            <PrivateRoute>
+              <Empresa />
             </PrivateRoute>
           }
         />
