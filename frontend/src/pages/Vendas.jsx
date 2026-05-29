@@ -127,22 +127,33 @@ export default function Vendas() {
     )
   }
 
+  const definirQuantidade = (index, quantidade) => {
+    const qtd = Math.max(1, Number(String(quantidade || "1").replace(/\D/g, "")))
+    setItens((prev) =>
+      prev.map((i, idx) => {
+        if (idx !== index) return i
+        return { ...i, quantidade: qtd, subtotal: qtd * i.precoUnitario }
+      })
+    )
+  }
+
   const removerItem = (index) =>
     setItens((prev) => prev.filter((_, i) => i !== index))
 
-  const totalBruto = useMemo(
-    () => itens.reduce((acc, i) => acc + Number(i.subtotal || 0), 0),
-    [itens]
-  )
-  const totalFinal = useMemo(
-    () => totalBruto - Number(desconto || 0),
-    [totalBruto, desconto]
-  )
   const valorPagoNum = Number(valorPago || 0)
+  const vendaAvulsa = itens.length === 0 && valorPagoNum > 0
+  const totalBruto = useMemo(() => {
+    const totalItensCarrinho = itens.reduce((acc, i) => acc + Number(i.subtotal || 0), 0)
+    return itens.length > 0 ? totalItensCarrinho : valorPagoNum
+  }, [itens, valorPagoNum])
+  const totalFinal = useMemo(
+    () => (itens.length > 0 ? totalBruto - Number(desconto || 0) : valorPagoNum),
+    [itens.length, totalBruto, desconto, valorPagoNum]
+  )
   const valorRestante = Math.max(totalFinal - valorPagoNum, 0)
   const totalItens = itens.reduce((a, i) => a + i.quantidade, 0)
 
-  const podePagar = itens.length > 0 && totalFinal >= 0
+  const podePagar = (itens.length > 0 && totalFinal >= 0) || vendaAvulsa
 
   const salvarVenda = async () => {
     if (salvando) return
@@ -174,7 +185,7 @@ export default function Vendas() {
       await api.post("/vendas", {
         clienteId: clienteId ? Number(clienteId) : null,
         tipoPreco,
-        desconto: Number(desconto || 0),
+        desconto: itens.length > 0 ? Number(desconto || 0) : 0,
         formaPagamento: formaPagamento || null,
         valorPago: valorPagoNum,
         vencimento: valorRestante > 0 ? vencimento || null : null,
@@ -227,8 +238,10 @@ export default function Vendas() {
     setClienteId,
     buscaCliente,
     alterarQuantidade,
+    definirQuantidade,
     removerItem,
     podePagar,
+    vendaAvulsa,
     salvando,
     salvarVenda,
     formatarMoeda,
@@ -380,8 +393,10 @@ function Carrinho({
   setClienteId,
   buscaCliente,
   alterarQuantidade,
+  definirQuantidade,
   removerItem,
   podePagar,
+  vendaAvulsa,
   salvando,
   salvarVenda,
   formatarMoeda,
@@ -448,9 +463,14 @@ function Carrinho({
                   >
                     −
                   </button>
-                  <span className="text-sm font-medium w-6 text-center">
-                    {item.quantidade}
-                  </span>
+                  <input
+                    type="number"
+                    min="1"
+                    step="1"
+                    value={item.quantidade}
+                    onChange={(e) => definirQuantidade(index, e.target.value)}
+                    className="h-7 w-12 border-x border-gray-200 text-center text-sm font-medium outline-none focus:ring-1 focus:ring-[#3E7996]"
+                  />
                   <button
                     type="button"
                     onClick={() => alterarQuantidade(index, 1)}
@@ -561,11 +581,19 @@ function Carrinho({
               {formatarMoeda(totalBruto)}
             </span>
           </div>
-          {Number(desconto || 0) > 0 && (
+          {itens.length > 0 && Number(desconto || 0) > 0 && (
             <div className="flex items-center justify-between">
               <span className="text-gray-500">Desconto</span>
               <span className="text-gray-500 tabular-nums">
                 −{formatarMoeda(Number(desconto || 0))}
+              </span>
+            </div>
+          )}
+          {vendaAvulsa && (
+            <div className="flex items-center justify-between text-xs">
+              <span className="text-gray-500">Venda avulsa</span>
+              <span className="font-medium text-gray-600">
+                sem itens selecionados
               </span>
             </div>
           )}

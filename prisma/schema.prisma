@@ -1,206 +1,195 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
-generator client {
-  provider = "prisma-client-js"
-}
-
 model Empresa {
-  id        Int      @id @default(autoincrement())
-  nome      String
-  email     String   @unique
-  senha     String
-  createdAt DateTime @default(now())
-
-  cpfCnpj     String?
-  celular    String?
-  cep         String?
-  rua         String?
-  numero      String?
-  complemento String?
-  bairro      String?
-  cidade      String?
-  estado      String?
-
-  usuarios Usuario[]
-  comissoes Comissao[]
-  contasPagar ContaPagar[]
+  id                Int                @id @default(autoincrement())
+  nome              String
+  email             String             @unique
+  senha             String
+  createdAt         DateTime           @default(now())
+  bairro            String?
+  celular           String?
+  cep               String?
+  cidade            String?
+  complemento       String?
+  cpfCnpj           String?
+  estado            String?
+  numero            String?
+  rua               String?
+  comissoes         Comissao[]
+  whatsappConfig    EmpresaWhatsApp?
+  mensagensWhatsApp MensagemWhatsApp[]
+  usuarios          Usuario[]
+  contasPagar       ContaPagar[]
 }
 
 model Usuario {
-  id          Int      @id @default(autoincrement())
-  nome        String
-  email       String   @unique
-  senha       String
-  role        String   @default("funcionario")
-  cargo       String?
-  status      String   @default("ativo")
-  permissoes  Json?
-  empresaId   Int
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @default(now()) @updatedAt
-
-  tipoEquipe                 String   @default("profissional")
-  profissional               Boolean  @default(true)
-  preSelecionarAgendamento   Boolean  @default(true)
-
-  comissaoPercentualPadrao   Float    @default(0)
-
-  empresa     Empresa  @relation(fields: [empresaId], references: [id])
+  id                       Int           @id @default(autoincrement())
+  nome                     String
+  email                    String        @unique
+  senha                    String
+  role                     String        @default("funcionario")
+  empresaId                Int
+  createdAt                DateTime      @default(now())
+  cargo                    String?
+  permissoes               Json?
+  status                   String        @default("ativo")
+  updatedAt                DateTime      @default(now()) @updatedAt
+  preSelecionarAgendamento Boolean       @default(true)
+  profissional             Boolean       @default(true)
+  tipoEquipe               String        @default("profissional")
+  comissaoPercentualPadrao Float         @default(0)
   agendamentosProfissional Agendamento[] @relation("ProfissionalAgendamentos")
-  vendasComoVendedor       Venda[] @relation("VendasVendedor")
   comissoes                Comissao[]
+  empresa                  Empresa       @relation(fields: [empresaId], references: [id])
+  vendasComoVendedor       Venda[]       @relation("VendasVendedor")
 }
 
 model Cliente {
-  id          Int      @id @default(autoincrement())
-  nome        String
-  telefone    String?
-  email       String?
-  status      String   @default("em_dia")
-  observacoes String?
-  empresaId   Int
-  createdAt   DateTime @default(now())
-
-  contasReceber ContaReceber[]
-  agendamentos Agendamento[]
-  vendas Venda[]
+  id                Int                @id @default(autoincrement())
+  nome              String
+  telefone          String?
+  email             String?
+  empresaId         Int
+  createdAt         DateTime           @default(now())
+  observacoes       String?
+  status            String             @default("em_dia")
+  whatsappOptIn     Boolean            @default(true)
+  agendamentos      Agendamento[]
+  contasReceber     ContaReceber[]
+  mensagensWhatsApp MensagemWhatsApp[]
+  vendas            Venda[]
 }
 
 model Transacao {
-  id        Int      @id @default(autoincrement())
-  tipo      String
-  valor     Float
-  categoria String?
-  descricao String?
-  formaPagamento String?
-  status    String   @default("ativa")
-  empresaId Int
-  createdAt DateTime @default(now())
-
-  comissoes Comissao[]
+  id                   Int                  @id @default(autoincrement())
+  tipo                 String
+  valor                Float
+  categoria            String?
+  descricao            String?
+  empresaId            Int
+  createdAt            DateTime             @default(now())
+  status               String               @default("ativa")
+  formaPagamento       String?
+  comissoes            Comissao[]
   pagamentosContaPagar PagamentoContaPagar[]
 }
 
 model ContaReceber {
-  id          Int      @id @default(autoincrement())
-  clienteId   Int
-  empresaId   Int
-  descricao   String?
-  valorTotal  Float
-  valorPago   Float    @default(0)
-  status      String   @default("pendente")
-  vencimento  DateTime?
-  createdAt   DateTime @default(now())
-
-  cliente     Cliente  @relation(fields: [clienteId], references: [id])
-  pagamentos  PagamentoContaReceber[]
-  vendas Venda[]
+  id         Int                     @id @default(autoincrement())
+  clienteId  Int
+  empresaId  Int
+  descricao  String?
+  valorTotal Float
+  valorPago  Float                   @default(0)
+  status     String                  @default("pendente")
+  vencimento DateTime?
+  createdAt  DateTime                @default(now())
+  cliente    Cliente                 @relation(fields: [clienteId], references: [id])
+  pagamentos PagamentoContaReceber[]
+  vendas     Venda[]
 }
 
 model PagamentoContaReceber {
-  id             Int      @id @default(autoincrement())
+  id             Int          @id @default(autoincrement())
   contaReceberId Int
   empresaId      Int
   valor          Float
   formaPagamento String?
   descricao      String?
-  createdAt      DateTime @default(now())
-
+  createdAt      DateTime     @default(now())
   contaReceber   ContaReceber @relation(fields: [contaReceberId], references: [id])
 }
 
 model ContaPagar {
-  id          Int      @id @default(autoincrement())
-  empresaId   Int
-  descricao   String
-  categoria   String?
-  valorTotal  Float
-  valorPago   Float    @default(0)
-  status      String   @default("pendente")
-  vencimento  DateTime?
-  observacoes String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @default(now()) @updatedAt
-
-  empresa     Empresa  @relation(fields: [empresaId], references: [id])
-  pagamentos  PagamentoContaPagar[]
+  id         Int                  @id @default(autoincrement())
+  empresaId  Int
+  fornecedor String?
+  descricao  String?
+  categoria  String?
+  valorTotal Float
+  valorPago  Float                @default(0)
+  status     String               @default("pendente")
+  vencimento DateTime?
+  createdAt  DateTime             @default(now())
+  updatedAt  DateTime             @default(now()) @updatedAt
+  empresa    Empresa              @relation(fields: [empresaId], references: [id])
+  pagamentos PagamentoContaPagar[]
 
   @@index([empresaId])
   @@index([status])
   @@index([vencimento])
+  @@index([createdAt])
 }
 
 model PagamentoContaPagar {
-  id             Int      @id @default(autoincrement())
+  id             Int        @id @default(autoincrement())
   contaPagarId   Int
   empresaId      Int
   transacaoId    Int?
   valor          Float
   formaPagamento String?
   descricao      String?
-  createdAt      DateTime @default(now())
-
-  contaPagar     ContaPagar @relation(fields: [contaPagarId], references: [id])
+  createdAt      DateTime   @default(now())
+  contaPagar     ContaPagar @relation(fields: [contaPagarId], references: [id], onDelete: Cascade)
   transacao      Transacao? @relation(fields: [transacaoId], references: [id])
 
-  @@index([empresaId])
   @@index([contaPagarId])
+  @@index([empresaId])
   @@index([transacaoId])
 }
 
 model Servico {
-  id        Int      @id @default(autoincrement())
-  nome      String
-  descricao String?
-  preco     Float
-  duracao   Int?
-  status    String    @default("ativo")
-  empresaId Int
-  createdAt DateTime  @default(now())
-
+  id                 Int           @id @default(autoincrement())
+  nome               String
+  descricao          String?
+  preco              Float
+  duracao            Int?
+  status             String        @default("ativo")
+  empresaId          Int
+  createdAt          DateTime      @default(now())
   comissaoPercentual Float?
-
-  agendamentos Agendamento[]
+  agendamentos       Agendamento[]
 }
 
 model Produto {
-  id            Int      @id @default(autoincrement())
-  nome          String
-  descricao     String?
-  precoVarejo   Float
-  precoAtacado  Float?
-  precoCusto    Float?
-  estoque       Int?
-  status        String   @default("ativo")
-  empresaId     Int
-  createdAt     DateTime @default(now())
-
+  id                 Int      @id @default(autoincrement())
+  nome               String
+  descricao          String?
+  precoVarejo        Float
+  precoAtacado       Float?
+  estoque            Int?
+  status             String   @default("ativo")
+  empresaId          Int
+  createdAt          DateTime @default(now())
+  precoCusto         Float?
   comissaoPercentual Float?
 }
 
 model Venda {
-  id             Int         @id @default(autoincrement())
+  id             Int           @id @default(autoincrement())
   clienteId      Int?
   empresaId      Int
-  contaReceberId Int?
-  vendedorId     Int?
-
-  tipoPreco      String      @default("varejo")
-  desconto       Float       @default(0)
+  tipoPreco      String        @default("varejo")
+  desconto       Float         @default(0)
   totalBruto     Float
   totalFinal     Float
-  status         String      @default("fechada")
-  createdAt      DateTime    @default(now())
-
-  itens          ItemVenda[]
-  agendamento Agendamento?
+  status         String        @default("fechada")
+  createdAt      DateTime      @default(now())
+  contaReceberId Int?
+  vendedorId     Int?
+  agendamento    Agendamento?
   comissoes      Comissao[]
-  cliente        Cliente? @relation(fields: [clienteId], references: [id])
+  itens          ItemVenda[]
+  cliente        Cliente?      @relation(fields: [clienteId], references: [id])
   contaReceber   ContaReceber? @relation(fields: [contaReceberId], references: [id])
-  vendedor       Usuario? @relation("VendasVendedor", fields: [vendedorId], references: [id])
+  vendedor       Usuario?      @relation("VendasVendedor", fields: [vendedorId], references: [id])
 
   @@index([clienteId])
   @@index([vendedorId])
@@ -216,12 +205,11 @@ model ItemVenda {
   nomeItem      String
   quantidade    Int      @default(1)
   precoUnitario Float
-  custoUnitario Float?
-  custoTotal    Float?
-  lucroBruto    Float?
   subtotal      Float
   createdAt     DateTime @default(now())
-
+  custoTotal    Float?
+  custoUnitario Float?
+  lucroBruto    Float?
   venda         Venda    @relation(fields: [vendaId], references: [id], onDelete: Cascade)
 }
 
@@ -243,29 +231,27 @@ model AuditLog {
 }
 
 model Agendamento {
-  id             Int      @id @default(autoincrement())
-  clienteId      Int?
-  servicoId      Int?
-  profissionalId Int?
-  empresaId      Int
-  vendaId        Int?     @unique
-
-  titulo         String
-  descricao      String?
-  dataHora       DateTime
-  status         String   @default("agendado")
-  valorServico   Float?
-  observacoes    String?
-
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @default(now()) @updatedAt
-  concluidoEm    DateTime?
-
-  cliente        Cliente? @relation(fields: [clienteId], references: [id])
-  servico        Servico? @relation(fields: [servicoId], references: [id])
-  profissional   Usuario? @relation("ProfissionalAgendamentos", fields: [profissionalId], references: [id])
-  venda          Venda?   @relation(fields: [vendaId], references: [id])
-  comissoes      Comissao[]
+  id                Int                @id @default(autoincrement())
+  clienteId         Int?
+  servicoId         Int?
+  empresaId         Int
+  titulo            String
+  descricao         String?
+  dataHora          DateTime
+  status            String             @default("agendado")
+  observacoes       String?
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @default(now()) @updatedAt
+  profissionalId    Int?
+  valorServico      Float?
+  vendaId           Int?               @unique
+  concluidoEm       DateTime?
+  cliente           Cliente?           @relation(fields: [clienteId], references: [id])
+  profissional      Usuario?           @relation("ProfissionalAgendamentos", fields: [profissionalId], references: [id])
+  servico           Servico?           @relation(fields: [servicoId], references: [id])
+  venda             Venda?             @relation(fields: [vendaId], references: [id])
+  comissoes         Comissao[]
+  mensagensWhatsApp MensagemWhatsApp[]
 
   @@index([empresaId])
   @@index([clienteId])
@@ -275,29 +261,77 @@ model Agendamento {
   @@index([dataHora])
 }
 
+model EmpresaWhatsApp {
+  id                   Int      @id @default(autoincrement())
+  empresaId            Int      @unique
+  ativo                Boolean  @default(false)
+  numero               String?
+  nomeExibicao         String?
+  businessId           String?
+  wabaId               String?
+  phoneNumberId        String
+  accessTokenEncrypted String
+  templateConfirmacao  String   @default("agendamento_confirmado")
+  templateLembrete24h  String   @default("lembrete_agendamento_24h")
+  idioma               String   @default("pt_BR")
+  status               String   @default("manual")
+  ultimoErro           String?
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+  empresa              Empresa  @relation(fields: [empresaId], references: [id])
+
+  @@index([empresaId])
+}
+
+model MensagemWhatsApp {
+  id                Int          @id @default(autoincrement())
+  empresaId         Int
+  agendamentoId     Int?
+  clienteId         Int?
+  tipo              String
+  canal             String       @default("whatsapp")
+  destino           String
+  templateName      String?
+  payload           Json?
+  status            String       @default("pendente")
+  providerMessageId String?
+  erro              String?
+  scheduledFor      DateTime?
+  enviadoEm         DateTime?
+  createdAt         DateTime     @default(now())
+  updatedAt         DateTime     @updatedAt
+  agendamento       Agendamento? @relation(fields: [agendamentoId], references: [id])
+  cliente           Cliente?     @relation(fields: [clienteId], references: [id])
+  empresa           Empresa      @relation(fields: [empresaId], references: [id])
+
+  @@index([empresaId])
+  @@index([agendamentoId])
+  @@index([clienteId])
+  @@index([status])
+  @@index([scheduledFor])
+}
+
 model Comissao {
-  id             Int       @id @default(autoincrement())
-  empresaId      Int
-  usuarioId      Int
-  vendaId        Int?
-  agendamentoId  Int?
-  transacaoId    Int?
-
-  tipo           String
-  descricao      String?
-  valorBase      Float
-  percentual     Float
-  valorComissao  Float
-  status         String    @default("pendente")
-  dataPagamento  DateTime?
-  createdAt      DateTime  @default(now())
-  updatedAt      DateTime  @default(now()) @updatedAt
-
-  empresa        Empresa     @relation(fields: [empresaId], references: [id])
-  usuario        Usuario     @relation(fields: [usuarioId], references: [id])
-  venda          Venda?      @relation(fields: [vendaId], references: [id])
-  agendamento    Agendamento? @relation(fields: [agendamentoId], references: [id])
-  transacao      Transacao?  @relation(fields: [transacaoId], references: [id])
+  id            Int          @id @default(autoincrement())
+  empresaId     Int
+  usuarioId     Int
+  vendaId       Int?
+  agendamentoId Int?
+  transacaoId   Int?
+  tipo          String
+  descricao     String?
+  valorBase     Float
+  percentual    Float
+  valorComissao Float
+  status        String       @default("pendente")
+  dataPagamento DateTime?
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @default(now()) @updatedAt
+  agendamento   Agendamento? @relation(fields: [agendamentoId], references: [id])
+  empresa       Empresa      @relation(fields: [empresaId], references: [id])
+  transacao     Transacao?   @relation(fields: [transacaoId], references: [id])
+  usuario       Usuario      @relation(fields: [usuarioId], references: [id])
+  venda         Venda?       @relation(fields: [vendaId], references: [id])
 
   @@index([empresaId])
   @@index([usuarioId])

@@ -21,6 +21,8 @@ import { errorHandler } from "./middlewares/errorHandler.js"
 import relatorioRoutes from "./routes/relatorioRoutes.js"
 import agendamentoRoutes from "./routes/agendamentoRoutes.js"
 import comissaoRoutes from "./routes/comissaoRoutes.js"
+import whatsappRoutes from "./routes/whatsappRoutes.js"
+import { iniciarLembretesWhatsApp } from "./services/whatsappReminderJob.js"
 
 const app = express()
 
@@ -61,6 +63,7 @@ vendaRoutes(app)
 relatorioRoutes(app)
 agendamentoRoutes(app)
 comissaoRoutes(app)
+whatsappRoutes(app)
 
 app.get("/health", (req, res) => {
   res.json({ status: "ok" })
@@ -91,4 +94,5 @@ const PORT = process.env.PORT || 3000
 app.listen(PORT, () => {
   console.log(`🚀 Servidor rodando em http://localhost:${PORT}`)
   console.log(`📡 Ambiente: ${process.env.NODE_ENV || "development"}`)
+  iniciarLembretesWhatsApp()
 })
