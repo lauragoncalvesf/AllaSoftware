@@ -15,6 +15,7 @@ export const podeAcessar = (modulo, acao = "visualizar") => {
 
   const aliases = {
     "contas-receber": "contasReceber",
+    "contas-pagar": "contasPagar",
     equipe: "usuarios",
     comissoes: "usuarios"
   }

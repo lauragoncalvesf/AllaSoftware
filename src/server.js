@@ -9,6 +9,7 @@ import clienteRoutes from "./routes/clienteRoutes.js"
 import transacaoRoutes from "./routes/transacaoRoutes.js"
 import dashboardRoutes from "./routes/dashboardRoutes.js"
 import contaReceberRoutes from "./routes/contaReceberRoutes.js"
+import contaPagarRoutes from "./routes/contaPagarRoutes.js"
 import alertaRoutes from "./routes/alertaRoutes.js"
 import usuarioRoutes from "./routes/usuarioRoutes.js"
 import servicoRoutes from "./routes/servicoRoutes.js"
@@ -53,6 +54,7 @@ clienteRoutes(app)
 transacaoRoutes(app)
 dashboardRoutes(app)
 contaReceberRoutes(app)
+contaPagarRoutes(app)
 alertaRoutes(app)
 usuarioRoutes(app)
 servicoRoutes(app)

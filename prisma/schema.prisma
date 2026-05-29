@@ -68,16 +68,16 @@ model Cliente {
 }
 
 model Transacao {
-  id             Int        @id @default(autoincrement())
-  tipo           String
-  valor          Float
-  categoria      String?
-  descricao      String?
-  empresaId      Int
-  createdAt      DateTime   @default(now())
-  status         String     @default("ativa")
-  formaPagamento String?
-  comissoes      Comissao[]
+  id                   Int                  @id @default(autoincrement())
+  tipo                 String
+  valor                Float
+  categoria            String?
+  descricao            String?
+  empresaId            Int
+  createdAt            DateTime             @default(now())
+  status               String               @default("ativa")
+  formaPagamento       String?
+  comissoes            Comissao[]
   pagamentosContaPagar PagamentoContaPagar[]
 }
 
@@ -129,16 +129,16 @@ model ContaPagar {
 }
 
 model PagamentoContaPagar {
-  id             Int         @id @default(autoincrement())
+  id             Int        @id @default(autoincrement())
   contaPagarId   Int
   empresaId      Int
   transacaoId    Int?
   valor          Float
   formaPagamento String?
   descricao      String?
-  createdAt      DateTime    @default(now())
-  contaPagar     ContaPagar  @relation(fields: [contaPagarId], references: [id], onDelete: Cascade)
-  transacao      Transacao?  @relation(fields: [transacaoId], references: [id])
+  createdAt      DateTime   @default(now())
+  contaPagar     ContaPagar @relation(fields: [contaPagarId], references: [id], onDelete: Cascade)
+  transacao      Transacao? @relation(fields: [transacaoId], references: [id])
 
   @@index([contaPagarId])
   @@index([empresaId])

@@ -36,6 +36,13 @@ const permissoesPadraoFuncionario = {
     editar: false,
     excluir: false
   },
+  contasPagar: {
+    visualizar: false,
+    criar: false,
+    pagar: false,
+    editar: false,
+    excluir: false
+  },
   agendamentos: {
     visualizar: true,
     criar: true,
@@ -69,6 +76,13 @@ const permissoesAdmin = {
     visualizar: true,
     criar: true,
     receberPagamento: true,
+    editar: true,
+    excluir: true
+  },
+  contasPagar: {
+    visualizar: true,
+    criar: true,
+    pagar: true,
     editar: true,
     excluir: true
   },
