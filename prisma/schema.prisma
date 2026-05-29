@@ -117,6 +117,7 @@ model ContaPagar {
   valorPago  Float                @default(0)
   status     String               @default("pendente")
   vencimento DateTime?
+  observacoes String?
   createdAt  DateTime             @default(now())
   updatedAt  DateTime             @default(now()) @updatedAt
   empresa    Empresa              @relation(fields: [empresaId], references: [id])
