@@ -113,7 +113,9 @@ export const criarVenda = async (req, res) => {
       vencimento
     } = req.body || {}
 
-   const itensRecebidos = Array.isArray(itens) ? itens : []
+    const itensRecebidos = Array.isArray(itens) ? itens : []
+    const descontoFinal = Number(desconto || 0)
+    const valorPagoFinal = Number(valorPago || 0)
 
     let totalBruto = 0
     const itensProcessados = []
@@ -124,6 +126,14 @@ export const criarVenda = async (req, res) => {
       if (!tipoItem || !referenciaId || !quantidade) {
         return res.status(400).json({
           error: "Cada item precisa ter tipoItem, referenciaId e quantidade"
+        })
+      }
+
+      const quantidadeNumero = Number(quantidade)
+
+      if (!Number.isInteger(quantidadeNumero) || quantidadeNumero <= 0) {
+        return res.status(400).json({
+          error: "A quantidade de cada item precisa ser um número inteiro maior que zero"
         })
       }
 
@@ -150,7 +160,7 @@ export const criarVenda = async (req, res) => {
         if (
           registro.estoque !== null &&
           registro.estoque !== undefined &&
-          Number(registro.estoque) < Number(quantidade)
+          Number(registro.estoque) < quantidadeNumero
         ) {
           return res.status(400).json({
             error: `Estoque insuficiente para o produto ${registro.nome}. Disponível: ${registro.estoque}`
@@ -195,10 +205,10 @@ export const criarVenda = async (req, res) => {
         })
       }
 
-      const subtotal = Number(quantidade) * Number(precoUnitario)
+      const subtotal = quantidadeNumero * Number(precoUnitario)
       totalBruto += subtotal
 
-      const custoTotal = custoUnitario !== null ? Number(custoUnitario) * Number(quantidade) : null
+      const custoTotal = custoUnitario !== null ? Number(custoUnitario) * quantidadeNumero : null
 
       const lucroBruto = custoTotal !== null ? Number(subtotal) - Number(custoTotal) : Number(subtotal)
 
@@ -206,7 +216,7 @@ export const criarVenda = async (req, res) => {
         tipoItem,
         referenciaId: Number(referenciaId),
         nomeItem,
-        quantidade: Number(quantidade),
+        quantidade: quantidadeNumero,
         precoUnitario: Number(precoUnitario),
         custoUnitario,
         custoTotal,
@@ -218,10 +228,31 @@ export const criarVenda = async (req, res) => {
       })
     }
 
-    const descontoFinal = Number(desconto || 0)
+    if (itensProcessados.length === 0 && valorPagoFinal > 0) {
+      totalBruto = Number(valorPagoFinal)
+      itensProcessados.push({
+        tipoItem: "avulso",
+        referenciaId: 0,
+        nomeItem: "Venda avulsa",
+        quantidade: 1,
+        precoUnitario: Number(valorPagoFinal),
+        custoUnitario: null,
+        custoTotal: null,
+        lucroBruto: Number(valorPagoFinal),
+        comissaoPercentual: null,
+        produtoEstoqueControlado: false,
+        subtotal: Number(valorPagoFinal)
+      })
+    }
+
     const totalFinal = Number(totalBruto) - Number(descontoFinal)
-    const valorPagoFinal = Number(valorPago || 0)
     const valorRestante = Number(totalFinal) - Number(valorPagoFinal)
+
+    if (itensProcessados.length === 0) {
+      return res.status(400).json({
+        error: "Informe ao menos um item ou um valor pago para registrar a venda"
+      })
+    }
 
     if (totalFinal < 0) {
       return res.status(400).json({
